@@ -4,7 +4,7 @@
 
 一份单文件HTML，包含年度统计、已完成月份的时长趋势、已载入书籍的主分类分布、真实事件时间线、可筛选书架、划线／个人笔记及分享导出。缺失月份保留缺口。用户只要图片时，复用已有HTML或按本次材料构建，通过同一个ReadingShareArtwork渲染器预览与导出，不切换到旧share-workflow，也不扩大书目或交付范围。
 
-默认先由助手蒸馏至少一本，再选择“加一本或生成报告”，最后网页阅读与导出。新建真实报告必须有至少一份共享验证器通过的 real 包，缺少时在采集或写文件前提示“先蒸馏至少一本”，保留已有报告且不创建空报告；示例仅能以 source_mode=sample 单独构建并只含 sample 包。已有HTML打开不触发新建门。
+年度报告不要求蒸馏。没有精华时照常采集／复用阅读记录、生成报告、阅读与导出，隐藏底部精华及其导航，不弹出必做提示。有有效蒸馏包才附加精华；明确提供的坏包、篡改包或真实／示例混用仍在采集／写文件前拒绝。示例以 source_mode=sample 单独构建，不填补真实记录。
 
 助手完成微信读书采集和网页交付；年份未指定默认本年并说明。鉴权失败不拿示例替代真实记录。蒸馏书目只在底部阅读，不能据此改变年度已读数、时长或书目版本。网页只读，无上传、开始指令、任务接口或模型连接；静态导出不调用模型。HTML本身无图片比例，分享出口支持3:4、1:1与4:5。
 
@@ -13,7 +13,7 @@
 助手运行，用户无需填写JSON：
 
 ```powershell
-python -X utf8 scripts/generate_reading_html.py --year 2026 --distillation output/books/已完成任务/deep/distillation.json --output output/reading-2026/index.html
+python -X utf8 scripts/generate_reading_html.py --year 2026 --output output/reading-2026/index.html
 ```
 
 Key从环境变量读取，不进入参数或交付。私人缓存按授权、年份和日期隔离；只复用当前用户的有效材料。新采集超过100本时先返回`needs_scope_confirmation`并说明范围；用户明确同意后才加`--allow-large-yearbook`，已有完整材料不受此限制。年度排行已覆盖官方读过总数时跳过额外候选扫描；否则结合书架与分页笔记本发现候选，再以实际进度和本年日期核实。完整笔记逐书采集，零记录有效；覆盖不足如实说明。可用`--annual-snapshot`、`--materials`和`--covers`复用已核验材料，不为视觉修改重采。
@@ -28,7 +28,7 @@ python -X utf8 scripts/build_reading_html.py --input reading-data.json --distill
 
 接受原始`shelf/stats/book_details`、规范化`summary/books`或已有`share-job.json`。已有分享任务包通常仅有精选书，用`--annual-snapshot`补充年内书目，不能直接加入整个书架。年度快照包含`annual.readLongest`、`shelf.books`与可选`non_ranked_progress`；后者只纳入实际开始阅读且末次阅读在本年的书。快照需通过显式year或annual.readTimes日期核验年份，跨年快照拒绝合并。
 
-`--distillation` 可重复，或已有输入包含 `distillations:[bundle]`。build_html、deliver 和自动生成入口均调用共享验证器，不以数量代替内容校验；坏包、篡改包、失败任务或真实报告中的 sample 都拒绝。包公开 analysis/digest 直接内嵌到安全转义的 JSON，不包含原始整书、私有路径、令牌或过程输出。`input_mode:upload|title` 与 `source_mode:real|sample` 独立，书名资料保持未核验全文的范围。
+`--distillation` 可选且可重复，或已有输入包含 `distillations:[bundle]`。缺失或空列表正常生成报告；有包才由 build_html、deliver 和自动生成入口执行共享验证，坏包、篡改包、失败任务或真实报告中的 sample 都拒绝。包公开 analysis/digest 直接内嵌到安全转义的 JSON，不包含原始整书、私有路径、令牌或过程输出。`input_mode:upload|title` 与 `source_mode:real|sample` 独立，书名资料保持未核验全文的范围。
 
 底部默认选第一本，多书切换只改变精华内容；复制、Markdown、独立HTML、PNG与ZIP来自当前所选同一结果并保留来源边界。可选阅读视角与金句按[读懂与表达](book-reading-writing.md)，有内容才出现；旧结果缺字段继续读取，不伪造新内容。
 

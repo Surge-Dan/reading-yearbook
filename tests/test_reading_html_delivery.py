@@ -18,6 +18,18 @@ def snapshot(count=1):
 
 
 class DeliveryTests(unittest.TestCase):
+    def test_cli_with_cached_materials_delivers_without_key_or_distillation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);target=root/'yearbook.html'
+            for name,data in [('annual',snapshot(0)),('materials',{'year':2026,'books':[]}),('covers',{})]:
+                (root/(name+'.json')).write_text(json.dumps(data),encoding='utf-8')
+            args=['generate','--year','2026','--output',str(target),'--cache',str(root/'cache'),
+                  '--annual-snapshot',str(root/'annual.json'),'--materials',str(root/'materials.json'),
+                  '--covers',str(root/'covers.json')]
+            with patch('sys.argv',args),patch.dict('os.environ',{'WEREAD_API_KEY':''}),patch('builtins.print'):
+                self.assertEqual(main(),0)
+            self.assertIn('reading-data',target.read_text('utf-8'))
+
     def test_cache_isolated_between_authorizations_without_literal_credentials(self):
         one=cache_directory('private/cache','first-secret-key',2026)
         two=cache_directory('private/cache','second-secret-key',2026)

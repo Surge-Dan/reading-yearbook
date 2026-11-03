@@ -17,6 +17,7 @@ class ReviewResumeTests(unittest.TestCase):
         self.job_id = job['id']
         self.drain()
         self.job = self.store.jobs[self.job_id]
+        self.job.pop('engine',None)  # Persisted pre-light task.
         self.job.update(state='completed', analysis={'review': {'status': 'unavailable',
             'reason': 'source rejected', 'paragraphs': []}}, digest='existing digest', allow_large=True)
 
@@ -64,6 +65,12 @@ class ReviewResumeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '不支持'):
             self.store.action(self.job_id, 'retry')
         self.assertEqual(self.job['state'], 'completed')
+
+    def test_completed_light_result_does_not_retry_unsupported_review(self):
+        self.job['engine']='light'
+        with self.assertRaisesRegex(ValueError,'不支持'):
+            self.store.agent_action(self.job_id,'retry',{'session':'owner'})
+        self.assertEqual(self.job['state'],'completed')
 
 
 if __name__ == '__main__':

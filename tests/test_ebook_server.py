@@ -113,9 +113,9 @@ class ServerTests(unittest.TestCase):
             self.assertEqual(error.exception.code, 403)
 
     def test_original_upload_stem_is_used_for_filename_title_fallback(self):
-        from test_ebook_core import ContractRunner
+        from test_ebook_light import LightRunner
         self.store.pipeline=None
-        self.store.runner=ContractRunner()
+        self.store.runner=LightRunner(mode='controlled-local')
         for name,title in [('folder/原书标题.txt','原书标题'),('folder/原书标题.md','原书标题'),('C:\\fakepath\\原:书?标题.txt','原-书-标题')]:
             with self.subTest(name=name):
                 job=self.store.create(name,'原文'.encode('utf-8'))

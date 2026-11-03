@@ -33,14 +33,25 @@ def report_data(packages=None, sample=False):
 
 
 class ReportReaderTests(unittest.TestCase):
-    def test_deliver_gate_runs_before_writing_output_or_state(self):
+    def test_deliver_without_distillation_writes_report_and_state(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'index.html'; state=Path(tmp)/'state.json'
             path.write_text('previous','utf-8')
-            with self.assertRaisesRegex(ValueError,'先蒸馏至少一本'):
-                generator.deliver({}, {}, {}, path, state_path=state)
-            self.assertEqual(path.read_text('utf-8'),'previous')
-            self.assertFalse(state.exists())
+            snapshot={'year':2026,'as_of':'2026-10-05','shelf':{'books':[]},
+                      'annual':{'readStat':[{'stat':'读过','counts':'0本'}],'readLongest':[]}}
+            generator.deliver(snapshot, {'year':2026,'books':[]}, {}, path, state_path=state)
+            self.assertIn('reading-data',path.read_text('utf-8'))
+            self.assertEqual(json.loads(state.read_text('utf-8'))['distillations'],[])
+
+    def test_cli_and_builder_accept_missing_and_empty_distillations(self):
+        for packages in (None, []):
+            with self.subTest(packages=packages),tempfile.TemporaryDirectory() as tmp:
+                path=Path(tmp)/'index.html'; source=Path(tmp)/'input.json'
+                data=report_data(packages)
+                build_html(data,path)
+                source.write_text(json.dumps(data),'utf-8')
+                with patch('sys.argv',['build','--input',str(source),'--output',str(path)]),patch('builtins.print'):
+                    self.assertEqual(builder.main(),0)
 
     def test_repeatable_cli_loads_both_packages(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -59,7 +70,7 @@ class ReportReaderTests(unittest.TestCase):
 
     def test_gate_preserves_existing_report_for_empty_bad_or_sample_real(self):
         invalid = bundle(); invalid['digest'] = 'tampered'
-        for packages in ([], [invalid], [bundle(sample=True)], [bundle(), bundle(sample=True)]):
+        for packages in ({}, 'not-a-list', [invalid], [bundle(sample=True)], [bundle(), bundle(sample=True)]):
             with self.subTest(packages=len(packages)), tempfile.TemporaryDirectory() as tmp:
                 path = Path(tmp) / 'index.html'; path.write_text('previous', encoding='utf-8')
                 with self.assertRaisesRegex(ValueError, '先蒸馏至少一本|结果包|sample|示例|完整性'):
@@ -93,11 +104,11 @@ class ReportReaderTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 build_html(report_data([bundle()], sample=True), Path(tmp) / 'mixed.html')
 
-    def test_generator_checks_before_credentials_resources_or_collection(self):
-        with tempfile.TemporaryDirectory() as tmp, patch('sys.argv', ['generate', '--output', str(Path(tmp)/'index.html')]), patch.dict('os.environ', {'WEREAD_API_KEY':'controlled'}), patch.object(generator, 'collect_snapshot') as collect, patch('builtins.print') as output:
+    def test_generator_without_distillation_reaches_credential_check(self):
+        with tempfile.TemporaryDirectory() as tmp, patch('sys.argv', ['generate', '--output', str(Path(tmp)/'index.html')]), patch.dict('os.environ', {'WEREAD_API_KEY':''}), patch.object(generator, 'collect_snapshot') as collect, patch('builtins.print') as output:
             self.assertEqual(generator.main(), 2)
             collect.assert_not_called()
-            self.assertIn('先蒸馏至少一本', str(output.call_args))
+            self.assertIn('missing_credentials', str(output.call_args))
 
     def test_invalid_package_cli_returns_actionable_error_without_collection_or_overwrite(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -109,7 +120,7 @@ class ReportReaderTests(unittest.TestCase):
                 with self.subTest(module=module.__name__),patch('sys.argv',arguments),patch.object(generator,'collect_snapshot') as collect,patch('builtins.print') as output:
                     self.assertEqual(module.main(),2)
                     collect.assert_not_called()
-                    self.assertIn('先蒸馏至少一本',str(output.call_args))
+                    self.assertIn('结果包',str(output.call_args))
                     self.assertEqual(target.read_text('utf-8'),'previous')
 
     def test_default_server_reader_has_no_task_controls_or_credentials(self):

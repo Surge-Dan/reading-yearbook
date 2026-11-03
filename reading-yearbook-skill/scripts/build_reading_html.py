@@ -444,7 +444,7 @@ def main():
     try:
         raw = json.loads(args.input.read_text('utf-8-sig'))
         if not isinstance(raw, dict):
-            raise ValueError('年鉴数据须为对象，请先提供已有材料并蒸馏至少一本。')
+            raise ValueError('年鉴数据须为对象，请提供已有阅读材料。蒸馏为可选功能。')
         if args.distillation:
             raw['distillations'] = load_distillations(args.distillation, raw.get('source_mode'))
         validated_distillations(raw.get('distillations'), raw.get('source_mode'))

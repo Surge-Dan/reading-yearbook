@@ -42,6 +42,8 @@ def public_error(error):
 def valid_saved_job(job, expected_id):
     if not isinstance(job, dict) or job.get('id') != expected_id or job.get('state') not in STATES:
         return False
+    if job.get('engine','legacy') not in ('legacy','light'):
+        return False
     if any(not isinstance(job.get(k), str) for k in ('filename', 'created_at', 'suffix', 'focus', 'stage', 'message')):
         return False
     if (job['suffix'] not in EXTENSIONS and not (job.get('input_mode') == 'title' and job['suffix'] == '')) or len(job['focus']) > 1000:
@@ -194,7 +196,7 @@ class JobStore:
             job_dir.mkdir()
             (job_dir / ('source' + suffix)).write_bytes(content)
             name = filename.replace('\\', '/').rsplit('/', 1)[-1][:200]
-            job = {'id': job_id, 'filename': name, 'suffix': suffix, 'focus': focus,
+            job = {'id': job_id, 'filename': name, 'suffix': suffix, 'focus': focus, 'engine':'light',
                    'runner_mode': self.runner.info().get('mode','legacy-cli'),
                    'created_at': datetime.now(timezone.utc).isoformat(),
                    'state': 'queued', 'stage': 'queued', 'message': '正在准备正文',
@@ -216,7 +218,7 @@ class JobStore:
             self._check_busy()
             job_id = uuid.uuid4().hex
             (self.jobs_dir / job_id).mkdir()
-            job = {'id':job_id,'input_mode':'title','book_query':{'title':title,'author':author.strip()},
+            job = {'id':job_id,'input_mode':'title','engine':'light','book_query':{'title':title,'author':author.strip()},
                    'filename':title,'suffix':'','focus':focus.strip(),
                    'runner_mode':'current-agent-instructed-tools','created_at':datetime.now(timezone.utc).isoformat(),
                    'state':'queued','stage':'queued','message':'准备确认书籍','completed':0,'total':0,'error':None}
@@ -427,8 +429,12 @@ class JobStore:
         deep = job_dir / 'deep'
         try:
             pipeline = self.pipeline
+            light = job.get('engine') == 'light'
             if job.get('input_mode') == 'title':
-                from ebook_title import distill_title
+                if light:
+                    from ebook_light import distill_title
+                else:
+                    from ebook_title import distill_title
                 def choose(books):
                     with self.lock:
                         if event.is_set() or self.events.get(job_id) is not event: raise InterruptedError('已取消')
@@ -446,7 +452,10 @@ class JobStore:
                                        cancel_event=event, focus=job['focus'], choose=choose)
             else:
                 if pipeline is None:
-                    from ebook_pipeline import distill
+                    if light:
+                        from ebook_light import distill
+                    else:
+                        from ebook_pipeline import distill
                     pipeline = distill
                 result = pipeline(job_dir / ('source' + job['suffix']), deep, runner or self.runner,
                                   progress=progress, cancel_event=event, focus=job['focus'], allow_large=allow_large,
@@ -527,6 +536,7 @@ class JobStore:
                 # validation, without opening retries for accepted results.
                 missing_review = (action == 'retry' and assistant_review_retry and self.agent_mode
                                   and job.get('assistant_input') is True
+                                  and job.get('engine') != 'light'
                                   and job['state'] == 'completed'
                                   and isinstance(review, dict)
                                   and review.get('status') == 'unavailable')

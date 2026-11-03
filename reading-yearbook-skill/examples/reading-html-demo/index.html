@@ -1148,6 +1148,7 @@ window.ReadingShareArtwork = (() => {
     const $=id=>root.querySelector('#'+id),readonly=root.dataset.readerMode==='readonly',config=readonly?{}:window.EBOOK_CONFIG||{},online=!readonly&&typeof config.token==='string'&&config.token.length>0;
     const embedded=JSON.parse(document.getElementById('reading-data')?.textContent||'{}'),bundles=embedded.distillations||[];
     let result=bundles[0]||window.EBOOK_RESULT||null,job=null,runnerAvailable=false,agentMode=false,poll=null,requestGeneration=0,requestBusy=false,shareItems=[],sharePages=[],shareArt=null,renderSequence=0;
+    if(readonly&&!result){root.hidden=true;document.querySelectorAll('a[href="#ebook"]').forEach(a=>a.hidden=true);return;}
     const activeStates=['queued','running','awaiting_agent','awaiting_response','needs_book_confirmation'];
     const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=String(text);if(cls)node.className=cls;return node;};
     const describe=value=>typeof value==='string'?value:value==null?'':JSON.stringify(value,null,2);
@@ -1175,7 +1176,7 @@ window.ReadingShareArtwork = (() => {
     let readingObserver;
     function renderResult(){
       if(!result?.analysis)return;
-      const a=result.analysis,container=$('ebookResult');window.EBOOK_RESULT=result;++renderSequence;sharePages=[];$('ebookPage').replaceChildren();$('ebookCanvas').getContext('2d').clearRect(0,0,$('ebookCanvas').width,$('ebookCanvas').height);$('ebookExportPng').disabled=$('ebookExportZip').disabled=true;
+      const a=result.analysis,light=a.pipeline_version?.startsWith('reading-light-'),container=$('ebookResult');window.EBOOK_RESULT=result;++renderSequence;sharePages=[];$('ebookPage').replaceChildren();$('ebookCanvas').getContext('2d').clearRect(0,0,$('ebookCanvas').width,$('ebookCanvas').height);$('ebookExportPng').disabled=$('ebookExportZip').disabled=true;
       readingObserver?.disconnect();$('ebookResultShell').hidden=false;container.replaceChildren();shareItems=[];
       $('ebookBookTitle').textContent=a.book?.title||'电子书精华';$('ebookAuthor').textContent=(a.book?.author||'')+(a.book?.edition?' · '+a.book.edition:'');
       $('ebookQuality').textContent='';$('ebookQuality').hidden=true;
@@ -1191,17 +1192,17 @@ window.ReadingShareArtwork = (() => {
         if(item.case_origin==='ai_exercise')article.append(el('p','应用示例（不是原书案例）','ebook-meta'));
         const body=textParts(item,key);copyButton(article,heading+'\n\n'+body);parent.append(article);shareItems.push({id:key+'-'+(item.id||index),kind:key,title:heading||parent.querySelector('h3')?.textContent||key,text:body});
       }
-      const overviewText=prose(a.overview);if(overviewText){const overview=section('书籍概览','overview');overviewText.split(/\n\s*\n/).filter(Boolean).forEach(p=>overview.append(el('p',p)));copyButton(overview,overviewText);shareItems.push({id:'overview',kind:'overview',title:'书籍概览',text:overviewText});}
+      const overviewText=prose(a.overview);if(overviewText){const title=light?'这本书讲什么':'书籍概览',overview=section(title,'overview');overviewText.split(/\n\s*\n/).filter(Boolean).forEach(p=>overview.append(el('p',p)));copyButton(overview,overviewText);shareItems.push({id:'overview',kind:'overview',title,text:overviewText});}
       if(a.book_context?.length){const s=section('读懂这本书','book-context');a.book_context.forEach((item,i)=>addItem(s,item,'book_context',i));}
-      for(const [key,title]of [['themes','核心观点'],['methods','值得带走的方法'],['cases','关键案例'],['counterexamples','反例'],['insights','对我的启发']])if(a[key]?.length){const s=section(title,key);a[key].forEach((item,i)=>addItem(s,item,key,i));}
+      for(const [key,title]of [['themes',light?'最值得记住的东西':'核心观点'],['methods','值得带走的方法'],['cases','关键案例'],['counterexamples','反例'],['insights',light?'读完想带走的东西':'对我的启发']])if(a[key]?.length){const s=section(title,key);a[key].forEach((item,i)=>addItem(s,item,key,i));}
       for(const [i,item]of (a.reading_lenses||[]).entries()){const s=section(item.title,'lens-'+i);s.append(el('p',item.text));copyButton(s,item.title+'\n\n'+item.text);shareItems.push({id:'lens-'+i,kind:'reading_lenses',title:item.title,text:item.text});}
       if(a.memorable_passages?.length){const s=section('值得保留的金句','passages');a.memorable_passages.forEach((item,i)=>{const article=el('article'),body='原文：\n'+item.text+'\n\n为什么记住它：\n'+item.why_it_matters;article.append(el('blockquote',item.text),el('p',item.why_it_matters));copyButton(article,body);s.append(article);shareItems.push({id:'passage-'+i,kind:'memorable_passages',title:'值得保留的金句',text:body});});}
       const review=a.review;
       if(review?.status==='ready'&&review.paragraphs?.some(p=>p.text)){
-        const s=section('我的书评','review');
+        const reviewTitle=light?'读后余味':'我的书评',s=section(reviewTitle,'review');
         review.paragraphs.forEach((paragraph,i)=>{if(!paragraph.text)return;const article=el('article',null,'ebook-review-paragraph');article.append(el('p',paragraph.text));
           const body=paragraph.text,shareText=paragraph.text;
-          copyButton(article,body);s.append(article);shareItems.push({id:'review-'+i,kind:'review',title:'我的书评 · '+(i+1),text:shareText});});
+          copyButton(article,body);s.append(article);shareItems.push({id:'review-'+i,kind:'review',title:reviewTitle+' · '+(i+1),text:shareText});});
       }
       const refs=section('参考资料','references');
       refs.append(el('p',scope(),'ebook-meta'));

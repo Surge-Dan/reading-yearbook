@@ -192,11 +192,11 @@ class AgentStoreTests(unittest.TestCase):
                 cli.close()
 
     def test_release_revokes_publication_after_last_model_stage(self):
-        from test_ebook_core import ContractRunner
-        import ebook_pipeline
+        from test_ebook_light import LightRunner
+        import ebook_light
         with tempfile.TemporaryDirectory() as tmp:
             entered, resume = threading.Event(), threading.Event()
-            original = ebook_pipeline._render_outputs
+            original = ebook_light._publish
             def paused(*args):
                 entered.set()
                 if not resume.wait(3):
@@ -204,10 +204,10 @@ class AgentStoreTests(unittest.TestCase):
                 return original(*args)
             store = JobStore(tmp, AgentRunner())
             try:
-                with patch('ebook_pipeline._render_outputs', paused):
+                with patch('ebook_light._publish', paused):
                     job = store.create('book.txt', b'Original source book content.')
                     store.agent_action(job['id'], 'claim', {'session': 's', 'host': 'test', 'model': 'fixture'})
-                    fixture, seen = ContractRunner(), set()
+                    fixture, seen = LightRunner(), set()
                     runner = store.runners[job['id']]
                     for _ in range(300):
                         if entered.is_set():
@@ -282,9 +282,9 @@ class AgentStoreTests(unittest.TestCase):
                 store.close()
 
     def test_full_pipeline_via_current_agent_protocol_is_not_blind_validation(self):
-        from test_ebook_core import ContractRunner
+        from test_ebook_light import LightRunner
         with tempfile.TemporaryDirectory() as tmp:
-            fixture = ContractRunner(methods=True)
+            fixture = LightRunner()
             store = JobStore(tmp, AgentRunner())
             server = create_server(store)
             thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -308,11 +308,11 @@ class AgentStoreTests(unittest.TestCase):
                 self.assertEqual(final['state'], 'completed', final.get('error'))
                 analysis = final['analysis']
                 self.assertEqual(analysis['quality_status'], 'needs_review')
-                self.assertEqual(analysis['methods'][0]['verification']['status'], 'needs_review')
-                self.assertEqual(analysis['coverage']['candidate_dispositions'][0]['final_status'], 'needs_review')
+                self.assertEqual(analysis['methods'], [])
+                self.assertEqual(analysis['pipeline_version'], 'reading-light-1')
                 report = json.loads((store.jobs_dir / job['id'] / 'deep/validation-report.json').read_text('utf-8'))
-                self.assertTrue(report['actual_task_trials'])
-                self.assertTrue(all(t['comparative_outcome'] == 'non_isolated_comparative_exercise' for t in report['actual_task_trials']))
+                self.assertEqual([s['stage'] for s in report['stages']], ['light-read','light-compose'])
+                self.assertEqual(report['semantic_validation'],'not_independent')
                 self.assertNotIn('validated：', final['digest'])
             finally:
                 server.shutdown()
@@ -320,7 +320,7 @@ class AgentStoreTests(unittest.TestCase):
                 store.close()
 
     def test_invalid_quote_never_becomes_cache_or_result(self):
-        from test_ebook_core import ContractRunner
+        from test_ebook_light import LightRunner
         with tempfile.TemporaryDirectory() as tmp:
             store = JobStore(tmp, AgentRunner())
             try:
@@ -332,8 +332,8 @@ class AgentStoreTests(unittest.TestCase):
                     if request:
                         break
                     time.sleep(.01)
-                answer = ContractRunner().generate(request['prompt'], schema=request['schema'])
-                answer['themes'][0]['sources'][0]['quote'] = 'Invented quotation never in book.'
+                answer = LightRunner().generate(request['prompt'], schema=request['schema'])
+                answer['notes'][0]['sources'][0]['quote'] = 'Invented quotation never in book.'
                 runner.submit('s', request['request_id'], answer)
                 for _ in range(100):
                     final = store.get(job['id'])

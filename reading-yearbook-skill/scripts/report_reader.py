@@ -9,16 +9,18 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def validated_distillations(bundles, source_mode='real'):
-    if not isinstance(bundles, list) or not bundles:
-        raise ValueError('先蒸馏至少一本，再生成报告：请让助手完成蒸馏并通过 --distillation 提供 distillation.json。')
+    if bundles is None:
+        return []
+    if not isinstance(bundles, list):
+        raise ValueError('蒸馏结果包须为列表；不提供蒸馏结果也能生成年度报告。')
     mode = 'sample' if source_mode == 'sample' else 'real'
     for bundle in bundles:
         try:
             validate_bundle(bundle)
         except (ValueError, TypeError, KeyError) as error:
-            raise ValueError('结果包无效，请让助手先蒸馏至少一本有效结果，再生成报告。') from error
+            raise ValueError('所提供的蒸馏结果包无效；请修复结果包，或移除此参数直接生成报告。') from error
         if bundle['source_mode'] != mode:
-            raise ValueError('结果包来源不匹配：真实报告不能混入示例 sample；请先蒸馏至少一本真实结果。示例报告仅使用 sample 包。')
+            raise ValueError('结果包来源不匹配：真实报告不能混入示例 sample；示例报告仅使用 sample 包。')
     return bundles
 
 
@@ -26,7 +28,7 @@ def load_distillations(paths, source_mode='real'):
     try:
         bundles = [load_bundle(path) for path in paths]
     except (ValueError, OSError, TypeError) as error:
-        raise ValueError('结果包无法读取或校验失败，请让助手先蒸馏至少一本有效结果，再生成报告。') from error
+        raise ValueError('蒸馏结果包无法读取或校验失败；请修复结果包，或移除此参数直接生成报告。') from error
     return validated_distillations(bundles, source_mode)
 
 
