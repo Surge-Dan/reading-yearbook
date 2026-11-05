@@ -203,6 +203,10 @@ def adapt_data(raw, year=None):
         data['features']=features_data(raw.get('features'),year,as_of)
     if 'distillations' in raw:
         data['distillations'] = validated_distillations(raw['distillations'], data['source_mode'])
+    if 'reading_signals' in raw:
+        from reading_portrait import profile
+        profile(raw['reading_signals'],data['books'],year)
+        data['reading_signals']=[{k:s[k] for k in ('source_id','axis','side','reason')} for s in raw['reading_signals']]
     return data
 
 
@@ -401,6 +405,7 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
     if re.search(r'wrk-[A-Za-z0-9_-]{8,}', serialized):
         raise ValueError('交付内容中检测到密钥格式，请移除后重试')
     template = (ROOT / 'assets' / 'reading-template.html').read_text('utf-8')
+    from reading_portrait import section
     # Art belongs to presentation, never the user's exported reading JSON.
     unknown = set(art_assets or {}) - {'hero', 'reading', 'rhythm'}
     if unknown:
@@ -415,7 +420,9 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
                     '__EBOOK_SECTION__': reader_section(),
                     '__LICENSE__': html.escape((ROOT / 'assets' / 'lieflat-LICENSE.txt').read_text('utf-8')+'\n\nNoto Serif SC\n'+(ROOT/'assets/fonts/OFL-Serif.txt').read_text('utf-8')+'\n\nNoto Sans SC\n'+(ROOT/'assets/fonts/OFL-Sans.txt').read_text('utf-8'))}
     # One-pass replacement: user text may itself contain template delimiters.
+    replacements['__STYLE__']+='\n'+(ROOT/'assets/reading-refinement.css').read_text('utf-8')
     page = re.sub(r'__(?:DATA|STYLE|APP|SHARE_APP|EBOOK_APP|EBOOK_SECTION|LICENSE|ART)__', lambda m: replacements[m.group()], template)
+    page=page.replace('<section id="shelf"',section(data)+'<section id="shelf"',1)
     if missing and allow_draft:
         notice=f'<section role="status" data-reading-draft="true"><h2>内部草稿</h2><p>{len(missing)}本书暂用书名封面。</p></section>'
         page=page.replace('<main>','<main>'+notice,1)

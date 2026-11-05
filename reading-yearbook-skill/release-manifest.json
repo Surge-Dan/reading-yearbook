@@ -86,6 +86,12 @@
       "bytes": 23024
     },
     {
+      "path": "assets/reading-refinement.css",
+      "sha256": "f9cad97a9dd707e1680c7f83ef7b1e76387c41310ed47eb67264249767d75172",
+      "hash_kind": "text-lf",
+      "bytes": 2571
+    },
+    {
       "path": "assets/reading-share-art.js",
       "sha256": "30e8da1e914e79425d79fb646ccd8206c91031db67273bac1a124cb17243beb2",
       "hash_kind": "text-lf",
@@ -632,6 +638,12 @@
       "bytes": 2188
     },
     {
+      "path": "references/reading-personality.md",
+      "sha256": "54874be5e7faf55f8d23ab37703152dd51fcff12ffdf7182e14de23053dbc1c0",
+      "hash_kind": "text-lf",
+      "bytes": 1563
+    },
+    {
       "path": "references/share-typography.md",
       "sha256": "6bcafa69a5eb62c27292c7552ebc9dcb84ba09a198dd0d0eff57e430b445272e",
       "hash_kind": "text-lf",
@@ -699,9 +711,9 @@
     },
     {
       "path": "scripts/build_reading_html.py",
-      "sha256": "8e4a67625255907fd922b74cf5eb3498bcb9f13b709d9dbb5d4767476d2dea09",
+      "sha256": "86f7224b2e2351d0af506c8ddf139d3bd033aec7e54173225ecb7f5e38da7d3f",
       "hash_kind": "text-lf",
-      "bytes": 28908
+      "bytes": 29384
     },
     {
       "path": "scripts/collage_materials.py",
@@ -842,6 +854,12 @@
       "bytes": 760
     },
     {
+      "path": "scripts/reading_portrait.py",
+      "sha256": "0902d15a2d5984ec4a29bfedc0297a674bb6d48da6a6fcf3ff4955dc2943593e",
+      "hash_kind": "text-lf",
+      "bytes": 9178
+    },
+    {
       "path": "scripts/render_yearbook.py",
       "sha256": "261f68f4e2dcb760cfe7ed382a2a30dde428c5857ba785fd0740cd52f4924508",
       "hash_kind": "text-lf",
@@ -885,9 +903,9 @@
     },
     {
       "path": "scripts/skill_release.py",
-      "sha256": "7d3a3c81dfabfe83abc2db34247f1a3ec5678fb554f1b2109619c7740cdf47e6",
+      "sha256": "7e9232c1426227c4e61e8ccee207fa2026e99dfd2be3ba9c918f1cad666a5e0d",
       "hash_kind": "text-lf",
-      "bytes": 5625
+      "bytes": 5723
     },
     {
       "path": "scripts/static_graphics.py",
@@ -909,9 +927,9 @@
     },
     {
       "path": "SKILL.md",
-      "sha256": "4c21b8715ba2fba3d1daed134c847a07435147c10a51e04592ad73c8da1929aa",
+      "sha256": "fa0967c6f2f1b2c593eaecbc5e9b1b78f07d54e8aa9519f5462627bdaae876be",
       "hash_kind": "text-lf",
-      "bytes": 12163
+      "bytes": 12539
     },
     {
       "path": "third_party/cangjie/extractors/case-extractor.md",
