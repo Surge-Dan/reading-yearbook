@@ -96,7 +96,7 @@ def section(data):
         values=[(r['name'],r['seconds']) for r in categories]
         total=max(sum(v for _,v in values),data['summary'].get('seconds') or 0)
         if total>sum(v for _,v in values):values.append(('未归属',total-sum(v for _,v in values)))
-        palette=['#38665c','#6b8c83','#a2b6a6','#bba775','#8d9fad','#bb9e91','#d8ddd5']
+        palette=['#b83225','#205ac5','#e0a521','#167c70','#a65a96','#dc793e','#eadcc5']
         result+='<article class="insight-chart"><h3>时间花在哪里</h3><svg viewBox="0 0 120 120" width="160" role="img" aria-label="分类时长占比环形图">'
         offset=0
         for i,(name,value) in enumerate(values):

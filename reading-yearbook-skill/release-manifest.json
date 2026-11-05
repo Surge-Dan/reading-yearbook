@@ -87,13 +87,13 @@
     },
     {
       "path": "assets/reading-refinement.css",
-      "sha256": "f9cad97a9dd707e1680c7f83ef7b1e76387c41310ed47eb67264249767d75172",
+      "sha256": "9f290083f77d0839d057602b5889ec074e1e72a8c66c2468ffcb5e07f818216b",
       "hash_kind": "text-lf",
-      "bytes": 2571
+      "bytes": 10033
     },
     {
       "path": "assets/reading-share-art.js",
-      "sha256": "30e8da1e914e79425d79fb646ccd8206c91031db67273bac1a124cb17243beb2",
+      "sha256": "db00c996d7cd79566666840e8fbf09c86f9f5ae61127a3b547a26b43ef1ddc9a",
       "hash_kind": "text-lf",
       "bytes": 32179
     },
@@ -393,7 +393,7 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "5b3ccb6c4c76230decd627195519e4a05c5158bd3f4db651a8c6b434cdd8504d",
+      "sha256": "26fc6eabe6b4e4781e76b909297ac7bbbf9f0fdd83038176ed3bdc5ec25aaf96",
       "hash_kind": "text-lf",
       "bytes": 3695188
     },
@@ -855,7 +855,7 @@
     },
     {
       "path": "scripts/reading_portrait.py",
-      "sha256": "0902d15a2d5984ec4a29bfedc0297a674bb6d48da6a6fcf3ff4955dc2943593e",
+      "sha256": "eef3056da57e6eb92c414755968120acbb8cbe385f2f9b03cf5490649e3e0123",
       "hash_kind": "text-lf",
       "bytes": 9178
     },
@@ -867,9 +867,9 @@
     },
     {
       "path": "scripts/report_reader.py",
-      "sha256": "9038b922b3695ff01c3867692cb18863b6d74716869593065be7da5a8bfe1317",
+      "sha256": "34092ca88e9c19916731285bc28a75a840027d4df624d259329bd6b8204ebd20",
       "hash_kind": "text-lf",
-      "bytes": 4806
+      "bytes": 4832
     },
     {
       "path": "scripts/run_share.py",

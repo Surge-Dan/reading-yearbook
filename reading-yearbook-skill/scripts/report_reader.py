@@ -44,7 +44,7 @@ def reader_page(result=None, yearbook=None):
     """Opening an old report never invokes the new-report preflight or a task."""
     section = reader_section()
     css = '\n'.join((ROOT / 'assets' / name).read_text('utf-8') for name in
-                    ('reading-app.css', 'reading-art.css', 'ebook-app.css'))
+                    ('reading-app.css', 'reading-art.css', 'ebook-app.css', 'reading-refinement.css'))
     app = '<script id="ebook-app-mounted">' + (ROOT / 'assets/ebook-app.js').read_text('utf-8') + '</script>'
     art = '<script id="reading-share-mounted">' + (ROOT / 'assets/reading-share-art.js').read_text('utf-8') + '</script>'
     if yearbook:
