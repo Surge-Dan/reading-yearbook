@@ -20,6 +20,8 @@ body{background:#fff0cf;color:var(--ink)}
 meter::-webkit-meter-bar{background:#f4e4c6;border:0;border-radius:8px}
 meter::-webkit-meter-optimum-value{background:var(--red);border-radius:8px}
 .insight-chart:nth-child(3n+2) meter::-webkit-meter-optimum-value{background:var(--blue)}
+.insight-chart:nth-child(3) meter::-webkit-meter-bar{background:#ffe7ce}
+.insight-chart:nth-child(3) meter::-webkit-meter-optimum-value{background:#d56a16}
 .portrait-axis:nth-child(even) meter::-webkit-meter-optimum-value{background:var(--blue)}
 .reading-calendar span{background:var(--blue)}
 .reading-calendar .unknown{background:repeating-linear-gradient(45deg,#f7e8ca,#f7e8ca 2px,#fffdf6 2px,#fffdf6 4px)}
