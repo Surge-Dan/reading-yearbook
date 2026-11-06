@@ -206,7 +206,7 @@ def adapt_data(raw, year=None):
     if 'reading_signals' in raw:
         from reading_portrait import profile
         profile(raw['reading_signals'],data['books'],year)
-        data['reading_signals']=[{k:s[k] for k in ('source_id','axis','side','reason')} for s in raw['reading_signals']]
+        data['reading_signals']=[{k:s[k] for k in ('source_id','axis','side','reason','source_kind') if k in s} for s in raw['reading_signals']]
     return data
 
 

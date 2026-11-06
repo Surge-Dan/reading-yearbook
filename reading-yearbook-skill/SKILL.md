@@ -48,7 +48,7 @@ python -X utf8 scripts/serve_ebook.py --output output/books --runner agent --por
 
 ## 内容与成本边界
 
-- 生成报告时，助手按[阅读人格规则](references/reading-personality.md)检查已取得的本年个人想法，有明确依据才生成可追溯的 reading_signals 并交给构建器；图表由程序汇总。没有依据的维度保持未知，不用阅读时段、类别或读完率硬算人格。分析不是额外API服务，不影响无蒸馏报告生成。
+- 生成报告时，助手按[阅读人格规则](references/reading-personality.md)分析本年个人想法和主动划线，生成可追溯的 reading_signals 并随数据交给构建器。网页只展示全年阅读侧写；依据不足的维度不显示比例。分析使用当前助手，不额外调用模型 API。
 
 - 新蒸馏默认按[轻量笔记](references/light-reading.md)组织概览、少量核心观点、启发、可靠金句与短书评，约1200–1800字为参考。人物关系、逻辑线、作者主张融入内容，不再逐项扩成独立栏目；语气随书调整，保留具体例子和自然趣味。旧结果保持可读，不擅自删除或改写。
 

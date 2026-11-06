@@ -50,7 +50,7 @@ class WarmUITests(unittest.TestCase):
                 page.keyboard.press('Tab')
                 page.locator('#ratioTrigger').focus()
                 self.assertNotEqual(page.locator('#ratioTrigger').evaluate('el=>getComputedStyle(el).outlineStyle'),'none')
-                self.assertGreaterEqual(page.locator('#portraitMonth').bounding_box()['height'],44)
+                self.assertEqual(page.locator('#readingPortrait select').count(),0)
                 for width in (768,375):
                     page.set_viewport_size({'width':width,'height':950})
                     self.assertFalse(page.evaluate('document.documentElement.scrollWidth>innerWidth'))

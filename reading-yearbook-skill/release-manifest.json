@@ -87,9 +87,9 @@
     },
     {
       "path": "assets/reading-refinement.css",
-      "sha256": "9f290083f77d0839d057602b5889ec074e1e72a8c66c2468ffcb5e07f818216b",
+      "sha256": "3c335f84ea41582137e93354c5907297ee9e32b5d5283b0585e1b4da03db726c",
       "hash_kind": "text-lf",
-      "bytes": 10033
+      "bytes": 10982
     },
     {
       "path": "assets/reading-share-art.js",
@@ -639,9 +639,9 @@
     },
     {
       "path": "references/reading-personality.md",
-      "sha256": "54874be5e7faf55f8d23ab37703152dd51fcff12ffdf7182e14de23053dbc1c0",
+      "sha256": "3f4c1fc68474edfd889b49ece29e74c1873a290439e8dbfc0111fc4f5281b7b8",
       "hash_kind": "text-lf",
-      "bytes": 1563
+      "bytes": 1450
     },
     {
       "path": "references/share-typography.md",
@@ -711,9 +711,9 @@
     },
     {
       "path": "scripts/build_reading_html.py",
-      "sha256": "86f7224b2e2351d0af506c8ddf139d3bd033aec7e54173225ecb7f5e38da7d3f",
+      "sha256": "817c286dee273a109124ccf46b975bbdacc5f03213801cc09bd0e23c1f619698",
       "hash_kind": "text-lf",
-      "bytes": 29384
+      "bytes": 29408
     },
     {
       "path": "scripts/collage_materials.py",
@@ -855,9 +855,9 @@
     },
     {
       "path": "scripts/reading_portrait.py",
-      "sha256": "eef3056da57e6eb92c414755968120acbb8cbe385f2f9b03cf5490649e3e0123",
+      "sha256": "8cb7e289343964067d3604e4b623b1833222ae0a81a664582508cb50e10f6712",
       "hash_kind": "text-lf",
-      "bytes": 9178
+      "bytes": 9781
     },
     {
       "path": "scripts/render_yearbook.py",
@@ -927,9 +927,9 @@
     },
     {
       "path": "SKILL.md",
-      "sha256": "fa0967c6f2f1b2c593eaecbc5e9b1b78f07d54e8aa9519f5462627bdaae876be",
+      "sha256": "bcbb8108a58f2a83409a13d4af528145f2b41025b6dd667573ada1f07a1d53b0",
       "hash_kind": "text-lf",
-      "bytes": 12539
+      "bytes": 12486
     },
     {
       "path": "third_party/cangjie/extractors/case-extractor.md",
