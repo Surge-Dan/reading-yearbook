@@ -18,15 +18,15 @@
       return seed/4294967296;
     };
     const holes=[];
-    for(let x=66;x<123;x+=2){
-      const density=(x-66)/57;
+    for(let x=0;x<124;x+=2){
+      const density=.035+.25*(x/124);
       for(let y=0;y<44;y+=2){
-        if(random()<density*density*.9)holes.push(`<rect x="${x}" y="${y}" width="2" height="2"/>`);
+        if(random()<density)holes.push(`<rect x="${x}" y="${y}" width="1.5" height="1.5"/>`);
       }
     }
     wordmark.style.setProperty('--wordmark-grain',svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 124 44" preserveAspectRatio="none"><mask id="grain"><rect width="124" height="44" fill="white"/>${holes.join('')}</mask><rect width="124" height="44" fill="white" mask="url(#grain)"/></svg>`));
     const dust=[];
-    for(let i=0;i<65;i++){
+    for(let i=0;i<32;i++){
       const x=random()*53,y=8+random()*29+(random()-.5)*x*.24;
       const size=x<26?1.7:1.1,opacity=(1-x/60)*(.26+random()*.57);
       dust.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size}" height="${size}" opacity="${opacity.toFixed(2)}"/>`);

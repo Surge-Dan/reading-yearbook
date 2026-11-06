@@ -109,7 +109,7 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
 }
 .paper .wordmark{
   font-family:"Microsoft YaHei","PingFang SC",var(--sans);
-  font-weight:900;letter-spacing:.12em;color:#9f3226;
+  font-size:clamp(27px,3vw,36px);font-weight:900;letter-spacing:.12em;color:#9f3226;
   padding-inline:clamp(6px,1.4vw,22px) clamp(10px,1.6vw,24px);
 }
 .paper .wordmark b{
