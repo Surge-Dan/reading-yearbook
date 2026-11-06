@@ -204,6 +204,21 @@
   function closeBook(){if(!$('#detail').open)return;$('#detail').close();if(dialogPushed&&location.hash.startsWith('#book=')){history.back();}else if(location.hash.startsWith('#book=')){history.replaceState(null,'',originalHash.startsWith('#book=')?'#shelf':originalHash||'#shelf');}dialogPushed=false;previousFocus?.isConnected&&previousFocus.focus({preventScroll:true});}
   $('#detail .close').onclick=closeBook;
   $('#detail').addEventListener('cancel',e=>{e.preventDefault();closeBook();});
+  const bookDialog=$('#detail');
+  let pointerStartedOutside=false;
+  function isBookBackdrop(event){
+    if(event.target!==bookDialog)return false;
+    const rect=bookDialog.getBoundingClientRect();
+    return event.clientX<rect.left||event.clientX>=rect.right||
+      event.clientY<rect.top||event.clientY>=rect.bottom;
+  }
+  bookDialog.addEventListener('pointerdown',event=>{
+    pointerStartedOutside=isBookBackdrop(event);
+  });
+  bookDialog.addEventListener('click',event=>{
+    if(pointerStartedOutside&&isBookBackdrop(event))closeBook();
+    pointerStartedOutside=false;
+  });
   addEventListener('hashchange',()=>{if(location.hash.startsWith('#book=')){try{openBook(decodeURIComponent(location.hash.slice(6)),true);}catch{toast('书籍链接无效');}}else if($('#detail').open){$('#detail').close();dialogPushed=false;previousFocus?.isConnected&&previousFocus.focus({preventScroll:true});}});
   if(location.hash.startsWith('#book=')){try{openBook(decodeURIComponent(location.hash.slice(6)),true);}catch{}}
   document.addEventListener('click',e=>{const open=e.target.closest('[data-open-book]');if(open)openBook(open.dataset.openBook);const add=e.target.closest('[data-share-book]');if(add)addBookShare(add.dataset.shareBook);const quote=e.target.closest('[data-add-quote]');if(quote){const b=bookMap.get(quote.dataset.addQuote);addBookShare(b.book_id,b.highlights[Number(quote.dataset.index)]?.text);toast('已加入分享，可在分享区预览');}const note=e.target.closest('[data-add-note]');if(note){const b=bookMap.get(note.dataset.addNote);addBookShare(b.book_id,b.thoughts[Number(note.dataset.index)]?.text,'thought');}});

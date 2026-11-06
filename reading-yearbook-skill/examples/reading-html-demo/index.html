@@ -13,6 +13,18 @@
 @media print{.timeline details{display:block!important}.timeline details>summary{display:none}}
 @media print{@page{size:A4;margin:14mm}body{background:white;font-size:11px}.paper{max-width:none;border:0;padding:0;background:white}.masthead,nav,.shelf-tools,.book-actions,.quote-pager,.quote-actions,#share,footer,.chart-readout,.chart-table,.toast,dialog,.skip{display:none!important}.filter-summary button{display:none}.hero{padding-top:0;break-inside:avoid}h1{font-size:32px}.stats{gap:12px}.metric strong{font-size:24px}.metric.lead strong{font-size:30px}.chapter{margin-bottom:25px}.chapter-heading{margin-bottom:15px}.chapter-heading h2{font-size:20px}.two-up{display:block}.timeline-section{padding-left:0;border:0}.chart,.book-entry,.quote-body,.timeline-row{break-inside:avoid}.books{grid-template-columns:repeat(4,1fr);gap:20px}.cover-wrap{height:160px}.cover-fallback{height:150px;font-size:15px}.book h3{font-size:13px}.book .author{font-size:10px}.timeline details{display:none}.book-sketch{max-width:160px}.script{font-size:20px}#printDetails{display:block}#printDetails article{break-before:page}#printDetails h3{margin:25px 0 12px}#printDetails p{font-size:12px;line-height:1.9;white-space:pre-wrap;overflow-wrap:anywhere}#printDetails .detail-note{font-size:12px;break-inside:avoid}}
 
+/* Keep book detail controls visible while the notes scroll. */
+#detail{--detail-gutter:28px;padding:0;overscroll-behavior:contain;scroll-padding-top:92px}
+#detail .dialog-header{
+  position:sticky;top:0;z-index:1;background:var(--paper);margin:0;
+  padding:var(--detail-gutter) var(--detail-gutter) 18px;
+}
+#detailContent{padding:18px var(--detail-gutter) var(--detail-gutter)}
+@media(max-width:700px){
+  #detail{--detail-gutter:18px;scroll-padding-top:74px}
+  #detail .dialog-header{padding-block:14px}
+}
+
 /* Paper, lettering and original illustration form one editorial surface. */
 :root{--control:#355d72;--control-hover:#294a5c;--control-tint:#355d7210}
 :root{--paper:#faf6e9;--ink:#24241f;--muted:#68665e;--red:#b94035;--blue:#3f6e96;--line:#d7ceba}
@@ -1024,6 +1036,21 @@ window.ReadingShareArtwork = (() => {
   function closeBook(){if(!$('#detail').open)return;$('#detail').close();if(dialogPushed&&location.hash.startsWith('#book=')){history.back();}else if(location.hash.startsWith('#book=')){history.replaceState(null,'',originalHash.startsWith('#book=')?'#shelf':originalHash||'#shelf');}dialogPushed=false;previousFocus?.isConnected&&previousFocus.focus({preventScroll:true});}
   $('#detail .close').onclick=closeBook;
   $('#detail').addEventListener('cancel',e=>{e.preventDefault();closeBook();});
+  const bookDialog=$('#detail');
+  let pointerStartedOutside=false;
+  function isBookBackdrop(event){
+    if(event.target!==bookDialog)return false;
+    const rect=bookDialog.getBoundingClientRect();
+    return event.clientX<rect.left||event.clientX>=rect.right||
+      event.clientY<rect.top||event.clientY>=rect.bottom;
+  }
+  bookDialog.addEventListener('pointerdown',event=>{
+    pointerStartedOutside=isBookBackdrop(event);
+  });
+  bookDialog.addEventListener('click',event=>{
+    if(pointerStartedOutside&&isBookBackdrop(event))closeBook();
+    pointerStartedOutside=false;
+  });
   addEventListener('hashchange',()=>{if(location.hash.startsWith('#book=')){try{openBook(decodeURIComponent(location.hash.slice(6)),true);}catch{toast('书籍链接无效');}}else if($('#detail').open){$('#detail').close();dialogPushed=false;previousFocus?.isConnected&&previousFocus.focus({preventScroll:true});}});
   if(location.hash.startsWith('#book=')){try{openBook(decodeURIComponent(location.hash.slice(6)),true);}catch{}}
   document.addEventListener('click',e=>{const open=e.target.closest('[data-open-book]');if(open)openBook(open.dataset.openBook);const add=e.target.closest('[data-share-book]');if(add)addBookShare(add.dataset.shareBook);const quote=e.target.closest('[data-add-quote]');if(quote){const b=bookMap.get(quote.dataset.addQuote);addBookShare(b.book_id,b.highlights[Number(quote.dataset.index)]?.text);toast('已加入分享，可在分享区预览');}const note=e.target.closest('[data-add-note]');if(note){const b=bookMap.get(note.dataset.addNote);addBookShare(b.book_id,b.thoughts[Number(note.dataset.index)]?.text,'thought');}});
