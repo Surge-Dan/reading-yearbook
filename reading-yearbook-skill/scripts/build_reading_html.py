@@ -407,11 +407,12 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
     template = (ROOT / 'assets' / 'reading-template.html').read_text('utf-8')
     from reading_portrait import section
     # Art belongs to presentation, never the user's exported reading JSON.
-    unknown = set(art_assets or {}) - {'hero', 'reading', 'rhythm'}
+    unknown = set(art_assets or {}) - {'hero', 'reading', 'rhythm', 'readingRecord'}
     if unknown:
         raise ValueError('未知艺术素材字段：' + ', '.join(sorted(unknown)))
     art = {name: embed_image((art_assets or {}).get(name) or ROOT / 'assets' / 'yearbook-art' / file)
-           for name, file in [('hero', 'hero-book.png'), ('reading', 'reading.png'), ('rhythm', 'rhythm.png')]}
+           for name, file in [('hero', 'hero-book.png'), ('reading', 'reading.png'), ('rhythm', 'rhythm.png'),
+                              ('readingRecord', 'reading-record.png')]}
     replacements = {'__DATA__': serialized, '__STYLE__': (ROOT / 'assets' / 'reading-app.css').read_text('utf-8') + '\n' + (ROOT / 'assets' / 'reading-art.css').read_text('utf-8') + '\n' + (ROOT / 'assets' / 'ebook-app.css').read_text('utf-8'),
                     '__ART__': json.dumps(art),
                     '__APP__': (ROOT / 'assets' / 'reading-app.js').read_text('utf-8'),
