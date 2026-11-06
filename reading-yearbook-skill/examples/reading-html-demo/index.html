@@ -102,6 +102,33 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'%3E%3Cdefs%3E%3ClinearGradient id='fade'%3E%3Cstop offset='.82' stop-color='white'/%3E%3Cstop offset='1' stop-color='white' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23fade)' d='M0 0h4v3H0z'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
+/* Share desk: the canvas keeps its exported proportions inside a steady preview stage. */
+#share .share-layout{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:clamp(22px,4vw,54px);align-items:start;margin-top:24px}
+#share .share-preview{margin:0;min-width:0;padding:0;background:var(--paper);border:1px solid var(--line);border-radius:16px}
+.share-stage{display:grid;place-items:center;padding:clamp(12px,3vw,30px);min-width:0;background:var(--paper);border-radius:16px 16px 0 0}
+#share .share-stage canvas{display:block;width:auto;height:auto;max-width:100%;max-height:min(70vh,640px);margin:0;box-shadow:0 5px 20px #52351024}
+.share-stage canvas[aria-busy=true]{opacity:.55}
+.share-caption{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:12px;align-items:center;text-align:center;padding:12px 16px;border-top:1px solid var(--line)}
+#share .share-caption .button{padding:4px;min-width:44px}
+.share-caption strong,.share-caption small{display:block;overflow-wrap:anywhere}
+.share-caption small{color:var(--muted);font-variant-numeric:tabular-nums}
+#share .share-settings{min-width:0;padding:0;border:0}
+#share .share-settings fieldset{min-width:0}
+#sharePages{display:grid;gap:8px;margin-bottom:12px}
+#sharePages .share-page{border:1px solid var(--line);border-radius:10px;padding:5px 10px;align-items:center}
+#sharePages .share-page:has([aria-pressed=true]){border-color:var(--red);background:var(--control-tint,#fff1d4)}
+.share-ratios{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.share-ratios>span{margin-right:5px}
+.share-ratios button{min-width:46px;min-height:44px;border:1px solid var(--line);border-radius:8px}
+#share .share-ratios button[aria-pressed=true]{background:var(--control-tint,#fff1d4);border-color:var(--red);color:var(--red)}
+.share-export{padding:14px 0;border-top:1px solid var(--line);margin-top:12px}
+.share-more-formats{border-top:1px solid var(--line)}
+.share-more-formats>p{padding-bottom:10px}
+@media(max-width:760px){
+  #share .share-layout{grid-template-columns:minmax(0,1fr)}
+  #share .share-stage canvas{max-height:min(62vh,520px)}
+}
+
 /* The existing yearbook paper and type remain the visual anchor. */
 .ebook-reading-nav{position:static;background:#f7f2e5;border-bottom:1px solid #c9c4b3;padding:12px 0;font-size:14px}.ebook-reading-nav nav{display:flex;gap:8px 22px;flex-wrap:wrap;padding-top:10px}.ebook-reading-nav a{color:#454a41;text-decoration:none;min-height:32px;display:inline-flex;align-items:center}.ebook-reading-nav a[aria-current]{color:#305c78;text-decoration:underline;text-underline-offset:6px}.ebook-result section{scroll-margin-top:130px}.ebook-result [data-reading-section=review] p{line-height:2.1}.ebook-result .ebook-review-paragraph{margin:28px 0 34px}.ebook-result details summary{cursor:pointer;min-height:44px;display:list-item;align-content:center;color:#305c78}.ebook-result details>blockquote p,.ebook-result [data-reading-section=references] p,.ebook-result [data-reading-section=references] li{font-size:14px}.ebook-result [data-reading-section=references]{color:#454a41}.ebook-result details:not(.ebook-reading-nav){margin:12px 0}.ebook-result .ebook-method-label{font-weight:600}.ebook-result section{animation:ebook-reading-arrive .25s ease-out}@keyframes ebook-reading-arrive{from{transform:translateY(4px)}to{transform:none}}@media(prefers-reduced-motion:reduce){.ebook-result section{animation:none}.ebook-reading-nav a{transition:none}}@media print{.ebook-reading-nav{display:none}.ebook-result section{animation:none;transform:none;opacity:1}}
 .ebook-entry-switch{display:flex;gap:28px;border-bottom:1px solid #c9c4b3;margin-bottom:20px}.ebook-entry-switch [aria-pressed=true]{font-weight:600;color:#242822;text-decoration-thickness:2px}.ebook-entry-panel label{display:block;font-size:14px;margin:16px 0 8px}.ebook-entry-panel>.button{margin-top:18px}.ebook-book-candidate{display:block!important;text-align:left;width:100%;margin:8px 0}.ebook-source-link{color:#305c78;overflow-wrap:anywhere}
@@ -129,7 +156,16 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
 <section class="chapter investment-section" aria-labelledby="investmentTitle"><div class="chapter-heading"><span class="chapter-no">04</span><h2 id="investmentTitle">时间花在哪本书上</h2><span class="rule"></span><button class="replay text-button" data-replay="investment" aria-label="重播逐书时长图动画">↻ 重播</button></div><p class="muted" id="investmentScope"></p><div id="investment" class="motion-chart"></div><details class="chart-table"><summary>查看逐书时长</summary><div id="investmentTable"></div></details></section>
 <div class="reading-interlude" aria-hidden="true"><svg viewBox="0 0 1100 112" class="pencil-landscape" preserveAspectRatio="none"><path d="M0 76C75 30 83 81 121 69S163 36 183 63 227 87 260 66 295 72 325 74 361 48 377 65 419 80 468 70M620 77C665 60 683 86 710 72S764 65 788 75 836 87 866 70 928 61 968 77 1041 88 1100 56"/></svg><svg class="reading-cup" viewBox="0 0 180 130"><defs><filter id="pencil-wobble"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="8" result="noise"/><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6"/></filter></defs><g filter="url(#pencil-wobble)" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="#bc4941" stroke-width="2.4" d="M35 51Q65 41 103 50L97 99Q67 113 43 98Z M35 51Q68 65 103 50M103 58Q132 50 131 70T100 87M39 108Q79 123 119 105M57 34Q47 25 58 13M82 35Q91 25 82 11"/><path stroke="#bba96b" stroke-width="1.4" d="M34 54Q63 44 101 53M48 76Q69 88 88 77"/><path stroke="#6b716c" stroke-width=".8" d="m145 23 3 9 9 2-8 4-2 9-4-8-8-2 8-5Z M21 82l-2 6-6 2 6 2 2 6 2-6 6-2-6-2Z"/></g></svg></div>
 <section id="quotes" class="chapter" aria-labelledby="quotesTitle"><div class="chapter-heading"><span class="chapter-no">05</span><h2 id="quotesTitle">留下来的句子</h2><span class="rule"></span><div class="quote-pager"><button id="previousQuote" aria-label="上一条划线">←</button><span id="quotePosition"></span><button id="nextQuote" aria-label="下一条划线">→</button></div></div><div class="quote-filter"><label for="quoteBook">按书籍查看划线</label><select id="quoteBook" aria-label="筛选划线书籍"></select></div><div id="quote"></div></section>
-<section id="share" class="chapter" aria-labelledby="shareTitle"><div class="chapter-heading"><span class="chapter-no">06</span><h2 id="shareTitle">把几页带走</h2><span class="rule"></span></div><p class="muted">挑选要分享的页，预览后再导出。</p><div class="share-layout"><div class="share-preview"><canvas id="previewCanvas" width="900" height="1200" aria-label="分享图预览"></canvas><p id="previewTitle" class="muted"></p></div><div class="share-settings"><fieldset><legend>分享页</legend><div id="sharePages"></div><div class="paper-select book-share-picker" id="bookSharePicker"><button type="button" id="bookShareTrigger" class="select-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="bookShareMenu"><span id="bookShareLabel">选择分享书籍</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg></button><div id="bookShareMenu" class="select-menu share-book-menu" role="dialog" aria-label="选择和预览分享书籍" hidden><label class="search share-book-search"><svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="shareBookSearch" type="search" placeholder="搜索书名或作者" aria-label="搜索分享书籍"></label><div class="book-share-tools"><span id="bookShareCount" role="status"></span><button type="button" class="text-button" id="selectAllShareBooks">全选</button><button type="button" class="text-button" id="clearShareBooks">清空</button><button type="button" class="text-button" id="closeShareBooks">完成</button></div><div id="bookShareRows" class="share-book-list"></div><p id="shareBookEmpty" class="small muted" hidden>没有匹配的书，试试其他关键词。</p></div></div></fieldset><div class="share-controls"><label>图片比例 <select id="ratio"><option value="3:4">3:4</option><option value="1:1">1:1</option><option value="4:5">4:5</option></select></label><button id="undoSelection" class="text-button" disabled>撤销选择</button></div><p id="selectedCount" role="status"></p><div class="export-buttons"><button id="exportOne" class="button">导出当前页PNG</button><button id="exportGroup" class="button primary">导出所选组图ZIP</button></div><p id="exportStatus" class="export-status" role="status" aria-live="polite"></p><div class="secondary-exports"><button id="exportPdf" class="text-button">打印／PDF</button><button id="exportMd" class="text-button">Markdown</button><button id="exportJson" class="text-button">JSON</button></div><p class="small muted">PDF由浏览器打印保存；Markdown与JSON导出当前年鉴已载入的内容。</p></div></div></section>
+<section id="share" class="chapter" aria-labelledby="shareTitle"><div class="chapter-heading"><span class="chapter-no">06</span><h2 id="shareTitle">把几页带走</h2><span class="rule"></span></div><p class="muted">挑选想带走的书页，预览后再下载。</p>
+<div class="share-layout">
+  <figure class="share-preview">
+    <div class="share-stage"><canvas id="previewCanvas" width="900" height="1200" aria-label="分享图预览"></canvas></div>
+    <figcaption class="share-caption">
+      <button type="button" id="previewPrevious" class="button" aria-label="预览上一张">←</button>
+      <div aria-live="polite"><strong id="previewTitle"></strong><small id="previewPosition"></small></div>
+      <button type="button" id="previewNext" class="button" aria-label="预览下一张">→</button>
+    </figcaption>
+  </figure><div class="share-settings"><fieldset><legend>分享页</legend><div id="sharePages"></div><div class="paper-select book-share-picker" id="bookSharePicker"><button type="button" id="bookShareTrigger" class="select-trigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="bookShareMenu"><span id="bookShareLabel">选择分享书籍</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg></button><div id="bookShareMenu" class="select-menu share-book-menu" role="dialog" aria-label="选择和预览分享书籍" hidden><label class="search share-book-search"><svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="shareBookSearch" type="search" placeholder="搜索书名或作者" aria-label="搜索分享书籍"></label><div class="book-share-tools"><span id="bookShareCount" role="status"></span><button type="button" class="text-button" id="selectAllShareBooks">全选</button><button type="button" class="text-button" id="clearShareBooks">清空</button><button type="button" class="text-button" id="closeShareBooks">完成</button></div><div id="bookShareRows" class="share-book-list"></div><p id="shareBookEmpty" class="small muted" hidden>没有匹配的书，试试其他关键词。</p></div></div></fieldset><div class="share-controls"><div class="share-ratios" role="group" aria-label="图片比例"><span>图片比例</span><select id="ratio" hidden><option value="3:4">3:4</option><option value="1:1">1:1</option><option value="4:5">4:5</option></select><button type="button" data-share-ratio="3:4">3:4</button><button type="button" data-share-ratio="1:1">1:1</button><button type="button" data-share-ratio="4:5">4:5</button></div><button id="undoSelection" class="text-button" disabled>撤销选择</button></div><div class="share-export"><p id="selectedCount" role="status"></p><div class="export-buttons"><button id="exportOne" class="button">下载当前图</button><button id="exportGroup" class="button primary">导出已选图片</button></div><p id="exportStatus" class="export-status" role="status" aria-live="polite"></p></div><details class="share-more-formats"><summary>更多格式</summary><div class="secondary-exports"><button id="exportPdf" class="text-button">打印／PDF</button><button id="exportMd" class="text-button">Markdown</button><button id="exportJson" class="text-button">JSON</button></div><p class="small muted">PDF由浏览器打印保存；Markdown与JSON导出当前年鉴已载入的内容。</p></details></div></div></section>
 <section id="printDetails" aria-label="打印阅读记录与笔记"></section>
 <section id="ebook" class="ebook-workbench chapter" data-reader-mode="readonly" aria-labelledby="ebookTitle">
   <div class="ebook-heading"><h2 id="ebookTitle">书籍精华</h2><p>读过之后，还想带走的内容。</p></div>
@@ -502,7 +538,9 @@ window.ReadingShareArtwork = (() => {
     const bookAccents=new Map(),bookColor=b=>bookAccents.get(b.book_id)||colors.get(b.category)||C.blue;
     async function coverAccent(b){
       if(!b.cover||bookAccents.has(b.book_id))return;
-      const im=await loadImage(b.cover),cv=document.createElement('canvas');cv.width=cv.height=24;const c=cv.getContext('2d');c.drawImage(im,0,0,24,24);
+      const im=await loadImage(b.cover).catch(()=>null);
+      if(!im)return;
+      const cv=document.createElement('canvas');cv.width=cv.height=24;const c=cv.getContext('2d');c.drawImage(im,0,0,24,24);
       // Quantize colored cover pixels into legible ink hues. White / neutral paper
       // has no vote, and category-chart colors keep their own stable semantics.
       const inks=[C.red,C.blue,C.green,'#8a6825','#79596d','#675b40'],rgb=inks.map(h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16))),votes=inks.map(()=>0),pixels=c.getImageData(0,0,24,24).data;
@@ -562,7 +600,19 @@ window.ReadingShareArtwork = (() => {
         const rad=angle*Math.PI/180,bw=Math.abs(iw*Math.cos(rad))+Math.abs(ih*Math.sin(rad)),bh=Math.abs(iw*Math.sin(rad))+Math.abs(ih*Math.cos(rad));
         manifest.images.push({x:x+w/2-bw/2,y:y+h/2-bh/2,w:bw,h:bh,angle});
       }
-      async function cover(b,x,y,w,h,opts={}){if(b.cover)await image(b.cover,x,y,w,h,opts);else{rect(x,y,w,h,C.cream);block(b.title,x+18,y+22,w-36,h-44,{size:34,min:28,weight:600});}}
+      async function cover(b,x,y,w,h,opts={}){
+        if(b.cover){
+          try{await image(b.cover,x,y,w,h,opts);return;}catch{/* Render the same placeholder as a missing cover. */}
+        }
+        rect(x,y,w,h,C.cream,C.line);
+        rect(x,y,Math.min(5,w/5),h,C.gold);
+        if(w>=70&&h>=72){
+          const inset=w<120?10:17;
+          block(b.title,x+inset,y+inset,w-inset*2,h-inset*2,{
+            size:w<120?21:30,min:w<120?16:23,weight:600,leading:1.25
+          });
+        }
+      }
       function metric(n,label,x,y,w,{size=64,color=C.ink,labelY,labelSize=26}={}){
         const s=amount(n);let fs=size;ctx.font=`400 ${fs}px ${NUM}`;while(ctx.measureText(s).width>w-8&&fs>28){fs-=2;ctx.font=`400 ${fs}px ${NUM}`;}
         const numberBox=text(s,x,y,{size:fs,font:NUM,color});
@@ -599,9 +649,11 @@ window.ReadingShareArtwork = (() => {
         manifest.charts.push({kind:'duration-bar',value:v,max,width,totalWidth:w});
       }
       function base(){
-        rect(0,0,W,H,C.paper);for(const [x,y,color]of [[W,0,'#e0bf65'],[0,H,'#90b5c7'],[W,H*.7,'#dda18e']]){const g=ctx.createRadialGradient(x,y,0,x,y,420);g.addColorStop(0,color+'38');g.addColorStop(1,color+'00');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+        rect(0,0,W,H,C.paper);
         let seed=281;ctx.fillStyle='#635237';ctx.globalAlpha=.045;for(let i=0;i<3600;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const x=seed%W;seed=(Math.imul(seed,1664525)+1013904223)>>>0;ctx.fillRect(x,seed%H,1,1);}ctx.globalAlpha=1;
-        ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.strokeRect(22,22,W-44,H-44);text('年年阅',M,72,{size:28,weight:600});
+        ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.strokeRect(22,22,W-44,H-44);
+        rect(22,22,48,3,C.red);rect(W-70,H-25,48,3,C.gold);
+        text('年年阅',M,72,{size:28,weight:600});
         const labels={cover:'阅读年鉴',stats:'阅读的节奏',distribution:'阅读分布',timeline:'阅读时间线',book:'书页之间'};
         text(labels[p.kind],W/2,71,{font:SANS,size:24,align:'center',color:C.muted});text(`${data.year}${data.source_mode==='sample'?' · 示例':''}`,R,72,{font:NUM,size:27,align:'right'});line(M,95,R,95);
         const idx=p.kind==='book'?5+data.books.findIndex(b=>b.book_id===p.book.book_id):['cover','stats','distribution','timeline'].indexOf(p.kind)+1;
@@ -739,8 +791,8 @@ window.ReadingShareArtwork = (() => {
       const parts=b.title.match(/^(.{2,24}?)[：:]\s*(.+)$/);
       let title;
       if(parts){
-        const main=block(parts[1],M,127,R-M,133,{size:58,min:36,weight:600,leading:1.2});
-        title=block(parts[2],M,main.bottom+19,R-M,114,{size:38,min:30,weight:400,leading:1.35});
+        const main=block(parts[1],M,127,R-M,square?100:133,{size:58,min:36,weight:600,leading:1.2});
+        title=block(parts[2],M,main.bottom+19,R-M,square?92:114,{size:38,min:30,weight:400,leading:1.35});
       }else{
         let size=56;
         // Avoid a lone final character in a headline; fit by the text, not by scaling the canvas.
@@ -1114,9 +1166,9 @@ window.ReadingShareArtwork = (() => {
   function recordUndo(){state.undo.push({ids:[...state.selection],preview:state.preview,quotes:pages.filter(p=>p.kind==='book').map(p=>[p.id,p.quote,p.textKind])});if(state.undo.length>10)state.undo.shift();}
   function addBookShare(id,quote,kind='highlight'){if(state.busy){toast('导出中，请稍后再调整');return;}const b=bookMap.get(id);if(!b)return;recordUndo();let p=pages.find(p=>p.id==='book-'+id);if(!p){p={id:'book-'+id,title:b.title,kind:'book',book:b,quote:quote||b.highlights[0]?.text||b.thoughts[0]?.text||'',textKind:quote?kind:b.highlights.length?'highlight':'thought'};pages.push(p);}if(quote!==undefined){p.quote=quote;p.textKind=kind;}state.selection.add(p.id);state.preview=p.id;drawShare();toast('已加入分享');}
   function shareRow(p){return `<div class="share-page" ${p.kind==='book'?`data-book-id="${esc(p.book.book_id)}"`:''}><label><input type="checkbox" data-page="${esc(p.id)}"><span>${esc(p.title)}${p.kind==='book'?`<small>${esc(p.book.author)}</small>`:''}</span></label><button type="button" data-preview="${esc(p.id)}">预览</button></div>`;}
+  $('#sharePages').innerHTML=pages.filter(p=>p.kind!=='book').map(shareRow).join('');
   function drawShare(){
     const books=pages.filter(p=>p.kind==='book');
-    $('#sharePages').innerHTML=pages.filter(p=>p.kind!=='book').map(shareRow).join('');
     if($('#bookShareRows').dataset.count!==String(books.length)){$('#bookShareRows').innerHTML=books.map(shareRow).join('');$('#bookShareRows').dataset.count=String(books.length);}
     const selectedBooks=books.filter(p=>state.selection.has(p.id)).length;
     $('#bookShareLabel').textContent=books.length?`分享书籍 · 已选${selectedBooks}／${books.length}本`:'暂无可选书籍';
@@ -1124,18 +1176,57 @@ window.ReadingShareArtwork = (() => {
     bookShareTrigger.disabled=state.busy||!books.length;$('#selectAllShareBooks').disabled=state.busy;$('#clearShareBooks').disabled=state.busy;
     if(state.busy||!books.length)closeShareBooks();
     $('#selectedCount').textContent=`已选${state.selection.size}／${pages.length}页`;$('#undoSelection').disabled=!state.undo.length||state.busy;$('#exportGroup').disabled=!state.selection.size||state.busy;$('#exportOne').disabled=state.busy;
+    $('#exportGroup').textContent=state.selection.size?`导出已选 ${state.selection.size} 张 · ZIP`:'导出已选图片';
+    const index=pages.findIndex(p=>p.id===state.preview);
+    $('#previewPrevious').disabled=state.busy||index<=0;
+    $('#previewNext').disabled=state.busy||index>=pages.length-1;
+    $$('[data-share-ratio]').forEach(button=>{
+      button.disabled=state.busy;
+      button.setAttribute('aria-pressed',String(button.dataset.shareRatio===state.ratio));
+    });
     $$('[data-page]').forEach(el=>{el.checked=state.selection.has(el.dataset.page);el.disabled=state.busy;el.onchange=()=>{if(state.busy)return;recordUndo();el.checked?state.selection.add(el.dataset.page):state.selection.delete(el.dataset.page);drawShare();};});
     $$('[data-preview]').forEach(el=>{el.disabled=state.busy;el.setAttribute('aria-pressed',String(state.preview===el.dataset.preview));el.onclick=()=>{if(state.busy)return;state.preview=el.dataset.preview;drawShare();};});
     filterShareBooks();updatePreview();
   }
   $('#undoSelection').onclick=()=>{const old=state.undo.pop();if(!old||state.busy)return;state.selection=new Set(old.ids);state.preview=old.preview;for(const [id,q,kind]of old.quotes){const p=pages.find(p=>p.id===id);if(p){p.quote=q;p.textKind=kind;}}drawShare();};
-  $('#ratio').onchange=()=>{if(state.busy)return;state.ratio=$('#ratio').value;updatePreview();};
+  $('#ratio').onchange=()=>{if(state.busy)return;state.ratio=$('#ratio').value;drawShare();};
+  $$('[data-share-ratio]').forEach(button=>button.onclick=()=>{
+    $('#ratio').value=button.dataset.shareRatio;
+    $('#ratio').onchange();
+  });
+  function stepPreview(offset){
+    const next=pages[pages.findIndex(p=>p.id===state.preview)+offset];
+    if(!state.busy&&next){state.preview=next.id;drawShare();}
+  }
+  $('#previewPrevious').onclick=()=>stepPreview(-1);
+  $('#previewNext').onclick=()=>stepPreview(1);
   function dimensions(ratio){return [900,ratio==='1:1'?900:ratio==='4:5'?1125:1200];}
   const images=new Map();
   function loadImage(src){if(!images.has(src))images.set(src,new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error('书封加载失败'));im.src=src;}));return images.get(src);}
   const shareArtwork=window.ReadingShareArtwork.create({data,art,loadImage});
   async function canvasPage(p,ratio){return shareArtwork.render(p,ratio);}
-  async function updatePreview(){const token=++renderToken,p=pages.find(p=>p.id===state.preview)||pages[0];try{const cv=await canvasPage(p,state.ratio);if(token!==renderToken)return;const target=$('#previewCanvas');target.width=cv.width;target.height=cv.height;target.getContext('2d').drawImage(cv,0,0);$('#previewTitle').textContent=p.title;}catch(e){if(token===renderToken){$('#previewTitle').textContent='预览失败：'+e.message;}}}
+  async function updatePreview(){
+    const token=++renderToken,p=pages.find(p=>p.id===state.preview)||pages[0];
+    const target=$('#previewCanvas'),caption=$('#previewTitle'),position=$('#previewPosition');
+    target.setAttribute('aria-busy','true');
+    $('#exportOne').disabled=true;
+    try{
+      const cv=await canvasPage(p,state.ratio);
+      if(token!==renderToken)return;
+      target.width=cv.width;target.height=cv.height;
+      target.getContext('2d').drawImage(cv,0,0);
+      caption.textContent=p.title;
+      position.textContent=`${pages.indexOf(p)+1} / ${pages.length} · ${cv.width} × ${cv.height}`;
+      $('#exportOne').disabled=state.busy;
+    }catch(e){
+      if(token!==renderToken)return;
+      target.getContext('2d').clearRect(0,0,target.width,target.height);
+      caption.textContent='预览失败：'+e.message;
+      position.textContent='';
+    }finally{
+      if(token===renderToken)target.removeAttribute('aria-busy');
+    }
+  }
   const blobCanvas = cv=>new Promise((resolve,reject)=>cv.toBlob(b=>b?resolve(b):reject(Error('无法生成PNG')),'image/png'));
   function download(blob,name){const link=document.createElement('a'),url=URL.createObjectURL(blob);link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
   const filename = p => `${data.year}-${String(pages.indexOf(p)+1).padStart(2,'0')}-${p.id.replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,80)||'page'}.png`;
@@ -1169,7 +1260,6 @@ window.ReadingShareArtwork = (() => {
   addEventListener('afterprint',()=>{$('#printDetails').replaceChildren();$$('#timeline details').forEach(el=>el.open=el.dataset.wasOpen==='true');drawBooks();});
   // Keep chapter indicator aligned to the currently visible section.
   if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{const active=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];if(active){$$('nav a').forEach(a=>a.getAttribute('href')==='#'+active.target.id?a.setAttribute('aria-current','location'):a.removeAttribute('aria-current'));}},{rootMargin:'-15% 0px -60% 0px'});['overview','shelf','quotes','share'].forEach(id=>observer.observe($('#'+id)));}
-  enhanceSelect($('#ratio'));
   drawShare();
 })();
 </script><script id="ebook-app-mounted">/* One workbench for hosted uploads and portable, offline results. */

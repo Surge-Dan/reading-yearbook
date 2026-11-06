@@ -13,6 +13,11 @@ const {chromium}=require('playwright'),{pathToFileURL}=require('url'),fs=require
    if(variant==='missing'){b.highlights=[];b.thoughts=[];b.intro='';b.note_coverage={highlights:'unverified',thoughts:'unverified'};}
    if(variant==='note-only'){b.highlights=[];b.thoughts=[{text:'这段话是个人想法，和原文划线分开。'}];b.note_coverage={highlights:'complete',thoughts:'complete'};}
    if(variant==='long-quote')b.highlights=[{text:'阅读的时候，记下值得回头看的句子。'.repeat(24)}];
+   if(variant==='broken-cover')b.cover='data:image/png;base64,invalid';
+   if(variant==='long-metadata'){
+     b.title='一段非常长的主标题用来测试换行效果真的很长：'+'这是一段特别长的副标题'.repeat(40);
+     b.author='作者名字也非常非常长'.repeat(40);b.cover=null;
+   }
    if(variant==='large'){data.summary.read=1234;data.summary.finished=999;data.summary.notes=9876;data.summary.read_days=365;data.summary.seconds=9999*3600+59*60;}
    if(variant==='full-year'){data.summary.complete_months=12;data.summary.monthly=Array.from({length:12},(_,i)=>i%4===0?null:(i+1)*3600);}
    const p=kind==='book'?{id:'book-'+b.book_id,title:b.title,kind,book:b,quote:b.highlights[0]?.text||b.thoughts[0]?.text||'',textKind:b.highlights.length?'highlight':'thought'}:{id:kind,kind};
@@ -60,7 +65,7 @@ const {chromium}=require('playwright'),{pathToFileURL}=require('url'),fs=require
  }
  const N=await page.locator('#reading-data').evaluate(n=>JSON.parse(n.textContent).books.length);
  for(let index=1;index<N;index++)for(const ratio of ['3:4','1:1','4:5'])validate(await render('book',ratio,null,index),'book-'+index+'-'+ratio.replace(':','-'));
- for(const variant of ['missing','note-only','long-quote'])for(const ratio of ['3:4','1:1','4:5']){
+ for(const variant of ['missing','note-only','long-quote','broken-cover','long-metadata'])for(const ratio of ['3:4','1:1','4:5']){
    const r=await render('book',ratio,variant);validate(r,variant+'-'+ratio.replace(':','-'));
    if(variant==='long-quote')assert(r.layout.material.excerpted&&r.layout.text.some(t=>t.text.includes('节选')));
    if(variant==='note-only')assert.equal(r.layout.material.kind,'个人笔记');

@@ -22,7 +22,9 @@ window.ReadingShareArtwork = (() => {
     const bookAccents=new Map(),bookColor=b=>bookAccents.get(b.book_id)||colors.get(b.category)||C.blue;
     async function coverAccent(b){
       if(!b.cover||bookAccents.has(b.book_id))return;
-      const im=await loadImage(b.cover),cv=document.createElement('canvas');cv.width=cv.height=24;const c=cv.getContext('2d');c.drawImage(im,0,0,24,24);
+      const im=await loadImage(b.cover).catch(()=>null);
+      if(!im)return;
+      const cv=document.createElement('canvas');cv.width=cv.height=24;const c=cv.getContext('2d');c.drawImage(im,0,0,24,24);
       // Quantize colored cover pixels into legible ink hues. White / neutral paper
       // has no vote, and category-chart colors keep their own stable semantics.
       const inks=[C.red,C.blue,C.green,'#8a6825','#79596d','#675b40'],rgb=inks.map(h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16))),votes=inks.map(()=>0),pixels=c.getImageData(0,0,24,24).data;
@@ -82,7 +84,19 @@ window.ReadingShareArtwork = (() => {
         const rad=angle*Math.PI/180,bw=Math.abs(iw*Math.cos(rad))+Math.abs(ih*Math.sin(rad)),bh=Math.abs(iw*Math.sin(rad))+Math.abs(ih*Math.cos(rad));
         manifest.images.push({x:x+w/2-bw/2,y:y+h/2-bh/2,w:bw,h:bh,angle});
       }
-      async function cover(b,x,y,w,h,opts={}){if(b.cover)await image(b.cover,x,y,w,h,opts);else{rect(x,y,w,h,C.cream);block(b.title,x+18,y+22,w-36,h-44,{size:34,min:28,weight:600});}}
+      async function cover(b,x,y,w,h,opts={}){
+        if(b.cover){
+          try{await image(b.cover,x,y,w,h,opts);return;}catch{/* Render the same placeholder as a missing cover. */}
+        }
+        rect(x,y,w,h,C.cream,C.line);
+        rect(x,y,Math.min(5,w/5),h,C.gold);
+        if(w>=70&&h>=72){
+          const inset=w<120?10:17;
+          block(b.title,x+inset,y+inset,w-inset*2,h-inset*2,{
+            size:w<120?21:30,min:w<120?16:23,weight:600,leading:1.25
+          });
+        }
+      }
       function metric(n,label,x,y,w,{size=64,color=C.ink,labelY,labelSize=26}={}){
         const s=amount(n);let fs=size;ctx.font=`400 ${fs}px ${NUM}`;while(ctx.measureText(s).width>w-8&&fs>28){fs-=2;ctx.font=`400 ${fs}px ${NUM}`;}
         const numberBox=text(s,x,y,{size:fs,font:NUM,color});
@@ -119,9 +133,11 @@ window.ReadingShareArtwork = (() => {
         manifest.charts.push({kind:'duration-bar',value:v,max,width,totalWidth:w});
       }
       function base(){
-        rect(0,0,W,H,C.paper);for(const [x,y,color]of [[W,0,'#e0bf65'],[0,H,'#90b5c7'],[W,H*.7,'#dda18e']]){const g=ctx.createRadialGradient(x,y,0,x,y,420);g.addColorStop(0,color+'38');g.addColorStop(1,color+'00');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+        rect(0,0,W,H,C.paper);
         let seed=281;ctx.fillStyle='#635237';ctx.globalAlpha=.045;for(let i=0;i<3600;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const x=seed%W;seed=(Math.imul(seed,1664525)+1013904223)>>>0;ctx.fillRect(x,seed%H,1,1);}ctx.globalAlpha=1;
-        ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.strokeRect(22,22,W-44,H-44);text('年年阅',M,72,{size:28,weight:600});
+        ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.strokeRect(22,22,W-44,H-44);
+        rect(22,22,48,3,C.red);rect(W-70,H-25,48,3,C.gold);
+        text('年年阅',M,72,{size:28,weight:600});
         const labels={cover:'阅读年鉴',stats:'阅读的节奏',distribution:'阅读分布',timeline:'阅读时间线',book:'书页之间'};
         text(labels[p.kind],W/2,71,{font:SANS,size:24,align:'center',color:C.muted});text(`${data.year}${data.source_mode==='sample'?' · 示例':''}`,R,72,{font:NUM,size:27,align:'right'});line(M,95,R,95);
         const idx=p.kind==='book'?5+data.books.findIndex(b=>b.book_id===p.book.book_id):['cover','stats','distribution','timeline'].indexOf(p.kind)+1;
@@ -259,8 +275,8 @@ window.ReadingShareArtwork = (() => {
       const parts=b.title.match(/^(.{2,24}?)[：:]\s*(.+)$/);
       let title;
       if(parts){
-        const main=block(parts[1],M,127,R-M,133,{size:58,min:36,weight:600,leading:1.2});
-        title=block(parts[2],M,main.bottom+19,R-M,114,{size:38,min:30,weight:400,leading:1.35});
+        const main=block(parts[1],M,127,R-M,square?100:133,{size:58,min:36,weight:600,leading:1.2});
+        title=block(parts[2],M,main.bottom+19,R-M,square?92:114,{size:38,min:30,weight:400,leading:1.35});
       }else{
         let size=56;
         // Avoid a lone final character in a headline; fit by the text, not by scaling the canvas.

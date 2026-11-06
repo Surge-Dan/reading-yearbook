@@ -50,6 +50,7 @@ const checks=[];const pass=(name,detail='')=>checks.push({name,status:'pass',det
  }
  await page.locator('#ratio').selectOption('3:4',{force:true});
  const [zip]=await Promise.all([page.waitForEvent('download'),page.locator('#exportGroup').click()]);await zip.saveAs(path.join(out,'reading-share.zip'));pass('actual group ZIP download',String(count));
+ await page.locator('.share-more-formats summary').click();
  for(const [id,name]of [['#exportMd','reading.md'],['#exportJson','reading.json']]){const[d]=await Promise.all([page.waitForEvent('download'),page.locator(id).click()]);await d.saveAs(path.join(out,name));}
  const exported=JSON.parse(fs.readFileSync(path.join(out,'reading.json'),'utf8'));assert.equal(exported.books.length,original);assert(exported.books.every(b=>!('cover'in b)));assert(fs.readFileSync(path.join(out,'reading.md'),'utf8').includes('来源：'));pass('actual Markdown and JSON exports');
  await page.evaluate(()=>window.print=()=>window.dispatchEvent(new Event('beforeprint')));await page.locator('#exportPdf').click();assert.equal(await page.locator('#printDetails article').count(),original);assert(await page.locator('#printDetails').textContent().then(t=>t.includes('这是我的个人笔记')));await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));assert.equal(await page.locator('#printDetails article').count(),0);pass('print button includes full notes and restores reading view');

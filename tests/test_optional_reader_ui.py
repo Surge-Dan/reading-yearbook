@@ -42,6 +42,7 @@ class OptionalReaderBrowserTests(unittest.TestCase):
                     self.assertEqual(page.locator('#ebook').is_visible(),attached)
                     self.assertEqual(page.locator('a[href="#ebook"]').first.is_visible(),attached)
                     self.assertEqual(page.locator('input[type="file"]').count(),0)
+                    page.locator('.share-more-formats summary').click()
                     with page.expect_download() as event:page.locator('#exportJson').click()
                     export=root/('attached.json' if attached else 'plain.json');event.value.save_as(export)
                     self.assertEqual(len(json.loads(export.read_text('utf-8')).get('distillations',[])),int(attached))
