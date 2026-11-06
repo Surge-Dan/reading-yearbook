@@ -135,18 +135,24 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
   font-weight:700;letter-spacing:.01em;
 }
 .paper .wordmark{
-  font-family:"YouYuan","Microsoft YaHei","PingFang SC",var(--sans);
-  font-weight:800;letter-spacing:.14em;color:#9f3226;
-  padding-inline:clamp(8px,1.6vw,25px) 0;
-  transform:skewX(-7deg);
-  -webkit-text-stroke:.25px currentColor;
-  text-shadow:1px 2px 0 #f1cca0;
+  font-family:"Microsoft YaHei","PingFang SC",var(--sans);
+  font-weight:900;letter-spacing:.12em;color:#9f3226;
+  padding-inline:clamp(6px,1.4vw,22px) clamp(10px,1.6vw,24px);
+}
+.paper .wordmark b{
+  display:inline-block;font-weight:inherit;
+  transform:scaleX(1.15);transform-origin:left center;
+  -webkit-text-stroke:.55px currentColor;
+  mask:var(--wordmark-grain,none) center / 100% 100% no-repeat;
 }
 .paper .wordmark::after{
   content:"";position:absolute;pointer-events:none;
-  inset-inline-start:22%;inset-block-end:3px;width:84%;height:8px;
-  border-radius:50%;transform:rotate(-5deg);z-index:-1;
-  background:linear-gradient(90deg,#eab26a75,#f1cf9a38,transparent);
+  inset-inline-end:-10px;inset-block:0;width:53px;
+  background:var(--wordmark-dust,none) center / 100% 100% no-repeat;
+}
+@media(prefers-reduced-motion:no-preference){
+  .paper .wordmark::after{animation:wordmark-drift 1.35s ease-out both}
+  @keyframes wordmark-drift{from{transform:translateX(-5px);opacity:.25}}
 }
 .reading-lettering{
   position:relative;
@@ -206,7 +212,7 @@ body .paper main summary:hover,body dialog summary:hover,body .paper .book-actio
 <body>
 <a class="skip" href="#main">跳到阅读年鉴</a>
 <div class="paper">
-<header class="masthead"><a class="wordmark" href="#overview">年年阅</a><nav aria-label="章节导航"><a href="#overview" aria-current="location">概览</a><a href="#shelf">书架</a><a href="#quotes">划线与笔记</a><a href="#share">分享</a><a href="#ebook">书籍精华</a></nav><a class="button quiet" href="#share">导出 <span aria-hidden="true">↗</span></a></header>
+<header class="masthead"><a class="wordmark" href="#overview"><b>年年阅</b></a><nav aria-label="章节导航"><a href="#overview" aria-current="location">概览</a><a href="#shelf">书架</a><a href="#quotes">划线与笔记</a><a href="#share">分享</a><a href="#ebook">书籍精华</a></nav><a class="button quiet" href="#share">导出 <span aria-hidden="true">↗</span></a></header>
 <main id="main">
 <section class="hero" id="overview">
 <div class="hero-copy"><div class="reading-lettering"><img class="display-reading" data-art="reading" alt="" aria-hidden="true"></div><h1>我的阅读年鉴</h1><p class="eyebrow" id="period"></p><p id="modeNotice" class="muted"></p><div id="stats" class="stats" aria-label="阅读统计"></div></div>
@@ -962,6 +968,30 @@ window.ReadingShareArtwork = (() => {
   $$('[data-art]').forEach(image=>{image.src=art[image.dataset.art];});
   const lettering=$('.reading-lettering');
   if(lettering&&art.reading)lettering.style.setProperty('--reading-ink',`url("${art.reading}")`);
+  const wordmark=$('.wordmark');
+  if(wordmark){
+    const svgUrl=svg=>`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+    let seed=431;
+    const random=()=>{
+      seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+      return seed/4294967296;
+    };
+    const holes=[];
+    for(let x=66;x<123;x+=2){
+      const density=(x-66)/57;
+      for(let y=0;y<44;y+=2){
+        if(random()<density*density*.9)holes.push(`<rect x="${x}" y="${y}" width="2" height="2"/>`);
+      }
+    }
+    wordmark.style.setProperty('--wordmark-grain',svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 124 44" preserveAspectRatio="none"><mask id="grain"><rect width="124" height="44" fill="white"/>${holes.join('')}</mask><rect width="124" height="44" fill="white" mask="url(#grain)"/></svg>`));
+    const dust=[];
+    for(let i=0;i<65;i++){
+      const x=random()*53,y=8+random()*29+(random()-.5)*x*.24;
+      const size=x<26?1.7:1.1,opacity=(1-x/60)*(.26+random()*.57);
+      dust.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size}" height="${size}" opacity="${opacity.toFixed(2)}"/>`);
+    }
+    wordmark.style.setProperty('--wordmark-dust',svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 53 44" preserveAspectRatio="none" fill="#9f3226">${dust.join('')}</svg>`));
+  }
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const serif = 'ReadingSerif, "Noto Serif SC", "SimSun", serif';
   const state = {query:'', status:'all', category:'', list:false, expanded:false, quote:0, busy:false, preview:'cover', ratio:'3:4', undo:[], selection:new Set(), composing:false};

@@ -108,18 +108,24 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
   font-weight:700;letter-spacing:.01em;
 }
 .paper .wordmark{
-  font-family:"YouYuan","Microsoft YaHei","PingFang SC",var(--sans);
-  font-weight:800;letter-spacing:.14em;color:#9f3226;
-  padding-inline:clamp(8px,1.6vw,25px) 0;
-  transform:skewX(-7deg);
-  -webkit-text-stroke:.25px currentColor;
-  text-shadow:1px 2px 0 #f1cca0;
+  font-family:"Microsoft YaHei","PingFang SC",var(--sans);
+  font-weight:900;letter-spacing:.12em;color:#9f3226;
+  padding-inline:clamp(6px,1.4vw,22px) clamp(10px,1.6vw,24px);
+}
+.paper .wordmark b{
+  display:inline-block;font-weight:inherit;
+  transform:scaleX(1.15);transform-origin:left center;
+  -webkit-text-stroke:.55px currentColor;
+  mask:var(--wordmark-grain,none) center / 100% 100% no-repeat;
 }
 .paper .wordmark::after{
   content:"";position:absolute;pointer-events:none;
-  inset-inline-start:22%;inset-block-end:3px;width:84%;height:8px;
-  border-radius:50%;transform:rotate(-5deg);z-index:-1;
-  background:linear-gradient(90deg,#eab26a75,#f1cf9a38,transparent);
+  inset-inline-end:-10px;inset-block:0;width:53px;
+  background:var(--wordmark-dust,none) center / 100% 100% no-repeat;
+}
+@media(prefers-reduced-motion:no-preference){
+  .paper .wordmark::after{animation:wordmark-drift 1.35s ease-out both}
+  @keyframes wordmark-drift{from{transform:translateX(-5px);opacity:.25}}
 }
 .reading-lettering{
   position:relative;

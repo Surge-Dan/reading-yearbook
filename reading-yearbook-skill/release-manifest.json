@@ -75,15 +75,15 @@
     },
     {
       "path": "assets/reading-app.js",
-      "sha256": "e27e85a8dcc1bfc8430f48bf50a9c9dddb03d633d0c76ff1d63bf941d13c61b5",
+      "sha256": "56765176f7ec6e76c821aaa4bd31b5b45823b06d6cbfb4589255a5c38fa7ac7e",
       "hash_kind": "text-lf",
-      "bytes": 45800
+      "bytes": 47094
     },
     {
       "path": "assets/reading-art.css",
-      "sha256": "4d214a4ea86a79aa945ac5f1c7cad5f9abb3ec45dafe1c2dac3ad0d4ee74d727",
+      "sha256": "fb2ca1e3bad1e3c6c16ef318a82c8572732a7c327f8790cbc067db2ac348a8dd",
       "hash_kind": "text-lf",
-      "bytes": 28608
+      "bytes": 28867
     },
     {
       "path": "assets/reading-refinement.css",
@@ -99,9 +99,9 @@
     },
     {
       "path": "assets/reading-template.html",
-      "sha256": "bfa534cb40c93c379baf4d194d7c13fa3ed77460f0d145c7dff1d003d1873382",
+      "sha256": "d6b654a1fed1e6d1778142c2fd52c2eb292371eff3a54179cd36a63af0dea3ed",
       "hash_kind": "text-lf",
-      "bytes": 11554
+      "bytes": 11561
     },
     {
       "path": "assets/sample-data.json",
@@ -399,9 +399,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "0396c37a356998e503df97b96adf9e6ba29b3013150d66302cef8f5b3cd24136",
+      "sha256": "b2ee570f771e3aa923d89fc5da209effcccb7299cec8b44502fa026a2852ec78",
       "hash_kind": "text-lf",
-      "bytes": 7893205
+      "bytes": 7894765
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",

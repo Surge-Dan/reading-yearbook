@@ -9,6 +9,30 @@
   $$('[data-art]').forEach(image=>{image.src=art[image.dataset.art];});
   const lettering=$('.reading-lettering');
   if(lettering&&art.reading)lettering.style.setProperty('--reading-ink',`url("${art.reading}")`);
+  const wordmark=$('.wordmark');
+  if(wordmark){
+    const svgUrl=svg=>`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+    let seed=431;
+    const random=()=>{
+      seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+      return seed/4294967296;
+    };
+    const holes=[];
+    for(let x=66;x<123;x+=2){
+      const density=(x-66)/57;
+      for(let y=0;y<44;y+=2){
+        if(random()<density*density*.9)holes.push(`<rect x="${x}" y="${y}" width="2" height="2"/>`);
+      }
+    }
+    wordmark.style.setProperty('--wordmark-grain',svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 124 44" preserveAspectRatio="none"><mask id="grain"><rect width="124" height="44" fill="white"/>${holes.join('')}</mask><rect width="124" height="44" fill="white" mask="url(#grain)"/></svg>`));
+    const dust=[];
+    for(let i=0;i<65;i++){
+      const x=random()*53,y=8+random()*29+(random()-.5)*x*.24;
+      const size=x<26?1.7:1.1,opacity=(1-x/60)*(.26+random()*.57);
+      dust.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${size}" height="${size}" opacity="${opacity.toFixed(2)}"/>`);
+    }
+    wordmark.style.setProperty('--wordmark-dust',svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 53 44" preserveAspectRatio="none" fill="#9f3226">${dust.join('')}</svg>`));
+  }
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const serif = 'ReadingSerif, "Noto Serif SC", "SimSun", serif';
   const state = {query:'', status:'all', category:'', list:false, expanded:false, quote:0, busy:false, preview:'cover', ratio:'3:4', undo:[], selection:new Set(), composing:false};
