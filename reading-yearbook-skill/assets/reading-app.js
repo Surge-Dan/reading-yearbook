@@ -68,7 +68,7 @@
   addEventListener('scroll',updateNavSurface,{passive:true});updateNavSurface();
   function toast(text) {$('#toast').textContent=text;$('#toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').hidden=true,2800);}
   $('#period').textContent = String(data.year);
-  $('#modeNotice').textContent = data.source_mode==='sample' ? '示例数据 · 不代表真实阅读记录' : data.verification_status!=='live_verified' ? '数据尚未核验，供预览使用' : '';
+  $('#modeNotice').textContent = data.source_mode==='sample' ? '示例数据 · 不代表真实阅读记录' : '';
   const time = data.summary.seconds;
   $('#stats').innerHTML = `<div class="metric lead"><strong>${time==null?'—':`${Math.floor(time/3600)}<em>小时</em>${Math.floor(time%3600/60)}<em>分钟</em>`}</strong><span>累计阅读时长</span></div>` + [[data.summary.read,'本读过'],[data.summary.finished,'本读完'],[data.summary.read_days,'天阅读'],[data.summary.notes,'条笔记']].map(([v,t])=>`<div class="metric"><strong>${esc(value(v))}</strong><span>${t}</span></div>`).join('');
   $('#distributionScope').textContent=`${scope} · 按主分类计数`;

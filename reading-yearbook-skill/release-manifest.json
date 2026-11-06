@@ -75,15 +75,15 @@
     },
     {
       "path": "assets/reading-app.js",
-      "sha256": "c9cb42bf7ccec32bb3afaca831987920e90bf16efe4f523dcf41fd6ae4484499",
+      "sha256": "630f17a51469bec36daed281c79a6926e7ef94b31433bda8cf2768d6b8443cf2",
       "hash_kind": "text-lf",
-      "bytes": 43693
+      "bytes": 43607
     },
     {
       "path": "assets/reading-art.css",
-      "sha256": "967229d63d847d755efb55b1abfe12217a79252ea3d7c1953f4b783af3c1db45",
+      "sha256": "1cf78ec81d1864a3b4c672e027369689be70d6760855ddc1f27e55a41125e2dd",
       "hash_kind": "text-lf",
-      "bytes": 23024
+      "bytes": 23486
     },
     {
       "path": "assets/reading-refinement.css",
@@ -393,9 +393,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "3efac6206387c740bd01daf2a2da4cb0ce02ec81ff8d70f6cdabed5b398e837d",
+      "sha256": "3691d9a0ed46a32f6c9b15340f9065e722972938b67f251472f4e67d5c2c3d7e",
       "hash_kind": "text-lf",
-      "bytes": 3696281
+      "bytes": 3696657
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
