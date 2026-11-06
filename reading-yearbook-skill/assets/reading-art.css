@@ -101,3 +101,41 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
   #share .share-layout{grid-template-columns:minmax(0,1fr)}
   #share .share-stage canvas{max-height:min(62vh,520px)}
 }
+
+/* Overview typography and paired charts. */
+.paper .wordmark,.paper .hero-copy h1{
+  font-family:"YouYuan","Microsoft YaHei","PingFang SC",var(--sans);
+  font-weight:700;letter-spacing:.01em;
+}
+.hero-reading{
+  display:block;font:italic 700 clamp(52px,6.5vw,96px)/1.08 "Trebuchet MS","Arial Rounded MT Bold",sans-serif;
+  letter-spacing:-.045em;margin:12px 0 8px;
+}
+.paper .hero-copy .eyebrow,.paper .hero-copy .metric strong{
+  font-family:"Arial Rounded MT Bold","Trebuchet MS",var(--sans);
+  font-variant-numeric:tabular-nums;
+}
+.paper .rhythm-section{
+  display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+  gap:clamp(18px,3vw,38px);align-items:start;
+}
+.rhythm-chart,.overview-status{
+  min-width:0;border:1px solid var(--line);border-radius:14px;
+  padding:clamp(12px,1.6vw,22px);
+}
+.overview-status h3{font-size:18px;margin-bottom:6px}
+#overviewStatusChart{display:grid;gap:18px;margin:25px 0 10px}
+.overview-status-label{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.overview-status-track{height:9px;margin-top:7px;background:#f1e4cc;border-radius:8px;overflow:hidden}
+.overview-status-fill{display:block;height:100%;border-radius:inherit}
+.overview-status-row:nth-child(1) .overview-status-fill{background:#b83225}
+.overview-status-row:nth-child(2) .overview-status-fill{background:#b26925}
+.overview-status-row:nth-child(3) .overview-status-fill{background:#8d7866}
+body .paper main summary,body dialog summary,body .paper .book-actions .text-button,body #openSources{color:#80502c}
+body .paper main summary:hover,body dialog summary:hover,body .paper .book-actions .text-button:hover,body #openSources:hover{color:#683c20;background:#fff0d5}
+@media(max-width:760px){
+  .paper .rhythm-section{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:600px){
+  .paper .hero-art{position:relative;display:block;top:auto;right:auto;width:100%;max-height:230px;margin:8px auto 0}
+}

@@ -123,6 +123,15 @@
   }
   drawChart(); let resizeFrame;addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(drawChart);});
 
+  const statusCounts={finished:0,reading:0,unknown:0};
+  for(const book of data.books)statusCounts[book.status in statusCounts?book.status:'unknown']++;
+  $('#overviewStatusChart').innerHTML=data.books.length
+    ?Object.entries(statusCounts).map(([status,count])=>`<div class="overview-status-row">
+      <div class="overview-status-label"><span>${statusLabel({status})}</span><strong>${count} 本</strong></div>
+      <div class="overview-status-track" aria-hidden="true"><span class="overview-status-fill" style="width:${count/data.books.length*100}%"></span></div>
+    </div>`).join('')
+    :'<p class="muted">暂无可统计的书架记录</p>';
+
   const categories = [...new Set(data.books.map(b=>b.category))];
   const categoryPalette=['#bd5143','#4477a1','#b8973b','#5c897c','#ac7b84','#897b9e','#71828b'];
   const categoryCounts = categories.map(c=>({name:c,count:data.books.filter(b=>b.category===c).length})).sort((a,b)=>b.count-a.count);

@@ -129,6 +129,44 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
   #share .share-stage canvas{max-height:min(62vh,520px)}
 }
 
+/* Overview typography and paired charts. */
+.paper .wordmark,.paper .hero-copy h1{
+  font-family:"YouYuan","Microsoft YaHei","PingFang SC",var(--sans);
+  font-weight:700;letter-spacing:.01em;
+}
+.hero-reading{
+  display:block;font:italic 700 clamp(52px,6.5vw,96px)/1.08 "Trebuchet MS","Arial Rounded MT Bold",sans-serif;
+  letter-spacing:-.045em;margin:12px 0 8px;
+}
+.paper .hero-copy .eyebrow,.paper .hero-copy .metric strong{
+  font-family:"Arial Rounded MT Bold","Trebuchet MS",var(--sans);
+  font-variant-numeric:tabular-nums;
+}
+.paper .rhythm-section{
+  display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+  gap:clamp(18px,3vw,38px);align-items:start;
+}
+.rhythm-chart,.overview-status{
+  min-width:0;border:1px solid var(--line);border-radius:14px;
+  padding:clamp(12px,1.6vw,22px);
+}
+.overview-status h3{font-size:18px;margin-bottom:6px}
+#overviewStatusChart{display:grid;gap:18px;margin:25px 0 10px}
+.overview-status-label{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.overview-status-track{height:9px;margin-top:7px;background:#f1e4cc;border-radius:8px;overflow:hidden}
+.overview-status-fill{display:block;height:100%;border-radius:inherit}
+.overview-status-row:nth-child(1) .overview-status-fill{background:#b83225}
+.overview-status-row:nth-child(2) .overview-status-fill{background:#b26925}
+.overview-status-row:nth-child(3) .overview-status-fill{background:#8d7866}
+body .paper main summary,body dialog summary,body .paper .book-actions .text-button,body #openSources{color:#80502c}
+body .paper main summary:hover,body dialog summary:hover,body .paper .book-actions .text-button:hover,body #openSources:hover{color:#683c20;background:#fff0d5}
+@media(max-width:760px){
+  .paper .rhythm-section{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:600px){
+  .paper .hero-art{position:relative;display:block;top:auto;right:auto;width:100%;max-height:230px;margin:8px auto 0}
+}
+
 /* The existing yearbook paper and type remain the visual anchor. */
 .ebook-reading-nav{position:static;background:#f7f2e5;border-bottom:1px solid #c9c4b3;padding:12px 0;font-size:14px}.ebook-reading-nav nav{display:flex;gap:8px 22px;flex-wrap:wrap;padding-top:10px}.ebook-reading-nav a{color:#454a41;text-decoration:none;min-height:32px;display:inline-flex;align-items:center}.ebook-reading-nav a[aria-current]{color:#305c78;text-decoration:underline;text-underline-offset:6px}.ebook-result section{scroll-margin-top:130px}.ebook-result [data-reading-section=review] p{line-height:2.1}.ebook-result .ebook-review-paragraph{margin:28px 0 34px}.ebook-result details summary{cursor:pointer;min-height:44px;display:list-item;align-content:center;color:#305c78}.ebook-result details>blockquote p,.ebook-result [data-reading-section=references] p,.ebook-result [data-reading-section=references] li{font-size:14px}.ebook-result [data-reading-section=references]{color:#454a41}.ebook-result details:not(.ebook-reading-nav){margin:12px 0}.ebook-result .ebook-method-label{font-weight:600}.ebook-result section{animation:ebook-reading-arrive .25s ease-out}@keyframes ebook-reading-arrive{from{transform:translateY(4px)}to{transform:none}}@media(prefers-reduced-motion:reduce){.ebook-result section{animation:none}.ebook-reading-nav a{transition:none}}@media print{.ebook-reading-nav{display:none}.ebook-result section{animation:none;transform:none;opacity:1}}
 .ebook-entry-switch{display:flex;gap:28px;border-bottom:1px solid #c9c4b3;margin-bottom:20px}.ebook-entry-switch [aria-pressed=true]{font-weight:600;color:#242822;text-decoration-thickness:2px}.ebook-entry-panel label{display:block;font-size:14px;margin:16px 0 8px}.ebook-entry-panel>.button{margin-top:18px}.ebook-book-candidate{display:block!important;text-align:left;width:100%;margin:8px 0}.ebook-source-link{color:#305c78;overflow-wrap:anywhere}
@@ -145,11 +183,11 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
 <header class="masthead"><a class="wordmark" href="#overview">年年阅<span></span></a><nav aria-label="章节导航"><a href="#overview" aria-current="location">概览</a><a href="#shelf">书架</a><a href="#quotes">划线与笔记</a><a href="#share">分享</a><a href="#ebook">书籍精华</a></nav><a class="button quiet" href="#share">导出 <span aria-hidden="true">↗</span></a></header>
 <main id="main">
 <section class="hero" id="overview">
-<div class="hero-copy"><img class="display-reading" data-art="reading" alt="" aria-hidden="true"><h1>我的阅读年鉴</h1><p class="eyebrow" id="period"></p><p id="modeNotice" class="muted"></p><div id="stats" class="stats" aria-label="阅读统计"></div></div>
+<div class="hero-copy"><span class="hero-reading" lang="en" aria-hidden="true">Reading</span><h1>我的阅读年鉴</h1><p class="eyebrow" id="period"></p><p id="modeNotice" class="muted"></p><div id="stats" class="stats" aria-label="阅读统计"></div></div>
 <img class="hero-art" data-art="hero" alt="" aria-hidden="true">
 <svg class="pencil-trail" viewBox="0 0 1200 90" preserveAspectRatio="none" aria-hidden="true"><path d="M0 15C160 105 286 65 456 45S619 2 625 23S608 59 654 48S728 25 750 36S731 65 776 48S948 23 1120 5"/></svg>
 </section>
-<section class="chapter rhythm-section" aria-labelledby="statsTitle"><div class="rhythm-chart"><div class="chart-heading"><h2 id="statsTitle" class="sr-only">阅读统计与月度节奏</h2><span class="muted">每月阅读时长</span><button class="replay text-button" data-replay="chart" aria-label="重播月度图动画">↻ 重播</button></div><div id="chart" class="chart motion-chart"></div><p id="chartReadout" class="chart-readout" aria-live="polite">选择月份，查看准确时长</p><details class="chart-table"><summary>查看月度数据</summary><div id="monthlyTable"></div></details></div><div class="rhythm-aside"><img data-art="rhythm" alt="" aria-hidden="true"><h3>阅读的节奏</h3><p>翻过的页，<br>也留下了时间的形状。</p><svg viewBox="0 0 180 42" aria-hidden="true"><path d="M5 29Q67 8 167 14M54 37Q89 21 135 19"/></svg></div></section>
+<section class="chapter rhythm-section" aria-labelledby="statsTitle"><div class="rhythm-chart"><div class="chart-heading"><h2 id="statsTitle" class="sr-only">阅读统计与月度节奏</h2><span class="muted">每月阅读时长</span><button class="replay text-button" data-replay="chart" aria-label="重播月度图动画">↻ 重播</button></div><div id="chart" class="chart motion-chart"></div><p id="chartReadout" class="chart-readout" aria-live="polite">选择月份，查看准确时长</p><details class="chart-table"><summary>查看月度数据</summary><div id="monthlyTable"></div><button id="openSources" class="text-button">查看统计口径</button></details></div><section class="overview-status" aria-labelledby="overviewStatusTitle"><h3 id="overviewStatusTitle">书架阅读状态</h3><p class="muted">按书架当前状态统计</p><div id="overviewStatusChart"></div></section></section>
 <section id="shelf" class="chapter" aria-labelledby="shelfTitle"><div class="chapter-heading"><span class="chapter-no">01</span><h2 id="shelfTitle">今年读过的书</h2><span class="rule"></span><span id="shelfScope" class="muted"></span></div><div class="shelf-tools"><div class="tabs" role="group" aria-label="阅读状态"><button data-status="all" aria-pressed="true">全部</button><button data-status="finished" aria-pressed="false">已读完</button><button data-status="reading" aria-pressed="false">在读</button><button data-status="unknown" aria-pressed="false">状态未记录</button></div><label class="search"><svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="search" type="search" placeholder="搜索书名或作者" aria-label="搜索书名或作者"></label><button id="viewSwitch" class="text-button" aria-pressed="false">列表视图</button></div><div class="filter-summary"><span id="resultCount" role="status"></span><button id="clearFilters" class="text-button" hidden>清除筛选</button></div><div id="books" class="books"></div><div class="shelf-more"><button id="expandShelf" class="text-button" aria-expanded="false" hidden>展开全部书目</button></div></section>
 <div class="two-up"><section class="chapter distribution" aria-labelledby="distributionTitle"><div class="chapter-heading"><span class="chapter-no">02</span><h2 id="distributionTitle">阅读分布</h2><span class="rule"></span></div><p id="distributionScope" class="muted"></p><div class="chart-heading"><span id="distributionLegend" class="muted">一块书脊，一本书</span><button class="replay text-button" data-replay="distribution" aria-label="重播分类图动画">↻ 重播</button></div><div id="distribution" class="motion-chart"></div></section>
 <section class="chapter timeline-section" aria-labelledby="timelineTitle"><div class="chapter-heading"><span class="chapter-no">03</span><h2 id="timelineTitle">阅读时间线</h2><span class="rule"></span></div><p class="muted">有日期的阅读与笔记记录</p><div id="timeline" class="timeline"></div></section></div>
@@ -185,7 +223,7 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
 </section>
 
 </main>
-<footer><span>年年阅 · 阅读留痕</span><button id="openSources" class="text-button">数据与来源</button></footer>
+<footer><span>年年阅 · 阅读留痕</span></footer>
 </div>
 <dialog id="detail" aria-labelledby="detailTitle"><div class="dialog-header"><span class="muted">划线与笔记</span><button class="close" aria-label="关闭书籍详情">关闭 ×</button></div><div id="detailContent"></div></dialog>
 <dialog id="sourcesDialog" aria-labelledby="sourcesTitle"><div class="dialog-header"><h2 id="sourcesTitle">数据与来源</h2><button class="close" aria-label="关闭数据来源">关闭 ×</button></div><div id="sourcesContent"></div><details id="collectionNotice" class="collection-notice" hidden><summary>部分阅读材料暂未取得</summary><p id="collectionMessage"></p></details><details><summary>图表许可</summary><p class="small">图表适配lieflat-charts Basics B2/F2 Hairline Line、B1/F1 Rung Bars、C1/F5 Tick Rows。来源：github.com/larashero3-dotcom/lieflat-charts。非商业许可，保留完整条款。</p><pre class="license"># PolyForm Noncommercial License 1.0.0
@@ -1011,6 +1049,15 @@ window.ReadingShareArtwork = (() => {
     revealChart('chart');
   }
   drawChart(); let resizeFrame;addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(drawChart);});
+
+  const statusCounts={finished:0,reading:0,unknown:0};
+  for(const book of data.books)statusCounts[book.status in statusCounts?book.status:'unknown']++;
+  $('#overviewStatusChart').innerHTML=data.books.length
+    ?Object.entries(statusCounts).map(([status,count])=>`<div class="overview-status-row">
+      <div class="overview-status-label"><span>${statusLabel({status})}</span><strong>${count} 本</strong></div>
+      <div class="overview-status-track" aria-hidden="true"><span class="overview-status-fill" style="width:${count/data.books.length*100}%"></span></div>
+    </div>`).join('')
+    :'<p class="muted">暂无可统计的书架记录</p>';
 
   const categories = [...new Set(data.books.map(b=>b.category))];
   const categoryPalette=['#bd5143','#4477a1','#b8973b','#5c897c','#ac7b84','#897b9e','#71828b'];

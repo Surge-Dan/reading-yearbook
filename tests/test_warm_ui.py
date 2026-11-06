@@ -61,6 +61,7 @@ class WarmUITests(unittest.TestCase):
                 self.assertFalse(detail.evaluate('el=>el.open'))
                 book.click()
                 page.keyboard.press('Escape')
+                page.locator('.rhythm-chart .chart-table summary').click()
                 page.locator('#openSources').click()
                 self.assertEqual(color('#sourcesDialog'),'rgb(255, 253, 246)')
                 page.keyboard.press('Escape')
