@@ -34,8 +34,12 @@ def main():
         assert len(payload['books'])==count and all(b['cover'].startswith('data:image/') for b in payload['books'])
         assert 'data:font/woff2;base64,' not in html
         assert 'ReadingInsights' not in html and 'PolyForm Noncommercial' in html
-        expected_css='\n'.join((installed/'assets'/name).read_text('utf-8') for name in ('reading-app.css','reading-art.css','ebook-app.css'))
+        expected_css='\n'.join((installed/'assets'/name).read_text('utf-8') for name in ('reading-app.css','reading-art.css','ebook-app.css','reading-refinement.css'))
         assert re.search(r'<style>(.*?)</style>',html,re.S).group(1).strip()==expected_css.strip()
+        art=json.loads(re.search(r'<script id="reading-art"[^>]*>(.*?)</script>',html,re.S).group(1))
+        assert base64.b64decode(art['readingRecord'].split(',',1)[1])==(installed/'assets/yearbook-art/reading-record.png').read_bytes()
+        assert 'id="portraitMonth"' not in html and 'id="readingPortrait"' in html
+        assert 'id="collectionNotice"' not in html.split('</main>',1)[0]
         assert 'display-reading' in html and 'hero-art' in html and 'bookShareTrigger' in html
         print(json.dumps({'count':count,'status':'pass','bytes':status['bytes']},ensure_ascii=False))
 
