@@ -130,28 +130,35 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
 }
 
 /* Overview typography and paired charts. */
-.paper .wordmark,.paper .hero-copy h1{
+.paper .hero-copy h1{
   font-family:"YouYuan","Microsoft YaHei","PingFang SC",var(--sans);
   font-weight:700;letter-spacing:.01em;
 }
-.hero-reading{
-  display:block;font:italic 700 clamp(52px,6.5vw,96px)/1.08 "Trebuchet MS","Arial Rounded MT Bold",sans-serif;
-  letter-spacing:-.045em;margin:12px 0 8px;
+.paper .wordmark{
+  font-family:"Microsoft YaHei","PingFang SC",var(--sans);
+  font-weight:800;letter-spacing:.01em;
+}
+.paper .hero-copy .display-reading{
+  width:clamp(205px,24vw,320px);margin:8px 0 -22px -10px;
+  filter:drop-shadow(.5px 0 0 #30271f) drop-shadow(0 .5px 0 #30271f);
 }
 .paper .hero-copy .eyebrow,.paper .hero-copy .metric strong{
-  font-family:"Arial Rounded MT Bold","Trebuchet MS",var(--sans);
-  font-variant-numeric:tabular-nums;
+  font-family:Georgia,"Noto Serif SC",serif;
+  font-variant-numeric:lining-nums tabular-nums;
+  font-weight:500;
 }
+.paper .hero-copy .metric em{font-family:var(--sans);font-weight:400}
 .paper .rhythm-section{
   display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
-  gap:clamp(18px,3vw,38px);align-items:start;
+  gap:clamp(18px,3vw,38px);align-items:stretch;
 }
 .rhythm-chart,.overview-status{
   min-width:0;border:1px solid var(--line);border-radius:14px;
   padding:clamp(12px,1.6vw,22px);
 }
 .overview-status h3{font-size:18px;margin-bottom:6px}
-#overviewStatusChart{display:grid;gap:18px;margin:25px 0 10px}
+.overview-status{display:flex;flex-direction:column}
+#overviewStatusChart{display:grid;flex:1;align-content:space-evenly;gap:22px;margin:22px 0 10px;max-height:250px}
 .overview-status-label{display:flex;justify-content:space-between;gap:10px;font-size:13px}
 .overview-status-track{height:9px;margin-top:7px;background:#f1e4cc;border-radius:8px;overflow:hidden}
 .overview-status-fill{display:block;height:100%;border-radius:inherit}
@@ -180,10 +187,10 @@ body .paper main summary:hover,body dialog summary:hover,body .paper .book-actio
 <body>
 <a class="skip" href="#main">跳到阅读年鉴</a>
 <div class="paper">
-<header class="masthead"><a class="wordmark" href="#overview">年年阅<span></span></a><nav aria-label="章节导航"><a href="#overview" aria-current="location">概览</a><a href="#shelf">书架</a><a href="#quotes">划线与笔记</a><a href="#share">分享</a><a href="#ebook">书籍精华</a></nav><a class="button quiet" href="#share">导出 <span aria-hidden="true">↗</span></a></header>
+<header class="masthead"><a class="wordmark" href="#overview">年年阅</a><nav aria-label="章节导航"><a href="#overview" aria-current="location">概览</a><a href="#shelf">书架</a><a href="#quotes">划线与笔记</a><a href="#share">分享</a><a href="#ebook">书籍精华</a></nav><a class="button quiet" href="#share">导出 <span aria-hidden="true">↗</span></a></header>
 <main id="main">
 <section class="hero" id="overview">
-<div class="hero-copy"><span class="hero-reading" lang="en" aria-hidden="true">Reading</span><h1>我的阅读年鉴</h1><p class="eyebrow" id="period"></p><p id="modeNotice" class="muted"></p><div id="stats" class="stats" aria-label="阅读统计"></div></div>
+<div class="hero-copy"><img class="display-reading" data-art="reading" alt="" aria-hidden="true"><h1>我的阅读年鉴</h1><p class="eyebrow" id="period"></p><p id="modeNotice" class="muted"></p><div id="stats" class="stats" aria-label="阅读统计"></div></div>
 <img class="hero-art" data-art="hero" alt="" aria-hidden="true">
 <svg class="pencil-trail" viewBox="0 0 1200 90" preserveAspectRatio="none" aria-hidden="true"><path d="M0 15C160 105 286 65 456 45S619 2 625 23S608 59 654 48S728 25 750 36S731 65 776 48S948 23 1120 5"/></svg>
 </section>

@@ -40,7 +40,7 @@ def main():
         assert base64.b64decode(art['readingRecord'].split(',',1)[1])==(installed/'assets/yearbook-art/reading-record.png').read_bytes()
         assert 'id="portraitMonth"' not in html and 'id="readingPortrait"' in html
         assert 'id="collectionNotice"' not in html.split('</main>',1)[0]
-        assert 'hero-reading' in html and 'hero-art' in html and 'bookShareTrigger' in html
+        assert 'display-reading' in html and 'hero-art' in html and 'bookShareTrigger' in html
         print(json.dumps({'count':count,'status':'pass','bytes':status['bytes']},ensure_ascii=False))
 
 
