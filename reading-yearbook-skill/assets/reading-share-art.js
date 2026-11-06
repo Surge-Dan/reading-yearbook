@@ -8,6 +8,26 @@ window.ReadingShareArtwork = (() => {
   const SANS='ReadingSans,"Noto Sans SC","Microsoft YaHei",sans-serif';
   const NUM='Georgia,"Noto Serif",serif';
   const palette=[C.blue,C.red,C.green,C.gold,'#97768b','#7a8875','#bd8261'];
+  const readingRecordArt='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 230">
+      <ellipse cx="179" cy="194" rx="119" ry="15" fill="#e8cfab" opacity=".35"/>
+      <path d="M75 151h205v34H75a17 17 0 0 1 0-34Z" fill="#dce9e0" stroke="#167c70" stroke-width="2.5"/>
+      <path d="M80 158h200v20H80a10 10 0 0 1 0-20Z" fill="#fffdf6"/>
+      <path d="M89 165h176m-176 7h161" stroke="#d3cbb7" stroke-linecap="round"/>
+      <g transform="rotate(-8 173 135)">
+        <path d="M92 111h173v33H92a16.5 16.5 0 0 1 0-33Z" fill="#f1d79b" stroke="#a47623" stroke-width="2.5"/>
+        <path d="M96 117h169v21H96a10.5 10.5 0 0 1 0-21Z" fill="#fffdf6"/>
+        <path d="M105 124h144m-144 7h132" stroke="#d3cbb7" stroke-linecap="round"/>
+      </g>
+      <g transform="rotate(12 178 92)">
+        <path d="M113 72h143v32H113a16 16 0 0 1 0-32Z" fill="#e8b7a9" stroke="#b83225" stroke-width="2.5"/>
+        <path d="M117 78h139v20H117a10 10 0 0 1 0-20Z" fill="#fffdf6"/>
+        <path d="M128 85h110m-110 6h103" stroke="#d3cbb7" stroke-linecap="round"/>
+        <path d="M203 83h17v36l-8-6-9 6Z" fill="#b83225"/>
+      </g>
+      <path d="M289 71v20m-10-10h20M70 87v12m-6-6h12" stroke="#a47623" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="267" cy="54" r="2.5" fill="#b83225"/>
+    </svg>`);
   const known=n=>typeof n==='number'&&Number.isFinite(n);
   const amount=n=>known(n)?String(n):'—';
   const duration=n=>!known(n)?'未记录':n>=3600?`${Math.floor(n/3600)}小时${Math.floor(n%3600/60)}分钟`:`${Math.floor(n/60)}分钟`;
@@ -333,7 +353,7 @@ window.ReadingShareArtwork = (() => {
           text('分类',tx,next+24,{size:25,font:SANS,color:C.muted});
           const cat=block(b.category,tx,next+44,tw,78,{size:32,min:28,color,leading:1.35});next=cat.bottom+32;
         }
-        if(mainBottom-next>=132)await d.image(art.hero,tx,next,tw,mainBottom-next-4);
+        if(mainBottom-next>=132)await d.image(readingRecordArt,tx,next,tw,mainBottom-next-4);
       }
       const metricY=H-200,mx=M+280,mw=R-mx;
       line(M,metricY-30,R,metricY-30,color,1);
