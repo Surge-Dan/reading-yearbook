@@ -7,6 +7,8 @@
   const art = JSON.parse(document.getElementById('reading-art').textContent);
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   $$('[data-art]').forEach(image=>{image.src=art[image.dataset.art];});
+  const lettering=$('.reading-lettering');
+  if(lettering&&art.reading)lettering.style.setProperty('--reading-ink',`url("${art.reading}")`);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const serif = 'ReadingSerif, "Noto Serif SC", "SimSun", serif';
   const state = {query:'', status:'all', category:'', list:false, expanded:false, quote:0, busy:false, preview:'cover', ratio:'3:4', undo:[], selection:new Set(), composing:false};

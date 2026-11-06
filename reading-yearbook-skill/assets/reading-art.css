@@ -108,12 +108,31 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
   font-weight:700;letter-spacing:.01em;
 }
 .paper .wordmark{
-  font-family:"Microsoft YaHei","PingFang SC",var(--sans);
-  font-weight:800;letter-spacing:.01em;
+  font-family:"YouYuan","Microsoft YaHei","PingFang SC",var(--sans);
+  font-weight:800;letter-spacing:.14em;color:#9f3226;
+  padding-inline:clamp(8px,1.6vw,25px) 0;
+  transform:skewX(-7deg);
+  -webkit-text-stroke:.25px currentColor;
+  text-shadow:1px 2px 0 #f1cca0;
 }
-.paper .hero-copy .display-reading{
+.paper .wordmark::after{
+  content:"";position:absolute;pointer-events:none;
+  inset-inline-start:22%;inset-block-end:3px;width:84%;height:8px;
+  border-radius:50%;transform:rotate(-5deg);z-index:-1;
+  background:linear-gradient(90deg,#eab26a75,#f1cf9a38,transparent);
+}
+.reading-lettering{
+  position:relative;
   width:clamp(205px,24vw,320px);margin:8px 0 -22px -10px;
-  filter:drop-shadow(.5px 0 0 #30271f) drop-shadow(0 .5px 0 #30271f);
+}
+.paper .reading-lettering .display-reading{width:100%;max-width:none;margin:0}
+@supports(mask-image:url("")){
+  .reading-lettering[style*="--reading-ink"] .display-reading{opacity:0}
+  .reading-lettering[style*="--reading-ink"]::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(125deg,#65251f 10%,#ad3c2d 50%,#a05a23 92%);
+    mask:var(--reading-ink) center / 100% 100% no-repeat;
+  }
 }
 .paper .hero-copy .eyebrow,.paper .hero-copy .metric strong{
   font-family:Georgia,"Noto Serif SC",serif;
