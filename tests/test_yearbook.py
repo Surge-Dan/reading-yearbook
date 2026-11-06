@@ -32,7 +32,7 @@ class CoreRulesTests(unittest.TestCase):
     def test_gateway_payload_keeps_business_fields_at_top_level(self):
         payload = build_gateway_payload("/user/notebooks", {"count": 20, "lastSort": 9})
         self.assertEqual(payload["api_name"], "/user/notebooks")
-        self.assertEqual(payload["skill_version"], "1.0.4")
+        self.assertEqual(payload["skill_version"], "1.0.5")
         self.assertEqual(payload["count"], 20)
         self.assertNotIn("params", payload)
 

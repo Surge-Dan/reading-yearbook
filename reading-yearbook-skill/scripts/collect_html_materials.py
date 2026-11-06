@@ -22,6 +22,23 @@ from build_reading_html import TZ
 
 
 CACHE_VERSION = 1
+COVER_HOSTS = {
+    'cdn.weread.qq.com', 'res.weread.qq.com',
+    'wfqqreader-1252317822.image.myqcloud.com',
+    'wrco-40036.sh.gfp.tencent-cloud.com',  # WeRead's imported EPUB cover storage
+}
+
+
+def validate_cover_url(url):
+    parts = urlsplit(url)
+    if parts.scheme != 'https' or parts.hostname not in COVER_HOSTS:
+        raise ValueError('封面来源须为已核验的微信读书HTTPS资源域名')
+
+
+class CoverRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        validate_cover_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
 class PartialReviews(WeReadError):
@@ -160,15 +177,10 @@ def download_cover(url, target, refresh=False):
                 return target
         except ValueError:
             pass
-    parts = urlsplit(url)
-    allowed = {'cdn.weread.qq.com', 'res.weread.qq.com', 'wfqqreader-1252317822.image.myqcloud.com'}
-    if parts.scheme != 'https' or parts.hostname not in allowed:
-        raise ValueError('封面来源须为已核验的微信读书HTTPS资源域名')
+    validate_cover_url(url)
     req = urllib.request.Request(url, headers={'User-Agent': 'reading-yearbook-skill/1.0'})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        final = urlsplit(response.geturl())
-        if final.scheme != 'https' or final.hostname not in allowed:
-            raise ValueError('封面重定向到未经核验的来源')
+    with urllib.request.build_opener(CoverRedirect()).open(req, timeout=20) as response:
+        validate_cover_url(response.geturl())
         content = response.read(8*1024*1024 + 1)
     if len(content) > 8*1024*1024:
         raise ValueError('封面超过8MB')

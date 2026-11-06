@@ -8,7 +8,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 
 
-SKILL_VERSION = "1.0.4"
+SKILL_VERSION = "1.0.5"
 YEARBOOK_TIMEZONE = timezone(timedelta(hours=8))
 
 

@@ -143,7 +143,7 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
 <a class="skip" href="#main">跳到阅读年鉴</a>
 <div class="paper">
 <header class="masthead"><a class="wordmark" href="#overview">年年阅<span></span></a><nav aria-label="章节导航"><a href="#overview" aria-current="location">概览</a><a href="#shelf">书架</a><a href="#quotes">划线与笔记</a><a href="#share">分享</a><a href="#ebook">书籍精华</a></nav><a class="button quiet" href="#share">导出 <span aria-hidden="true">↗</span></a></header>
-<main id="main"><details id="collectionNotice" class="collection-notice" hidden><summary>部分阅读材料暂未取得</summary><p id="collectionMessage"></p></details>
+<main id="main">
 <section class="hero" id="overview">
 <div class="hero-copy"><img class="display-reading" data-art="reading" alt="" aria-hidden="true"><h1>我的阅读年鉴</h1><p class="eyebrow" id="period"></p><p id="modeNotice" class="muted"></p><div id="stats" class="stats" aria-label="阅读统计"></div></div>
 <img class="hero-art" data-art="hero" alt="" aria-hidden="true">
@@ -188,7 +188,7 @@ body{background:#e9e8e3;background-image:none}.paper{background-color:var(--pape
 <footer><span>年年阅 · 阅读留痕</span><button id="openSources" class="text-button">数据与来源</button></footer>
 </div>
 <dialog id="detail" aria-labelledby="detailTitle"><div class="dialog-header"><span class="muted">划线与笔记</span><button class="close" aria-label="关闭书籍详情">关闭 ×</button></div><div id="detailContent"></div></dialog>
-<dialog id="sourcesDialog" aria-labelledby="sourcesTitle"><div class="dialog-header"><h2 id="sourcesTitle">数据与来源</h2><button class="close" aria-label="关闭数据来源">关闭 ×</button></div><div id="sourcesContent"></div><details><summary>图表许可</summary><p class="small">图表适配lieflat-charts Basics B2/F2 Hairline Line、B1/F1 Rung Bars、C1/F5 Tick Rows。来源：github.com/larashero3-dotcom/lieflat-charts。非商业许可，保留完整条款。</p><pre class="license"># PolyForm Noncommercial License 1.0.0
+<dialog id="sourcesDialog" aria-labelledby="sourcesTitle"><div class="dialog-header"><h2 id="sourcesTitle">数据与来源</h2><button class="close" aria-label="关闭数据来源">关闭 ×</button></div><div id="sourcesContent"></div><details id="collectionNotice" class="collection-notice" hidden><summary>部分阅读材料暂未取得</summary><p id="collectionMessage"></p></details><details><summary>图表许可</summary><p class="small">图表适配lieflat-charts Basics B2/F2 Hairline Line、B1/F1 Rung Bars、C1/F5 Tick Rows。来源：github.com/larashero3-dotcom/lieflat-charts。非商业许可，保留完整条款。</p><pre class="license"># PolyForm Noncommercial License 1.0.0
 
 &lt;https://polyformproject.org/licenses/noncommercial/1.0.0&gt;
 
@@ -1135,7 +1135,12 @@ window.ReadingShareArtwork = (() => {
 
   const pages=[{id:'cover',title:'封面',kind:'cover'},{id:'stats',title:'阅读统计',kind:'stats'},
     {id:'distribution',title:'阅读分布',kind:'distribution'},{id:'timeline',title:'阅读时间线',kind:'timeline'}];
-  data.books.forEach(b=>pages.push({id:'book-'+b.book_id,title:b.title,kind:'book',book:b,quote:b.highlights[0]?.text||b.thoughts[0]?.text||'',textKind:b.highlights.length?'highlight':'thought'}));
+  function bookSharePage(book){
+    const original=book.highlights[0]?.text||book.thoughts.find(note=>note.quote?.trim())?.quote;
+    return {id:'book-'+book.book_id,title:book.title,kind:'book',book,
+      quote:original||book.thoughts[0]?.text||'',textKind:original?'highlight':'thought'};
+  }
+  data.books.forEach(book=>pages.push(bookSharePage(book)));
   state.selection=new Set(pages.map(p=>p.id));
   let shareBookComposing=false;
   const bookShareBox=$('#bookSharePicker'),bookShareMenu=$('#bookShareMenu'),bookShareTrigger=$('#bookShareTrigger');
@@ -1164,7 +1169,7 @@ window.ReadingShareArtwork = (() => {
   function changeShareBooks(select){if(state.busy)return;recordUndo();for(const p of pages.filter(p=>p.kind==='book'))select?state.selection.add(p.id):state.selection.delete(p.id);drawShare();}
   $('#selectAllShareBooks').onclick=()=>changeShareBooks(true);$('#clearShareBooks').onclick=()=>changeShareBooks(false);$('#closeShareBooks').onclick=()=>closeShareBooks(true);
   function recordUndo(){state.undo.push({ids:[...state.selection],preview:state.preview,quotes:pages.filter(p=>p.kind==='book').map(p=>[p.id,p.quote,p.textKind])});if(state.undo.length>10)state.undo.shift();}
-  function addBookShare(id,quote,kind='highlight'){if(state.busy){toast('导出中，请稍后再调整');return;}const b=bookMap.get(id);if(!b)return;recordUndo();let p=pages.find(p=>p.id==='book-'+id);if(!p){p={id:'book-'+id,title:b.title,kind:'book',book:b,quote:quote||b.highlights[0]?.text||b.thoughts[0]?.text||'',textKind:quote?kind:b.highlights.length?'highlight':'thought'};pages.push(p);}if(quote!==undefined){p.quote=quote;p.textKind=kind;}state.selection.add(p.id);state.preview=p.id;drawShare();toast('已加入分享');}
+  function addBookShare(id,quote,kind='highlight'){if(state.busy){toast('导出中，请稍后再调整');return;}const b=bookMap.get(id);if(!b)return;recordUndo();let p=pages.find(p=>p.id==='book-'+id);if(!p){p=bookSharePage(b);pages.push(p);}if(quote!==undefined){p.quote=quote;p.textKind=kind;}state.selection.add(p.id);state.preview=p.id;drawShare();toast('已加入分享');}
   function shareRow(p){return `<div class="share-page" ${p.kind==='book'?`data-book-id="${esc(p.book.book_id)}"`:''}><label><input type="checkbox" data-page="${esc(p.id)}"><span>${esc(p.title)}${p.kind==='book'?`<small>${esc(p.book.author)}</small>`:''}</span></label><button type="button" data-preview="${esc(p.id)}">预览</button></div>`;}
   $('#sharePages').innerHTML=pages.filter(p=>p.kind!=='book').map(shareRow).join('');
   function drawShare(){

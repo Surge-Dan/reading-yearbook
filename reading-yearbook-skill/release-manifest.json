@@ -75,9 +75,9 @@
     },
     {
       "path": "assets/reading-app.js",
-      "sha256": "934198c70285c7dcd230eba5c0ca8e5e3331cb71f5c09454966ceb267822abb6",
+      "sha256": "07ee146b7664545a8b79ba6cf144657d7b0b3ac67bfd571cf6aa64b2c76bea7d",
       "hash_kind": "text-lf",
-      "bytes": 45002
+      "bytes": 45007
     },
     {
       "path": "assets/reading-art.css",
@@ -99,7 +99,7 @@
     },
     {
       "path": "assets/reading-template.html",
-      "sha256": "7eac6fe95461a08ed9fb8b2de07f8f883e567a07090970f5a733c9c409d91c9d",
+      "sha256": "11bb1294b1f53d532d7f4eedffa138a0f426e2d3060997fe276a3b82d91e0975",
       "hash_kind": "text-lf",
       "bytes": 11570
     },
@@ -393,9 +393,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "74b2f5f221dff442ab68b9370f81380a66fb9e49b9573086ea761bf46d7dc660",
+      "sha256": "ebdc72318833c67fcea3c63d39c1cbf8bb6129cd961c928f9b7b36ebc5369c26",
       "hash_kind": "text-lf",
-      "bytes": 3701124
+      "bytes": 3701129
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
@@ -723,9 +723,9 @@
     },
     {
       "path": "scripts/collect_html_materials.py",
-      "sha256": "3695e325712a3247adb1fb350496ba9425f4cb6ab2bf0f6ffa5179ec405d4d34",
+      "sha256": "c0cb7fd110eacb487efc371e3aa762e720e894bcd520800fbd23e7f9376ff195",
       "hash_kind": "text-lf",
-      "bytes": 15718
+      "bytes": 16003
     },
     {
       "path": "scripts/collect_weread_data.py",
@@ -921,7 +921,7 @@
     },
     {
       "path": "scripts/yearbook_core.py",
-      "sha256": "f0b699c1ed3f8a878f351acf6732b7776af30c7a59f2f74c4642c8c235df3638",
+      "sha256": "ba8951c004c0a908c6527f3fdc8c4c2436c766d924d44761154c829e574ad7d3",
       "hash_kind": "text-lf",
       "bytes": 15388
     },

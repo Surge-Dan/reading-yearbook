@@ -246,7 +246,12 @@
 
   const pages=[{id:'cover',title:'封面',kind:'cover'},{id:'stats',title:'阅读统计',kind:'stats'},
     {id:'distribution',title:'阅读分布',kind:'distribution'},{id:'timeline',title:'阅读时间线',kind:'timeline'}];
-  data.books.forEach(b=>pages.push({id:'book-'+b.book_id,title:b.title,kind:'book',book:b,quote:b.highlights[0]?.text||b.thoughts[0]?.text||'',textKind:b.highlights.length?'highlight':'thought'}));
+  function bookSharePage(book){
+    const original=book.highlights[0]?.text||book.thoughts.find(note=>note.quote?.trim())?.quote;
+    return {id:'book-'+book.book_id,title:book.title,kind:'book',book,
+      quote:original||book.thoughts[0]?.text||'',textKind:original?'highlight':'thought'};
+  }
+  data.books.forEach(book=>pages.push(bookSharePage(book)));
   state.selection=new Set(pages.map(p=>p.id));
   let shareBookComposing=false;
   const bookShareBox=$('#bookSharePicker'),bookShareMenu=$('#bookShareMenu'),bookShareTrigger=$('#bookShareTrigger');
@@ -275,7 +280,7 @@
   function changeShareBooks(select){if(state.busy)return;recordUndo();for(const p of pages.filter(p=>p.kind==='book'))select?state.selection.add(p.id):state.selection.delete(p.id);drawShare();}
   $('#selectAllShareBooks').onclick=()=>changeShareBooks(true);$('#clearShareBooks').onclick=()=>changeShareBooks(false);$('#closeShareBooks').onclick=()=>closeShareBooks(true);
   function recordUndo(){state.undo.push({ids:[...state.selection],preview:state.preview,quotes:pages.filter(p=>p.kind==='book').map(p=>[p.id,p.quote,p.textKind])});if(state.undo.length>10)state.undo.shift();}
-  function addBookShare(id,quote,kind='highlight'){if(state.busy){toast('导出中，请稍后再调整');return;}const b=bookMap.get(id);if(!b)return;recordUndo();let p=pages.find(p=>p.id==='book-'+id);if(!p){p={id:'book-'+id,title:b.title,kind:'book',book:b,quote:quote||b.highlights[0]?.text||b.thoughts[0]?.text||'',textKind:quote?kind:b.highlights.length?'highlight':'thought'};pages.push(p);}if(quote!==undefined){p.quote=quote;p.textKind=kind;}state.selection.add(p.id);state.preview=p.id;drawShare();toast('已加入分享');}
+  function addBookShare(id,quote,kind='highlight'){if(state.busy){toast('导出中，请稍后再调整');return;}const b=bookMap.get(id);if(!b)return;recordUndo();let p=pages.find(p=>p.id==='book-'+id);if(!p){p=bookSharePage(b);pages.push(p);}if(quote!==undefined){p.quote=quote;p.textKind=kind;}state.selection.add(p.id);state.preview=p.id;drawShare();toast('已加入分享');}
   function shareRow(p){return `<div class="share-page" ${p.kind==='book'?`data-book-id="${esc(p.book.book_id)}"`:''}><label><input type="checkbox" data-page="${esc(p.id)}"><span>${esc(p.title)}${p.kind==='book'?`<small>${esc(p.book.author)}</small>`:''}</span></label><button type="button" data-preview="${esc(p.id)}">预览</button></div>`;}
   $('#sharePages').innerHTML=pages.filter(p=>p.kind!=='book').map(shareRow).join('');
   function drawShare(){
