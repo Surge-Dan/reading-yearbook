@@ -13,7 +13,7 @@ class CurrentExampleTests(unittest.TestCase):
     def test_public_example_uses_current_css_and_inline_scripts(self):
         page = (DEMO / 'index.html').read_text('utf-8')
         expected_css = '\n'.join((ROOT / 'assets' / name).read_text('utf-8')
-                                 for name in ('reading-app.css', 'reading-art.css','ebook-app.css'))
+                                 for name in ('reading-app.css', 'reading-art.css', 'ebook-app.css', 'reading-refinement.css'))
         self.assertEqual(re.search(r'<style>(.*?)</style>', page, re.S).group(1).strip(), expected_css.strip())
         for script_id,asset in [('reading-share-mounted','reading-share-art.js'),('ebook-app-mounted','ebook-app.js')]:
             self.assertEqual(re.search(r'<script id="'+script_id+r'">(.*?)</script>',page,re.S).group(1).strip(),(ROOT/'assets'/asset).read_text('utf-8').strip())

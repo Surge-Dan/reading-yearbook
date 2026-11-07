@@ -339,69 +339,69 @@
     },
     {
       "path": "examples/reading-html-demo/images/01-cover.png",
-      "sha256": "400fb3922c5baa62dde98034aca8dc3f5d061c565f2df1b3010f7dd046203ca5",
+      "sha256": "3e9354ce7c18ad3ed0a54c38e44d80c39cbf52c3e25944d03bcf8ae7e0c2d857",
       "hash_kind": "binary",
-      "bytes": 746151
+      "bytes": 254634
     },
     {
       "path": "examples/reading-html-demo/images/02-stats.png",
-      "sha256": "e666685bef84e23717aa0501a7f0db4ce7d0f1b1356b05776d293c0aff28cb47",
+      "sha256": "2c1e3aa8435ce8e38fea93e34486f95156d8772d3df8623f9929f6d6ccb6b333",
       "hash_kind": "binary",
-      "bytes": 746810
+      "bytes": 174882
     },
     {
       "path": "examples/reading-html-demo/images/03-distribution.png",
-      "sha256": "7e7e97c0ee12dd851f65a8b89c937ea9a5f82b6701c014c8580283db406a188e",
+      "sha256": "63578acc96595ac328f2cf93f9cfddd79637b8aef348fa83736fcffeeb63a0c7",
       "hash_kind": "binary",
-      "bytes": 687734
+      "bytes": 173403
     },
     {
       "path": "examples/reading-html-demo/images/04-timeline.png",
-      "sha256": "d78ac6e8ecd2e26bdca1f82f3858e72fd6dc294da4f9a5292c899524842f9bf6",
+      "sha256": "d554763680697ae6560d8b512ee68ae8979bad664f78bf5ed20dacb01feb8da4",
       "hash_kind": "binary",
-      "bytes": 752171
+      "bytes": 184438
     },
     {
       "path": "examples/reading-html-demo/images/05-book-demo-001.png",
-      "sha256": "cde421b1cee61416109f233ea6fdb0b4da92bbc46fbd1b8509731eb3870e08fd",
+      "sha256": "99ad2f47824fbdb6616745bf07b69d7507545906e14e30a6097d5557637f2124",
       "hash_kind": "binary",
-      "bytes": 744847
+      "bytes": 172673
     },
     {
       "path": "examples/reading-html-demo/images/06-book-demo-002.png",
-      "sha256": "067595cd9e8159a997b20dde843ec704683c777611b5e88676a42b9307719aad",
+      "sha256": "1f4d971ff205ba9ef42178c16c0f1709537eb6d11e0e4e68cf9206b05f9308bf",
       "hash_kind": "binary",
-      "bytes": 750186
+      "bytes": 177088
     },
     {
       "path": "examples/reading-html-demo/images/07-book-demo-003.png",
-      "sha256": "55098e3ae6726224cbb422edf3901d291f8486d8c411d9764bd969da97e193db",
+      "sha256": "9bc17bf224d8907e73e72886bca5550f20fe85111723b8a075b3d4d2f64943c5",
       "hash_kind": "binary",
-      "bytes": 773645
+      "bytes": 203242
     },
     {
       "path": "examples/reading-html-demo/images/08-book-demo-004.png",
-      "sha256": "82249d0c5a2c984b314e710730fcfa66a841fd737d7af0d6035f8fe70ad18625",
+      "sha256": "86dfc4733fb4f3a9b5bc8bda6df2052538634b9d2f90c97350d9a217d4123cf1",
       "hash_kind": "binary",
-      "bytes": 743656
+      "bytes": 171749
     },
     {
       "path": "examples/reading-html-demo/images/09-book-demo-005.png",
-      "sha256": "a6f3b2136889faea9c668317f1ce848d9961f64c84927246aefc9c68c5af2ce3",
+      "sha256": "ff5bb30843175a71a038ad2f443d5ccec8a102d3b883f7214e9edd2e58dfd7f1",
       "hash_kind": "binary",
-      "bytes": 746390
+      "bytes": 173625
     },
     {
       "path": "examples/reading-html-demo/images/10-book-demo-006.png",
-      "sha256": "b4bff9e2ece9f9e322f5c006a88d940968f088dbd8b326ffd1055dc274feb820",
+      "sha256": "6f2193799df157c10f2567baf98fd1dbae53b58ef1e36e44702afd14706686de",
       "hash_kind": "binary",
-      "bytes": 756860
+      "bytes": 184159
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "938023c7e0ba28a2f0b5d736758041071b6b8bb492d9db69f2746ee3c6aa4bb2",
+      "sha256": "0a76186df8806fd199e5c20c225d368894469bb06c7df0dee8dbf16637aba0a1",
       "hash_kind": "text-lf",
-      "bytes": 7894932
+      "bytes": 7909803
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
@@ -411,21 +411,21 @@
     },
     {
       "path": "examples/reading-html-demo/README.md",
-      "sha256": "53b5707a973d2e66360fc6b20d857cda423bf29c0e7394bfa97aff796c93decd",
+      "sha256": "bd13f5d72dd4017b9e93d76249c1b18c3326a261bc6ce0692c8a40ff4ba8991c",
       "hash_kind": "text-lf",
-      "bytes": 3187
+      "bytes": 3071
     },
     {
       "path": "examples/reading-html-demo/share-overview.png",
-      "sha256": "d437910d8febc8d90cee3a7975eade3e5e0d22c31cad4944dde0ae912df5fd4a",
+      "sha256": "399435feccdea61bb30e6a90c6487160044b4b0155d6888de4187743c55afefd",
       "hash_kind": "binary",
-      "bytes": 1015956
+      "bytes": 606387
     },
     {
       "path": "examples/reading-html-demo/web-preview.png",
-      "sha256": "c9b8bebbca116b474720ae0b408ca87ee27cdeb27b678f1df40706d9f8c1bd6a",
+      "sha256": "8f0a20ccd4f5ff8defd71ee4e10952a21c8fc2a071ed70c9fe9fa079cc82f333",
       "hash_kind": "binary",
-      "bytes": 1822033
+      "bytes": 867880
     },
     {
       "path": "examples/README.md",
