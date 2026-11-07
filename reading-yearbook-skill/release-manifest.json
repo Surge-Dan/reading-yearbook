@@ -69,9 +69,9 @@
     },
     {
       "path": "assets/reading-app.css",
-      "sha256": "a2b7387fc7c40feb71f878bcac03226620e6d4e0f4119e0d877e523215c26183",
+      "sha256": "825fb08d141e88772454d3f52722a25a2e7a2cc635798b025d5a128b0d3e7d72",
       "hash_kind": "text-lf",
-      "bytes": 16896
+      "bytes": 16755
     },
     {
       "path": "assets/reading-app.js",
@@ -81,9 +81,9 @@
     },
     {
       "path": "assets/reading-art.css",
-      "sha256": "f1ac49f01c48ae8e85f325e97518ae6084750e6e46b9038a8296533152953cb6",
+      "sha256": "f41ec851ff0a5a058cae5009674e1e39c6b835d46a7ed3205071f802de58f738",
       "hash_kind": "text-lf",
-      "bytes": 28898
+      "bytes": 28740
     },
     {
       "path": "assets/reading-refinement.css",
@@ -399,9 +399,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "96e80517a133413bf9183c6b919bfa18756b00f67bc84e0770b970cb9c7660ef",
+      "sha256": "938023c7e0ba28a2f0b5d736758041071b6b8bb492d9db69f2746ee3c6aa4bb2",
       "hash_kind": "text-lf",
-      "bytes": 7895231
+      "bytes": 7894932
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
