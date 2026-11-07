@@ -62,6 +62,8 @@ def features_data(raw,year,as_of):
 
 
 def notes(rows, year):
+    if rows is None:
+        return []
     if not isinstance(rows, list):
         raise ValueError('书籍划线／想法须为列表')
     result, seen = [], set()
@@ -138,10 +140,15 @@ def adapt_data(raw, year=None):
                                  'created_at': value.get('created_at'), 'quote': value.get('abstract', '')})
         else:
             highlights, thoughts = row.get('highlights', []), row.get('thoughts', [])
+            for field, entries in (('highlights', highlights), ('thoughts', thoughts)):
+                if entries is not None and not isinstance(entries, list):
+                    raise ValueError(f'books[{index}].{field}须为列表或null')
         progress = number(row.get('progress'))
         if progress is not None and progress > 100:
             progress = None
-        category = category_name(row.get('source_category') if normalized and 'source_category' in row else row.get('category'))
+        category = category_name(row.get('category'))
+        if normalized:
+            category = category_name(row.get('source_category')) or (category if category != '未分类' else '')
         primary_category = re.split(r'[-/]', category)[0].strip() if category else '未分类'
         books.append({'book_id': book_id, 'title': str(row.get('title') or '未命名书籍'),
                       'author': str(row.get('author') or '作者未记录'),
@@ -194,9 +201,14 @@ def adapt_data(raw, year=None):
                         'seconds': number(summary.get('total_read_seconds')),
                         'monthly': values, 'complete_months': complete_months}, 'books': books}
     if normalized:
-        for key in ('collection_status','material_coverage'):
-            if isinstance(raw.get(key),dict):
-                data[key] = raw[key]
+        if isinstance(raw.get('collection_status'), dict):
+            data['collection_status'] = raw['collection_status']
+        if isinstance(material := raw.get('material_coverage'), dict):
+            data['material_coverage'] = {
+                key: number(material.get(key)) for key in
+                ('books_with_checked_highlights', 'books_with_checked_thoughts', 'current_finished')
+            }
+            data['material_coverage']['states_collected_on'] = date_value(material.get('states_collected_on')) or ''
         coverage=raw.get('coverage',{})
         data['coverage']['complete'] = data['coverage']['complete'] and coverage.get('complete') is True
         data['coverage']['reason'] = str(coverage.get('reason') or '')
@@ -254,6 +266,9 @@ def merge_annual(data, snapshot):
         data['summary']['monthly'] = monthly
     shelf = {str(b.get('bookId')): b for b in snapshot.get('shelf', {}).get('books', [])}
     existing = {b['book_id']: b for b in data['books']}
+    for key, book in existing.items():
+        if shelf.get(key, {}).get('secret') in (True, 1):
+            book['secret'] = True
     ranked = {str((x.get('book') or {}).get('bookId')): x for x in annual.get('readLongest', []) if number(x.get('readTime')) and (x.get('book') or {}).get('bookId')}
     candidates = {key: {**shelf.get(key, {}), **item['book']} for key, item in ranked.items()}
     status = {}
@@ -270,14 +285,12 @@ def merge_annual(data, snapshot):
             b = adapt_data({'year': data['year'], 'books': [{'book_id': key, 'title': row.get('title'), 'author': row.get('author')}], 'summary': {}})['books'][0]
             b['selected'] = False
             existing[key] = b
-        category = row.get('category')
-        if isinstance(category, str) and category:
+        category = category_name(row.get('category'))
+        if category:
             b['source_category'] = category
             b['category'] = re.split(r'[-/]', category)[0].strip() or '未分类'
-        elif isinstance(category, dict):
-            b['category'] = str(category.get('title') or category.get('categoryTitle') or '未分类')
         info = status.get(key, {})
-        b['secret'] = row.get('secret') in (True,1)
+        b['secret'] = b['secret'] or row.get('secret') in (True,1) or shelf.get(key, {}).get('secret') in (True,1)
         b['is_started'] = info.get('is_started') if isinstance(info.get('is_started'),bool) else None
         progress = number(info.get('progress'))
         if progress is not None and progress <= 100:
@@ -379,6 +392,32 @@ def embed_image(path):
 def build_html(data, output, covers=None, art_assets=None, require_all_covers=False, allow_draft=False):
     """Whitelist data at adapter boundary; no raw payload embedded."""
     validated_distillations(data.get('distillations'), data.get('source_mode'))
+    private_books = [book for book in data['books'] if book.get('secret')]
+    if private_books:
+        private_ids = {book['book_id'] for book in private_books}
+        private_titles = {book['title'].strip().casefold() for book in private_books}
+        private_notes = {(kind, note['source_id']) for book in private_books
+                         for kind, field in (('highlight', 'highlights'), ('thought', 'thoughts'))
+                         for note in book[field]}
+        books = [book for book in data['books'] if book['book_id'] not in private_ids]
+        data = {**data, 'books': books, 'private_books_omitted': len(private_ids),
+                'coverage': {**data['coverage'], 'loaded_books': len(books), 'complete': False}}
+        if 'reading_signals' in data:
+            data['reading_signals'] = [signal for signal in data['reading_signals']
+                                       if (signal.get('source_kind', 'thought'), signal['source_id']) not in private_notes]
+        if 'distillations' in data:
+            data['distillations'] = [bundle for bundle in data['distillations']
+                                     if bundle['analysis']['book']['title'].strip().casefold() not in private_titles]
+        if 'collection_status' in data:
+            data['collection_status'] = {key: data['collection_status'][key] for key in ('complete', 'message')
+                                         if key in data['collection_status']}
+        if 'material_coverage' in data:
+            data['material_coverage'] = {
+                'books_with_checked_highlights': sum(b.get('note_coverage', {}).get('highlights') == 'complete' for b in books),
+                'books_with_checked_thoughts': sum(b.get('note_coverage', {}).get('thoughts') == 'complete' for b in books),
+                'current_finished': sum(b.get('progress') == 100 for b in books),
+                'states_collected_on': data['material_coverage'].get('states_collected_on'),
+            }
     from cover_contract import missing_covers, MissingCovers
     strict=require_all_covers
     invalid_files=set()
@@ -456,21 +495,22 @@ def main():
         if args.distillation:
             raw['distillations'] = load_distillations(args.distillation, raw.get('source_mode'))
         validated_distillations(raw.get('distillations'), raw.get('source_mode'))
-    except (ValueError, OSError) as error:
+        data = adapt_data(raw, args.year)
+        if args.annual_snapshot:
+            merge_annual(data, json.loads(args.annual_snapshot.read_text('utf-8-sig')))
+        if args.book_materials:
+            merge_materials(data, json.loads(args.book_materials.read_text('utf-8-sig')))
+        covers = {}
+        if args.covers:
+            covers = {k: args.covers.parent / v for k, v in json.loads(args.covers.read_text('utf-8-sig')).items()}
+        art_assets = {}
+        if args.art_assets:
+            art_assets = {k: args.art_assets.parent / v for k, v in json.loads(args.art_assets.read_text('utf-8-sig')).items()}
+        result = build_html(data, args.output, covers, art_assets, args.require_all_covers, allow_draft=args.allow_draft)
+    except (ValueError, OSError, TypeError, AttributeError, KeyError) as error:
         print(json.dumps({'status':'blocked','message':str(error)},ensure_ascii=False))
         return 2
-    data = adapt_data(raw, args.year)
-    if args.annual_snapshot:
-        merge_annual(data, json.loads(args.annual_snapshot.read_text('utf-8-sig')))
-    if args.book_materials:
-        merge_materials(data, json.loads(args.book_materials.read_text('utf-8-sig')))
-    covers = {}
-    if args.covers:
-        covers = {k: args.covers.parent / v for k, v in json.loads(args.covers.read_text('utf-8-sig')).items()}
-    art_assets = {}
-    if args.art_assets:
-        art_assets = {k: args.art_assets.parent / v for k, v in json.loads(args.art_assets.read_text('utf-8-sig')).items()}
-    print(json.dumps(build_html(data, args.output, covers, art_assets, args.require_all_covers,allow_draft=args.allow_draft), ensure_ascii=False))
+    print(json.dumps(result, ensure_ascii=False))
     return 0
 
 

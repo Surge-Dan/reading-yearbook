@@ -88,8 +88,8 @@
   const hours = v => v == null ? '未记录' : `${(v/3600).toFixed(1)}小时`;
   const duration = v => v == null ? '未记录' : `${Math.floor(v/3600)}小时${Math.floor(v%3600/60)}分钟`;
   const value = v => v == null ? '—' : String(v);
-  const statusLabel = b => ({finished:'已读完',reading:'在读',unknown:'状态未记录'}[b.status]);
-  const scope = data.coverage.complete ? `全年${data.books.length}本` : `已载入${data.books.length}本 · 年度记录${value(data.coverage.annual_books)}本`;
+  const statusLabel = b => ({finished:'已读完',reading:'在读',unstarted:'未开始',unknown:'状态未记录'}[b.status]);
+  const scope = data.private_books_omitted ? `已载入${data.books.length}本 · 已隐藏私密书目 · 年度汇总含全部记录` : data.coverage.complete ? `全年${data.books.length}本` : `已载入${data.books.length}本 · 年度记录${value(data.coverage.annual_books)}本`;
   function updateNavSurface(){document.querySelector('.masthead').classList.toggle('is-scrolled',scrollY>8);}
   addEventListener('scroll',updateNavSurface,{passive:true});updateNavSurface();
   function toast(text) {$('#toast').textContent=text;$('#toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').hidden=true,2800);}
@@ -149,10 +149,10 @@
   }
   drawChart(); let resizeFrame;addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(drawChart);});
 
-  const statusCounts={finished:0,reading:0,unknown:0};
+  const statusCounts={finished:0,reading:0,unstarted:0,unknown:0};
   for(const book of data.books)statusCounts[book.status in statusCounts?book.status:'unknown']++;
   $('#overviewStatusChart').innerHTML=data.books.length
-    ?Object.entries(statusCounts).map(([status,count])=>`<div class="overview-status-row">
+    ?Object.entries(statusCounts).filter(([status,count])=>status!=='unstarted'||count>0).map(([status,count])=>`<div class="overview-status-row">
       <div class="overview-status-label"><span>${statusLabel({status})}</span><strong>${count} 本</strong></div>
       <div class="overview-status-track" aria-hidden="true"><span class="overview-status-fill" style="width:${count/data.books.length*100}%"></span></div>
     </div>`).join('')
@@ -258,7 +258,7 @@
   if(location.hash.startsWith('#book=')){try{openBook(decodeURIComponent(location.hash.slice(6)),true);}catch{}}
   document.addEventListener('click',e=>{const open=e.target.closest('[data-open-book]');if(open)openBook(open.dataset.openBook);const add=e.target.closest('[data-share-book]');if(add)addBookShare(add.dataset.shareBook);const quote=e.target.closest('[data-add-quote]');if(quote){const b=bookMap.get(quote.dataset.addQuote);addBookShare(b.book_id,b.highlights[Number(quote.dataset.index)]?.text);toast('已加入分享，可在分享区预览');}const note=e.target.closest('[data-add-note]');if(note){const b=bookMap.get(note.dataset.addNote);addBookShare(b.book_id,b.thoughts[Number(note.dataset.index)]?.text,'thought');}});
   $('#sourcesDialog .close').onclick=()=>$('#sourcesDialog').close();
-  $('#openSources').onclick=()=>{$('#sourcesContent').innerHTML=`<p>统计年份：${data.year}${data.as_of?'；采集日期：'+esc(data.as_of):''}</p><p>书目范围：${esc(scope)}。</p><p>模式：${esc(data.source_mode)}；核验状态：${esc(data.verification_status)}。</p><p>分布按已载入书籍的主分类计数；未知状态不归入“在读”。月度图只展示完整月份，缺失值不当作零。</p><p>时间线只展示本年有日期的事件。书籍简介、原文划线和个人笔记分别呈现。</p>${data.material_coverage?`<p>已核查${data.material_coverage.books_with_checked_highlights}本书的划线、${data.material_coverage.books_with_checked_thoughts}本书的个人想法。书籍详情保留本书全部历史记录，年度时间线只取${data.year}年。</p><p>年度汇总读完${value(data.summary.finished)}本；当前书架进度100%的书有${data.material_coverage.current_finished}本。年度汇总与当前阅读进度是不同口径；“已读完”筛选使用当前进度。进度采集日期：${esc(data.material_coverage.states_collected_on)}。</p>`:''}<p>字体优先使用本机Noto Serif SC／Noto Sans SC，无该字体时使用系统中文字体。文件不依赖在线字体或CDN。</p>`;$('#sourcesDialog').showModal();};
+  $('#openSources').onclick=()=>{$('#sourcesContent').innerHTML=`<p>统计年份：${data.year}${data.as_of?'；采集日期：'+esc(data.as_of):''}</p><p>书目范围：${esc(scope)}。</p><p>模式：${esc(data.source_mode)}；核验状态：${esc(data.verification_status)}。</p><p>分布按已载入书籍的主分类计数；未知状态不归入“在读”。月度图只展示完整月份，缺失值不当作零。</p><p>时间线只展示本年有日期的事件。书籍简介、原文划线和个人笔记分别呈现。</p>${data.material_coverage?`<p>已核查${esc(value(data.material_coverage.books_with_checked_highlights))}本书的划线、${esc(value(data.material_coverage.books_with_checked_thoughts))}本书的个人想法。书籍详情保留本书全部历史记录，年度时间线只取${data.year}年。</p><p>年度汇总读完${value(data.summary.finished)}本；当前书架进度100%的书有${esc(value(data.material_coverage.current_finished))}本。年度汇总与当前阅读进度是不同口径；“已读完”筛选使用当前进度。进度采集日期：${esc(data.material_coverage.states_collected_on)}。</p>`:''}<p>字体优先使用本机Noto Serif SC／Noto Sans SC，无该字体时使用系统中文字体。文件不依赖在线字体或CDN。</p>`;$('#sourcesDialog').showModal();};
 
   async function copyText(text){try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);}else{const t=document.createElement('textarea');t.value=text;document.body.append(t);t.select();if(!document.execCommand('copy'))throw Error('clipboard');t.remove();}toast('已复制');}catch{toast('复制失败，可选中文字后手动复制');}}
   $('#quoteBook').innerHTML='<option value="">全部书籍</option>'+data.books.filter(b=>entryKind==='highlight'?b.highlights.length:b.thoughts.length).map(b=>`<option value="${esc(b.book_id)}">${esc(b.title)}（${entryKind==='highlight'?b.highlights.length:b.thoughts.length}）</option>`).join('');
@@ -394,7 +394,7 @@
   function markdown(){
     const lines=[`# ${data.year}阅读年鉴`,'',`范围：${scope}${data.as_of?'；采集日期：'+data.as_of:''}`,'',`阅读时长：${duration(data.summary.seconds)}`,`读过：${value(data.summary.read)}本；年度汇总读完：${value(data.summary.finished)}本`,''];
     if(data.collection_status&&!data.collection_status.complete)lines.push(data.collection_status.message||'部分材料暂未取得。','');
-    if(data.material_coverage)lines.push(`当前进度100%的书：${data.material_coverage.current_finished}本（与年度汇总分别统计）。`,'');
+    if(data.material_coverage)lines.push(`当前进度100%的书：${esc(value(data.material_coverage.current_finished))}本（与年度汇总分别统计）。`,'');
     for(const b of data.books){
       lines.push(`## ${b.title}`,'',`作者：${b.author}`,'',`阅读状态：${statusLabel(b)}`,'');
       if(b.note_coverage?.scope==='all_time')lines.push('笔记范围：本书全部历史记录。','');

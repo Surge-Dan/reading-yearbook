@@ -75,9 +75,9 @@
     },
     {
       "path": "assets/reading-app.js",
-      "sha256": "928286446afd524715c223fc6124c359a9d9a274b924dd2013ff69889e33d329",
+      "sha256": "31babb40cbe074e1ec02381b5f8856580e7c008d4020f2e8c8f9a856a7ddf8b0",
       "hash_kind": "text-lf",
-      "bytes": 47093
+      "bytes": 47353
     },
     {
       "path": "assets/reading-art.css",
@@ -93,15 +93,15 @@
     },
     {
       "path": "assets/reading-share-art.js",
-      "sha256": "59be462fee5210cd8697f85c1b30e2455613b2e4f6ac4eaea7063e0d25c67904",
+      "sha256": "9877245d94b557dacf477a3fe532d3b13d3a92068e0033201a6dca85cc252e5d",
       "hash_kind": "text-lf",
-      "bytes": 32441
+      "bytes": 32544
     },
     {
       "path": "assets/reading-template.html",
-      "sha256": "d6b654a1fed1e6d1778142c2fd52c2eb292371eff3a54179cd36a63af0dea3ed",
+      "sha256": "cc6d5b8696378b144eea4c02815c5a3044f33cdf0961c72b35cd30d18e24d340",
       "hash_kind": "text-lf",
-      "bytes": 11561
+      "bytes": 11632
     },
     {
       "path": "assets/sample-data.json",
@@ -399,9 +399,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "abf65bedc574cb6823ebfc7ab57181dd5c0a0cc90f51c43bef42133a153c75f6",
+      "sha256": "96e80517a133413bf9183c6b919bfa18756b00f67bc84e0770b970cb9c7660ef",
       "hash_kind": "text-lf",
-      "bytes": 7894795
+      "bytes": 7895231
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
@@ -621,9 +621,9 @@
     },
     {
       "path": "references/html-yearbook.md",
-      "sha256": "8c83c08b90af807e480d113ce9e0fa27ed4f436f74a41f907ec21b6092ab1f1d",
+      "sha256": "9b327069816b028a8f6165682d3df0f26ec4137c22d65cc3ade95224fc41fcb3",
       "hash_kind": "text-lf",
-      "bytes": 21106
+      "bytes": 21124
     },
     {
       "path": "references/light-reading.md",
@@ -717,9 +717,9 @@
     },
     {
       "path": "scripts/build_reading_html.py",
-      "sha256": "acd4e79df65fa49cc73be36416396332f78913ee72f4fe2d5a5b1334a2600084",
+      "sha256": "e6b57a4878db17d7c4b08650e16e63ff7e0626cfc1b0e002a1b3b9a966728ec2",
       "hash_kind": "text-lf",
-      "bytes": 29496
+      "bytes": 32342
     },
     {
       "path": "scripts/collage_materials.py",
@@ -747,9 +747,9 @@
     },
     {
       "path": "scripts/cover_contract.py",
-      "sha256": "96ceb7c491623edc60d315e0a75cda4b3701c9610516faeea284ace4bac53223",
+      "sha256": "4bc9b6f942de0f5d416c5f712340ab96a43f8688262d514d2b7b50c20fcb4bc8",
       "hash_kind": "text-lf",
-      "bytes": 4078
+      "bytes": 4675
     },
     {
       "path": "scripts/create_display_lettering.py",

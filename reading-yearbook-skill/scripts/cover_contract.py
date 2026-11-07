@@ -73,6 +73,15 @@ def check_yearbook_page(page):
     parser=YearbookData(); parser.feed(page)
     if not parser.found: raise ValueError('年鉴缺少可核查的书目数据')
     data=json.loads(''.join(parser.parts))
+    if isinstance(data, dict):
+        if any(isinstance(book, dict) and book.get('secret') for book in data.get('books', [])):
+            raise ValueError('旧年鉴含私密书目，请重新生成后再分享')
+        material = data.get('material_coverage')
+        if isinstance(material, dict) and any(
+            material.get(key) is not None and type(material[key]) not in (int, float)
+            for key in ('books_with_checked_highlights', 'books_with_checked_thoughts', 'current_finished')
+        ):
+            raise ValueError('旧年鉴含无效统计字段，请重新生成')
     if isinstance(data,dict) and data.get('source_mode')=='sample': return page
     missing=missing_covers(data)
     if not isinstance(data.get('summary'),dict) or not isinstance(data['summary'].get('monthly'),list):

@@ -28,6 +28,30 @@ def fixture():
 
 
 class ReadingHtmlTests(unittest.TestCase):
+    def test_delivery_omits_private_book_and_its_portrait_evidence(self):
+        raw = fixture()
+        raw['books'][0]['secret'] = True
+        raw['reading_signals'] = [{'source_id':'h1','source_kind':'highlight','axis':'EI',
+                                   'side':'I','reason':'private-portrait-marker'}]
+        data = adapt_data(raw)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'index.html'
+            build_html(data, path)
+            page = path.read_text('utf-8')
+        self.assertNotIn(raw['books'][0]['title'], page)
+        self.assertNotIn(raw['books'][0]['highlights'][0]['text'], page)
+        self.assertNotIn('private-portrait-marker', page)
+        self.assertEqual(len(data['books']), 3)
+
+    def test_normalized_import_cleans_coverage_and_preserves_category(self):
+        raw = adapt_data(fixture())
+        raw['books'][0].update(source_category='', category='历史', highlights=None)
+        raw['material_coverage'] = {'books_with_checked_highlights':'<img src=x onerror=alert(1)>'}
+        restored = adapt_data(raw)
+        self.assertEqual(restored['books'][0]['category'], '历史')
+        self.assertEqual(restored['books'][0]['highlights'], [])
+        self.assertIsNone(restored['material_coverage']['books_with_checked_highlights'])
+
     def test_formal_yearbook_requires_every_cover_and_preserves_previous_html(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'index.html';path.write_text('previous valid version','utf-8')

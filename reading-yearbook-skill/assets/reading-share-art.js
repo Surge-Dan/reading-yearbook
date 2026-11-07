@@ -11,7 +11,7 @@ window.ReadingShareArtwork = (() => {
   const known=n=>typeof n==='number'&&Number.isFinite(n);
   const amount=n=>known(n)?String(n):'—';
   const duration=n=>!known(n)?'未记录':n>=3600?`${Math.floor(n/3600)}小时${Math.floor(n%3600/60)}分钟`:`${Math.floor(n/60)}分钟`;
-  const status=b=>b.progress==null?'进度未记录':b.progress>=100?'已读完':'在读';
+  const status=b=>({finished:'已读完',reading:'在读',unstarted:'未开始',unknown:'状态未记录'}[b.status]??(b.progress==null?'进度未记录':b.progress>=100?'已读完':'在读'));
   function create({data,art,loadImage}){
     const fonts=Promise.all([document.fonts.load('600 48px ReadingSerif'),document.fonts.load('400 32px ReadingSerif'),document.fonts.load('400 28px ReadingSans')]);
     const categories=new Map();for(const b of data.books)categories.set(b.category,(categories.get(b.category)||0)+1);
