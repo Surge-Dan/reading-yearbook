@@ -452,6 +452,8 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
     art = {name: embed_image((art_assets or {}).get(name) or ROOT / 'assets' / 'yearbook-art' / file)
            for name, file in [('hero', 'hero-book.png'), ('reading', 'reading.png'), ('rhythm', 'rhythm.png'),
                               ('readingRecord', 'reading-record.png')]}
+    empty_shelf = (ROOT / 'assets/yearbook-art/empty-shelf.svg').read_bytes()
+    art['emptyShelf'] = 'data:image/svg+xml;base64,' + base64.b64encode(empty_shelf).decode('ascii')
     replacements = {'__DATA__': serialized, '__STYLE__': (ROOT / 'assets' / 'reading-app.css').read_text('utf-8') + '\n' + (ROOT / 'assets' / 'reading-art.css').read_text('utf-8') + '\n' + (ROOT / 'assets' / 'ebook-app.css').read_text('utf-8'),
                     '__ART__': json.dumps(art),
                     '__APP__': (ROOT / 'assets' / 'reading-app.js').read_text('utf-8'),

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="410" viewBox="0 0 600 410">
+  <defs>
+    <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(34)">
+      <path d="M0 0v6" stroke="#a36348" stroke-width="1" opacity=".22"/>
+    </pattern>
+    <linearGradient id="wash" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#f6e7cb" stop-opacity=".65"/>
+      <stop offset="1" stop-color="#f6e7cb" stop-opacity=".08"/>
+    </linearGradient>
+  </defs>
+  <path d="M84 305C47 240 68 163 108 111 156 50 236 39 302 50c75-5 146 13 191 63 58 64 64 140 22 196Z" fill="url(#wash)"/>
+  <ellipse cx="297" cy="350" rx="235" ry="13" fill="#b07c52" opacity=".1"/>
+  <g stroke="#a0644c" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M135 337V88q0-6 7-6h314q8 0 8 6v249M145 108h309M150 109v219m299-219v219" fill="none" stroke-width="3"/>
+    <path d="M135 90h329l-12 17H148Zm15 116h299l13 12H137Zm0 104h299l13 12H137Z" fill="#e7c69c" stroke-width="2"/>
+    <path d="M137 218h325v7H137Zm0 104h325v8H137Z" fill="#c98961" stroke-width="2"/>
+    <path d="M135 84h14v122h-14zm315 0h14v122h-14zm-315 145h14v80h-14zm315 0h14v80h-14z" fill="url(#hatch)" stroke-width="1"/>
+    <path d="M136 329h14v11h-14zm313 0h15v11h-15z" fill="#ac6c52" stroke-width="1.8"/>
+    <path d="M184 216c40 2 95 2 133 0m-105 111 132-1m30-110 54-1M164 99l73 1m146 0h37" fill="none" stroke="#fcf1dc" stroke-width="1.6"/>
+  </g>
+  <g fill="none" stroke="#b7886b" stroke-width="2" stroke-dasharray="5 7" opacity=".64">
+    <rect x="243" y="133" width="27" height="65" rx="3"/>
+    <rect x="273" y="124" width="31" height="74" rx="3"/>
+    <rect x="310" y="136" width="24" height="60" rx="3" transform="rotate(-11 322 196)"/>
+  </g>
+  <g stroke="#bb815f" stroke-width="2" stroke-linecap="round" opacity=".65">
+    <path d="M94 150v22m-11-11h22m406 70v18m-9-9h18M493 116v11m-6-6h12"/>
+  </g>
+</svg>

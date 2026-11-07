@@ -60,14 +60,17 @@ class ReadingChartDesignTests(unittest.TestCase):
                         const data=JSON.parse(document.querySelector('#reading-data').textContent),art=JSON.parse(document.querySelector('#reading-art').textContent);
                         const loadImage=src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=src;});
                         const renderer=ReadingShareArtwork.create({data,art,loadImage}),out=[];
-                        for(const kind of ['distribution','stats'])out.push((await renderer.render({id:kind,kind},ratio)).readingLayout);
+                        data.features={daily:{[data.year+'-01-01']:0,[data.year+'-01-02']:900,[data.year+'-01-03']:1800,[data.year+'-01-04']:3600,[data.year+'-01-05']:3601}};
+                        for(const kind of ['distribution','stats','cover'])out.push((await renderer.render({id:kind,kind},ratio)).readingLayout);
                         return out;
                     }""", ratio)
                     categories = [c for c in layouts[0]['charts'] if c['kind']=='category']
                     self.assertEqual(sum(c['count'] for c in categories), 3)
-                    self.assertTrue(all(c.get('encoding')=='book-spines' for c in categories))
-                    if ratio != '1:1':
-                        self.assertTrue(any(c['kind']=='duration-bar' for c in layouts[1]['charts']))
+                    self.assertTrue(all(c.get('encoding')=='share-bar' for c in categories))
+                    daily = next(c for c in layouts[1]['charts'] if c['kind']=='day-distribution')
+                    self.assertEqual([b['count'] for b in daily['bins']], [1, 1, 1, 1])
+                    self.assertEqual(daily['total'], 4)
+                    self.assertEqual([c['kind'] for c in layouts[2]['charts']], ['calendar'])
                 self.assertEqual(errors, [])
             finally:
                 browser.close()

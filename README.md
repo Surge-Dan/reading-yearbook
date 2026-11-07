@@ -87,7 +87,7 @@ npx skills add Tencent/WeChatReading -g
 
 ![阅读年鉴网页预览](reading-yearbook-skill/examples/reading-html-demo/web-preview.png)
 
-分享图直接使用网页内的渲染器导出。下图展示四种概览页和两张书卡，分别使用原文摘录与个人笔记。
+分享图直接使用网页内的渲染器导出。封面用日历热力图展示已取得的逐日时长，统计页展示月度趋势和单日时长分布，分类页按内容量调整间距。下图还展示时间线以及原文摘录、个人笔记两种书卡。
 
 ![网页分享区导出的组图预览](reading-yearbook-skill/examples/reading-html-demo/share-overview.png)
 

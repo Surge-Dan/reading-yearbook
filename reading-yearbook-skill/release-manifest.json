@@ -93,9 +93,9 @@
     },
     {
       "path": "assets/reading-share-art.js",
-      "sha256": "9877245d94b557dacf477a3fe532d3b13d3a92068e0033201a6dca85cc252e5d",
+      "sha256": "ffb3eedd65bff3f11ea75cd4afece4e095aa9b00aaf26e701520c2586bca8a75",
       "hash_kind": "text-lf",
-      "bytes": 32544
+      "bytes": 33481
     },
     {
       "path": "assets/reading-template.html",
@@ -108,6 +108,12 @@
       "sha256": "95b547d27ae15a0a8cfbe9529c70c3967b67fcb58d8ed7c227f906c223797536",
       "hash_kind": "text-lf",
       "bytes": 7164
+    },
+    {
+      "path": "assets/yearbook-art/empty-shelf.svg",
+      "sha256": "877b706975373ceb26d55f9aa0ba72d4090f9f44fb0fbeaf216765034101fc1e",
+      "hash_kind": "text-lf",
+      "bytes": 1932
     },
     {
       "path": "assets/yearbook-art/hero-book.png",
@@ -201,9 +207,9 @@
     },
     {
       "path": "examples/build_html_demo.py",
-      "sha256": "346a21f9462f0d668328420ee46966646d1c56408434f2b495f777fa623db0f4",
+      "sha256": "e51eb71f0377a7b63ac97e504a7713792a366798d1ed99dd86d4774fb14cfb60",
       "hash_kind": "text-lf",
-      "bytes": 6782
+      "bytes": 7339
     },
     {
       "path": "examples/build_share_demo.py",
@@ -339,21 +345,21 @@
     },
     {
       "path": "examples/reading-html-demo/images/01-cover.png",
-      "sha256": "3e9354ce7c18ad3ed0a54c38e44d80c39cbf52c3e25944d03bcf8ae7e0c2d857",
+      "sha256": "252932d142d7a3b31d32e0c6f48601b7af5bb5bfc98658e849598a0b8ff3be46",
       "hash_kind": "binary",
-      "bytes": 254634
+      "bytes": 256839
     },
     {
       "path": "examples/reading-html-demo/images/02-stats.png",
-      "sha256": "2c1e3aa8435ce8e38fea93e34486f95156d8772d3df8623f9929f6d6ccb6b333",
+      "sha256": "286e4d265b16a8ec943a676b1bd37ce3df9c4d51c5a75d9379fe65d7c39968d0",
       "hash_kind": "binary",
-      "bytes": 174882
+      "bytes": 156587
     },
     {
       "path": "examples/reading-html-demo/images/03-distribution.png",
-      "sha256": "63578acc96595ac328f2cf93f9cfddd79637b8aef348fa83736fcffeeb63a0c7",
+      "sha256": "bba9347ee7a592ecf6e51b302bf11290bb8e58a53d7e6035a78a2a5006050699",
       "hash_kind": "binary",
-      "bytes": 173403
+      "bytes": 128386
     },
     {
       "path": "examples/reading-html-demo/images/04-timeline.png",
@@ -399,9 +405,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "0a76186df8806fd199e5c20c225d368894469bb06c7df0dee8dbf16637aba0a1",
+      "sha256": "ef6756c297060c15cfb02e2a674ef01321b9b626b63b4b4fab3e7ff4610cca95",
       "hash_kind": "text-lf",
-      "bytes": 7909803
+      "bytes": 7938172
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
@@ -417,9 +423,9 @@
     },
     {
       "path": "examples/reading-html-demo/share-overview.png",
-      "sha256": "399435feccdea61bb30e6a90c6487160044b4b0155d6888de4187743c55afefd",
+      "sha256": "3cc95b88471c949ffcc9aac31418dd753ae39ee81b831de195dddfae2e8e53d9",
       "hash_kind": "binary",
-      "bytes": 606387
+      "bytes": 571956
     },
     {
       "path": "examples/reading-html-demo/web-preview.png",
@@ -621,9 +627,9 @@
     },
     {
       "path": "references/html-yearbook.md",
-      "sha256": "9b327069816b028a8f6165682d3df0f26ec4137c22d65cc3ade95224fc41fcb3",
+      "sha256": "98ecfd42904f42f1fdfa1c8917ac6bbc1fbb2ba3fa5b7d60b744d8bc20b2e6dd",
       "hash_kind": "text-lf",
-      "bytes": 21124
+      "bytes": 21181
     },
     {
       "path": "references/light-reading.md",
@@ -717,9 +723,9 @@
     },
     {
       "path": "scripts/build_reading_html.py",
-      "sha256": "e6b57a4878db17d7c4b08650e16e63ff7e0626cfc1b0e002a1b3b9a966728ec2",
+      "sha256": "7c7f70616dcb9e05d7b63e9a870d5a0a1c073013ab74378726ecb585d25ddec5",
       "hash_kind": "text-lf",
-      "bytes": 32342
+      "bytes": 32521
     },
     {
       "path": "scripts/collage_materials.py",
@@ -909,9 +915,9 @@
     },
     {
       "path": "scripts/skill_release.py",
-      "sha256": "7e9232c1426227c4e61e8ccee207fa2026e99dfd2be3ba9c918f1cad666a5e0d",
+      "sha256": "06ae55e0084b440829de73a0a386160fe10b7374e18f8fcdb95c3ff97a6b49d0",
       "hash_kind": "text-lf",
-      "bytes": 5723
+      "bytes": 5766
     },
     {
       "path": "scripts/static_graphics.py",

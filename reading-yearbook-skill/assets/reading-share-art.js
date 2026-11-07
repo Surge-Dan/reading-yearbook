@@ -125,13 +125,6 @@ window.ReadingShareArtwork = (() => {
         if(!small){for(let i=0;i<vals.length;i++){const xx=vals.length===1?(left+right)/2:left+i*(right-left)/(vals.length-1);if(vals.length<=9||i%2===0||i===vals.length-1)text(`${i+1}月`,xx,base+35,{size:25,font:SANS,color:C.muted,align:'center'});}text('小时',x,y+5,{size:23,font:SANS,color:C.muted});}
         manifest.charts.push({kind:'monthly',points,top,base,upper});
       }
-      function durationBar(v,max,x,y,w,color=C.blue){
-        const width=max>0?w*v/max:0;
-        rect(x,y-11,w,12,C.cream);
-        for(const fraction of [.25,.5,.75])line(x+w*fraction,y-14,x+w*fraction,y+4,C.line,.7);
-        rect(x,y-11,width,12,color);
-        manifest.charts.push({kind:'duration-bar',value:v,max,width,totalWidth:w});
-      }
       function base(){
         rect(0,0,W,H,C.paper);
         let seed=281;ctx.fillStyle='#635237';ctx.globalAlpha=.045;for(let i=0;i<3600;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const x=seed%W;seed=(Math.imul(seed,1664525)+1013904223)>>>0;ctx.fillRect(x,seed%H,1,1);}ctx.globalAlpha=1;
@@ -145,7 +138,7 @@ window.ReadingShareArtwork = (() => {
         text(`${String(idx).padStart(2,'0')} / ${String(4+data.books.length).padStart(2,'0')}`,M,H-44,{font:NUM,size:24,color:C.muted,role:'footer'});
         text(p.kind==='book'?(p.quote?(p.textKind==='thought'?'个人笔记与阅读记录':'原文摘录与阅读记录'):'阅读记录'):'我的阅读年鉴',R,H-44,{size:23,font:SANS,align:'right',color:C.muted,role:'footer'});
       }
-      return {ctx,W,H,M,R,text,block,measureBlock,rect,line,dot,section,scribble,star,image,cover,metric,progress,trend,durationBar,base,manifest};
+      return {ctx,W,H,M,R,text,block,measureBlock,rect,line,dot,section,scribble,star,image,cover,metric,progress,trend,base,manifest};
     }
     async function render(p,ratio){
       await fonts;await document.fonts.ready;const cv=document.createElement('canvas');cv.width=900;cv.height=ratio==='1:1'?900:ratio==='4:5'?1125:1200;
@@ -157,94 +150,133 @@ window.ReadingShareArtwork = (() => {
       else{await coverAccent(p.book);await bookPage(D,p);}
       return cv;
     }
+    function calendar(d,x,y,width){
+      const daily=data.features?.daily??{};
+      const day=86400000,start=Date.UTC(data.year,0,1),end=Date.UTC(data.year+1,0,1);
+      const cutoff=data.as_of?Date.parse(data.as_of):end-day;
+      const offset=(new Date(start).getUTCDay()+6)%7;
+      const weeks=Math.ceil(((end-start)/day+offset)/7);
+      const pitch=Math.min(14,width/weeks),size=pitch-2;
+      const colors=['#efe4d4','#efcf9b','#dda366','#bf6246','#923a30'];
+      const keys=Object.keys(daily);
+      d.text('每天的阅读记录',x,y,{font:SANS,size:24,weight:500});
+      if(!keys.length){
+        d.text('本次未取得逐日时长',x,y+62,{font:SANS,size:27,color:C.muted});
+        return;
+      }
+      const gridY=y+48;
+      for(let time=start;time<end;time+=day){
+        const date=new Date(time),index=(time-start)/day+offset;
+        const left=x+Math.floor(index/7)*pitch,top=gridY+(index%7)*pitch;
+        const value=daily[date.toISOString().slice(0,10)];
+        if(date.getUTCDate()===1 && date.getUTCMonth()%2===0){
+          d.text((date.getUTCMonth()+1)+'月',left,y+37,{font:SANS,size:17,color:C.muted});
+        }
+        if(time>cutoff)continue;
+        if(!known(value))d.rect(left+.5,top+.5,size-1,size-1,C.paper,'#eadcc7');
+        else d.rect(left,top,size,size,colors[value===0?0:value<=900?1:value<=1800?2:value<=3600?3:4]);
+      }
+      const legendY=gridY+7*pitch+22;
+      d.rect(x,legendY-12,12,12,C.paper,'#eadcc7');
+      d.text('缺记录',x+21,legendY,{font:SANS,size:18,color:C.muted});
+      d.text('空白为未到日期',x+116,legendY,{font:SANS,size:18,color:C.muted});
+      d.text('0分钟',x+475,legendY,{font:SANS,size:18,color:C.muted});
+      colors.forEach((fill,i)=>d.rect(x+540+i*19,legendY-13,14,14,fill));
+      d.text('超过60分钟',x+645,legendY,{font:SANS,size:18,color:C.muted});
+      d.manifest.charts.push({kind:'calendar',weeks,days:keys.length});
+    }
     async function coverPage(d){
-      const {H,M,R,text,block,line,image,cover,metric,trend,star}=d,square=H===900;
-      text(String(data.year),M,square?215:238,{font:NUM,size:square?116:136,color:C.red,italic:true});
-      await image(art.reading,568,125,260,126);
-      text('这一年，',M,square?286:318,{size:square?52:58,weight:600});
-      text('读了这些书',M,square?363:400,{size:square?64:72,weight:600});
-      d.scribble(M,square?383:422,350,C.blue);star(797,square?341:373,14);
-      const shelfTop=square?414:464,shelfBottom=square?622:H-371,shelfHeight=shelfBottom-shelfTop;
+      const {H,M,R,text,block,line,image,cover,metric,star}=d,square=H===900;
+      const titleY=square?230:302, shelfTop=square?290:395, shelfBottom=square?477:H-468;
+      text(String(data.year),M,square?188:221,{font:NUM,size:square?94:121,color:C.red,italic:true});
+      await image(art.reading,575,120,247,118);
+      text(data.books.length?'这一年，读了这些书':'这一年的阅读年鉴',M,titleY+34,{size:square?56:61,weight:600});
+      d.scribble(M,titleY+53,363,C.blue);star(800,titleY+19,13);
       const chosen=[...data.books.filter(b=>b.selected),...data.books.filter(b=>!b.selected)].slice(0,5);
       if(chosen.length){
-        const cw=chosen.length<=2?190:Math.min(168,(R-M-56)/(chosen.length*.84+.16)),gap=cw*.84,total=cw+(chosen.length-1)*gap,left=(900-total)/2;
-        for(const [i,b]of chosen.entries())await cover(b,left+i*gap,shelfTop+(i%2?12:0),cw,shelfHeight-24,{angle:[-4,3,-2,4,-3][i],shadow:true});
+        const cw=square?139:167,gap=cw*.83,total=cw+(chosen.length-1)*gap,left=(900-total)/2;
+        for(const [i,b]of chosen.entries())await cover(b,left+i*gap,shelfTop+(i%2?9:0),cw,shelfBottom-shelfTop-18,{angle:[-4,3,-2,4,-3][i],shadow:true});
       }else{
-        await image(art.hero,220,shelfTop,460,shelfHeight-62);
-        block(data.coverage.complete?'这一年，还没有读书记录。':'阅读记录尚未取得。',M,shelfBottom-42,R-M,42,{size:28,min:26,color:C.muted});
+        if(art.emptyShelf)await image(art.emptyShelf,M,shelfTop-10,R-M,shelfBottom-shelfTop-39);
+        block(data.coverage.complete?'这一年还没有阅读记录。':'本次未取得书目。',M,shelfBottom-48,R-M,46,{size:27,min:25,color:C.muted});
       }
-      line(M,shelfBottom+23,R,shelfBottom+23);
-      const my=square?695:H-289,w=(R-M)/4;
-      for(const [i,[v,label]]of [[data.summary.read,'本读过'],[data.summary.finished,'本读完'],[data.summary.read_days,'天阅读'],[data.summary.notes,'条笔记']].entries())metric(v,label,M+i*w,my,w-22,{size:square?52:60,color:C.secondaryInk,labelSize:24});
-      const timeY=square?795:H-132;
-      text('阅读时长',M,timeY,{font:SANS,size:24,color:C.muted});
-      text(duration(data.summary.seconds),M+130,timeY,{font:SANS,size:square?28:30,color:C.quietBlue});
-      if(!square)trend(475,H-181,345,90,{small:true});
+      line(M,shelfBottom+8,R,shelfBottom+8);
+      const metrics=[[data.summary.read,'本读过'],[data.summary.finished,'本读完'],[data.summary.read_days,'天阅读'],[data.summary.notes,'条笔记']];
+      for(const [i,[value,label]]of metrics.entries())metric(value,label,M+i*193,shelfBottom+70,169,{size:48,labelSize:21});
+      text(duration(data.summary.seconds),R,H-288,{font:SANS,size:23,align:'right',color:C.quietBlue});
+      calendar(d,M,H-288,R-M);
     }
     async function statsPage(d){
-      const {H,M,R,text,block,line,metric,trend,section}=d,square=H===900;
-      text('今年，花在书上的时间',M,175,{size:52,weight:600});
-      const total=data.summary.seconds;
-      if(known(total)){
-        metric(Math.floor(total/3600),'小时',M,281,338,{size:80,color:C.red,labelY:335});
-        metric(Math.floor(total%3600/60),'分钟',M+405,281,330,{size:80,color:C.blue,labelY:335});
-        line(M+365,215,M+365,340);
-      }else text('阅读时长未记录',M,286,{size:42,color:C.muted});
-      const w=(R-M)/4;
-      for(const [i,[v,label]]of [[data.summary.read,'本读过'],[data.summary.finished,'本读完'],[data.summary.read_days,'天阅读'],[data.summary.notes,'条笔记']].entries())metric(v,label,M+i*w,410,w-22,{size:52});
-      section('每月的阅读节奏',M,490,R-M,'01');
-      const chartY=549,chartH=square?206:H-895;
-      trend(M,chartY,R-M,chartH);
-      const valid=months.map((v,i)=>({v,i})).filter(r=>known(r.v)),peakY=square?791:H-300;
-      if(valid.length){const peak=valid.reduce((a,b)=>b.v>a.v?b:a);text(`${peak.i+1}月读得最久`,M,peakY,{size:27,weight:400,color:C.quietBlue});text(duration(peak.v),R,peakY,{size:26,font:SANS,align:'right',color:C.muted});}
-      if(!square){
-        const ranked=data.books.filter(b=>known(b.reading_seconds)&&b.reading_seconds>0).sort((a,b)=>b.reading_seconds-a.reading_seconds).slice(0,2);
-        line(M,H-264,R,H-264);
-        text('02',M,H-230,{font:NUM,size:24,color:C.red,italic:true});
-        text(ranked.length?'时间花在哪本书上':'这一年的阅读记录',M+45,H-230,{size:26,weight:500,font:SANS,color:C.secondaryInk});
-        if(ranked.length){
-          const max=ranked[0].reading_seconds;
-          for(const [i,b]of ranked.entries()){
-            const y=H-171+i*60,style={size:28,min:26,weight:400,color:C.secondaryInk,leading:1.2};
-            const shortTitle=measureBlockTitle(b.title);
-            await d.cover(b,M,y-30,24,34);
-            block(shortTitle,M+38,y-28,285,42,style);
-            d.durationBar(b.reading_seconds,max,425,y-3,180,chartColors.get(b.category)||C.blue);
-            text(duration(b.reading_seconds),R,y,{size:24,font:SANS,align:'right',color:C.muted});
-          }
-        }else block('每一本书，都在书架里留下了位置。',M,H-175,R-M,56,{size:28,min:26,color:C.muted});
+      const {H,M,R,text,rect,trend,section}=d,square=H===900;
+      text('阅读的节奏',M,174,{size:56,weight:600});
+      section('每月阅读时长',M,227,R-M,'01');
+      trend(M,285,R-M,square?187:275);
+      const valid=months.map((v,i)=>({v,i})).filter(row=>known(row.v));
+      const peak=valid.length?valid.reduce((a,b)=>b.v>a.v?b:a):null;
+      const durations=Object.values(data.features?.daily??{}).filter(value=>known(value)&&value>0);
+      const sparse=durations.length<12||data.books.length<=3;
+      const split=(square?531:668)+(sparse?(square?12:40):0);
+      const peakY=square?493:597;
+      if(peak?.v>0)text(peak.i+1+'月读得最久 · '+duration(peak.v),M,peakY,{font:SANS,size:22,color:C.quietBlue});
+      section('单日阅读时长分布',M,split,R-M,'02');
+      if(!durations.length){
+        text('暂无可统计的正时长日记录',M,split+105,{font:SANS,size:28,color:C.muted});
+        const {seconds,read_days:days}=data.summary;
+        if(known(seconds)&&days>0)text('按年度汇总，阅读日平均 '+duration(seconds/days),M,split+160,{font:SANS,size:24,color:C.muted});
+        return;
       }
-      function measureBlockTitle(title){return d.measureBlock(title,350,42,{size:28,min:26,leading:1.2}).cut&&/[：:]/.test(title)?title.split(/[：:]/)[0]:title;}
+      const bins=[['15分钟以内',900],['15至30分钟',1800],['30至60分钟',3600],['超过60分钟',Infinity]]
+        .map(([label,max],i,all)=>({label,count:durations.filter(value=>value<=max&&value>(all[i-1]?.[1]??0)).length}));
+      const max=Math.max(...bins.map(row=>row.count));
+      const firstRow=split+(sparse?(square?73:85):(square?68:78));
+      const stride=(H-139-firstRow)/4;
+      for(const [i,row]of bins.entries()){
+        const y=firstRow+i*stride;
+        text(row.label,M,y,{font:SANS,size:24});
+        rect(M+228,y-19,444,16,C.cream);
+        rect(M+228,y-19,444*row.count/max,16,['#efcf9b','#dda366','#bf6246','#923a30'][i]);
+        text(row.count+'天',R,y,{font:SANS,size:23,color:C.muted,align:'right'});
+      }
+      text('按有正时长记录的'+durations.length+'天统计',M,firstRow+4*stride,{font:SANS,size:21,color:C.muted});
+      d.manifest.charts.push({kind:'day-distribution',bins,total:durations.length});
     }
     async function distributionPage(d){
-      const {H,M,R,text,block,line,cover,section}=d,square=H===900;
-      text('今年，读向了哪些地方',M,175,{size:54,weight:600});
-      d.metric(data.books.length,'本读过',M,272,250,{size:66,color:C.red});
-      text(`${counts.length}个分类`,R,270,{size:29,align:'right',font:SANS,color:C.muted});
+      const {H,M,R,text,block,rect,section,cover}=d,square=H===900;
+      text('今年，读向了哪些地方',M,176,{size:54,weight:600});
+      d.metric(data.books.length,'本书',M,265,200,{size:64,color:C.red});
+      text(counts.length+'个分类',R,268,{font:SANS,size:28,color:C.muted,align:'right'});
       if(!counts.length){
-        block(data.coverage.complete?'这一年没有可统计的阅读书目。':'暂未取得书目，暂无法展示分类分布。',M,371,R-M,118,{size:34,min:32});
-        await d.image(art.hero,210,510,480,H-618);return;
+        block(data.coverage.complete?'这一年还没有书目可供分类。':'本次未取得可分类的书目。',M,356,R-M,70,{size:33,min:30});
+        if(art.emptyShelf)await d.image(art.emptyShelf,M+34,463,R-M-68,H-603);
+        return;
       }
-      const limit=square?4:6,rows=counts.slice(0,counts.length>limit?limit-1:limit);
-      if(counts.length>limit)rows.push({name:'其他分类',count:counts.slice(limit-1).reduce((s,r)=>s+r.count,0),other:true});
-      const max=Math.max(...rows.map(r=>r.count)),unit=Math.max(1,Math.ceil(max/(square?5:7)));
-      section(`按分类统计 · 一块书脊${unit}本`,M,357,R-M,'01');
-      const y0=415,bottom=square?638:H-344,rh=(bottom-y0)/Math.ceil(rows.length/2),categoryCell=(R-M)/2;
-      for(const [i,r]of rows.entries()){
-        const cy=y0+(Math.floor(i/2)+.5)*rh,x=M+(i%2)*categoryCell,color=chartColors.get(r.name)||C.green,marks=Math.ceil(r.count/unit),glyphs=[];
-        block(r.name,x+130,cy-40,categoryCell-146,38,{size:29,min:26,weight:500,leading:1.2});
-        text(`${r.count}本 · ${Math.round(r.count/data.books.length*100)}%`,x+130,cy+35,{font:SANS,size:27,color:C.muted});
-        for(let k=0;k<marks;k++){
-          const value=Math.min(unit,r.count-k*unit),h=10*value/unit,bx=x+15+[0,3,-1][k%3],by=cy+36-k*14-h;
-          d.rect(bx+1,by+2,88,h,'#40352718');d.rect(bx,by,88,h,color);d.rect(bx+65,by+1,18,Math.max(0,h-2),C.paper);line(bx+8,by+2,bx+8,by+Math.max(2,h-2),C.cream,1);
-          glyphs.push({value,x:bx,y:by,width:88,height:h});
-        }
-        d.manifest.charts.push({kind:'category',encoding:'book-spines',name:r.name,count:r.count,total:data.books.length,unit,marks,center:cy,glyphs});
+      const limit=square?6:8,retained=counts.slice(0,counts.length>limit?limit-1:limit);
+      const omitted=counts.length-retained.length;
+      const rows=omitted?[...retained,{name:'其他'+omitted+'类',count:counts.slice(retained.length).reduce((n,r)=>n+r.count,0),other:true}]:retained;
+      const sparse=rows.length<=3;
+      const sectionY=square?(sparse?378:359):(sparse?410:376);
+      section('按书目数量统计',M,sectionY,R-M,'01');
+      const firstRow=sectionY+(sparse?(square?72:84):70);
+      const lastRow=rows.length===1?firstRow:sparse?(square?610:730):H-(omitted?171:160);
+      const stride=rows.length>1?(lastRow-firstRow)/(rows.length-1):0;
+      for(const [i,row]of rows.entries()){
+        const y=firstRow+i*stride,pct=row.count/data.books.length;
+        block(row.name,M,y-28,R-M-168,39,{size:26,min:24,font:SANS});
+        text(row.count+'本 · '+Math.round(pct*100)+'%',R,y,{font:SANS,size:23,align:'right',color:C.muted});
+        rect(M,y+14,R-M,11,C.cream);
+        rect(M,y+14,(R-M)*pct,11,row.other?'#a79786':chartColors.get(row.name)||C.red);
       }
-      const bottomY=square?656:H-284;
-      section('从这些书，继续翻下去',M,bottomY,R-M,'02');
-      const chosen=rows.filter(r=>!r.other).map(r=>data.books.find(b=>b.category===r.name)).slice(0,square?4:5),cell=(R-M)/chosen.length,cw=square?91:104,ch=square?86:127;
-      for(const [i,b]of chosen.entries())await cover(b,M+i*cell+(cell-cw)/2,bottomY+54,cw,ch,{shadow:true});
+      if(omitted)text('其余分类合并统计，包含'+rows.at(-1).count+'本书',M,lastRow+54,{font:SANS,size:22,color:C.muted});
+      if(rows.length<=3){
+        const books=data.books.slice(0,4),spacing=(R-M)/books.length;
+        const top=lastRow+(square?82:116);
+        const imageTop=top+42;
+        const wide=rows.length===1?(square?138:218):108;
+        const height=H-121-imageTop;
+        section('书架里的几本书',M,top-12,R-M,'02');
+        for(const [i,book]of books.entries())await cover(book,M+i*spacing+(spacing-wide)/2,imageTop,wide,height,{shadow:true});
+      }
+      for(const row of rows)d.manifest.charts.push({kind:'category',encoding:'share-bar',...row,total:data.books.length});
     }
     async function timelinePage(d){
       const {H,M,R,text,block,line,dot,cover,section}=d,square=H===900;
