@@ -42,13 +42,14 @@ def _sources(sources, elements, allowed=None):
         if not isinstance(source, dict) or not all(isinstance(source.get(k), str) and source[k] for k in ('element_id', 'quote', 'location')):
             _fail('阅读来源字段无效')
         eid, quote = source['element_id'], source['quote']
-        if eid not in index or (allowed is not None and eid not in allowed) or quote not in index[eid]['text']:
+        if not quote.strip() or eid not in index or (allowed is not None and eid not in allowed) or quote not in index[eid]['text']:
             _fail('阅读引文未匹配有效材料')
         if len(quote) > 150 if re.search(r'[\u3400-\u9fff]', quote) else len(quote.split()) > 100:
             _fail('阅读引文过长')
         source['location'] = index[eid]['location']
-        for key in ('url', 'source_type'):
+        for key in ('url', 'source_type', 'source_id', 'content_kind'):
             if key in index[eid]: source[key] = index[eid][key]
+            else: source.pop(key, None)
 
 
 def validate_map(rows, elements):

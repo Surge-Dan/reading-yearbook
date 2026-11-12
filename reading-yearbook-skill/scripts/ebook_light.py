@@ -7,6 +7,7 @@ import tempfile
 from datetime import date
 from pathlib import Path
 
+from ebook_agent_bridge import stage_cache_context
 from ebook_document import parse_document, build_chunks
 from ebook_pipeline import BudgetRequired, _archive_generation, _cancel, _model_batches
 from ebook_reading import _sources, validate_review
@@ -39,20 +40,10 @@ def _rows(value, key, maximum, elements):
     return rows
 
 
-def _bind_provenance(value,elements):
-    index={e['element_id']:e for e in elements}
-    for source in _citations(value):
-        actual=index[source['element_id']]
-        for key in ('location','url','source_type','source_id'):
-            if key in actual: source[key]=actual[key]
-            else: source.pop(key,None)
-
-
 def _validate_notes(value,elements):
     if not isinstance(value,dict): raise ValueError('阅读笔记须为对象')
     rows=_rows(value,'notes',5,elements)
     if not rows: raise ValueError('正文批次未提取到有效内容')
-    _bind_provenance([{'sources':row['sources']} for row in rows],elements)
 
 
 def _validate_digest(value,document,mode):
@@ -73,6 +64,7 @@ def _validate_digest(value,document,mode):
 
 def _caller(output,runner,context,total,progress,event):
     audit=[]
+    cache_context=stage_cache_context(runner,context)
     def check():
         _cancel(event)
         if hasattr(runner,'check'): runner.check()
@@ -85,7 +77,7 @@ def _caller(output,runner,context,total,progress,event):
                 'SAME chat, not an independent/blind evaluation. Return strict JSON only.\nSTAGE:'+stage+
                 '\nOUTPUT_CONTRACT:'+contract+'\nCITATION_RULES:'+SOURCE_CONTRACT+'\nRULES:\n'+rules+
                 '\nSOURCE_DATA_JSON:\n'+json.dumps(payload,ensure_ascii=False,sort_keys=True))
-        key=hashlib.sha256(json.dumps([context,prompt],ensure_ascii=False,sort_keys=True).encode()).hexdigest()
+        key=hashlib.sha256(json.dumps([cache_context,prompt],ensure_ascii=False,sort_keys=True).encode()).hexdigest()
         path=output/'.cache'/(key+'.json'); answer=None
         if path.is_file():
             try:
@@ -135,7 +127,6 @@ def _compose(document,notes,call,mode,focus):
             for citation in _citations(cited):
                 if not any(citation['quote'] in excerpt for excerpt in excerpts[citation['element_id']]):
                     raise ValueError('综合阶段引用必须来自单个已核对的短摘录，不能拼接')
-        _bind_provenance(cited,elements)
     value=call('light-compose',rules,{'book':document['book'],'notes':notes,'elements':elements,
         'source_notes':document.get('source_notes',[]),'input_mode':mode,'focus':focus},
         validate,COMPOSE_CONTRACT)

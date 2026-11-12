@@ -306,7 +306,8 @@ class JobStore:
                             self._save(job)
                 ownership_path = self.jobs_dir / job_id / '.agent' / 'ownership.json'
                 previous_ownership = json.loads(ownership_path.read_text('utf-8')) if ownership_path.exists() else {}
-                runner = self.runner.bind(self.jobs_dir / job_id, job_id, data, notify, event)
+                prior_identities = (transfer['execution_identity'] for transfer in previous_ownership.get('session_transfers', []))
+                runner = self.runner.bind(self.jobs_dir / job_id, job_id, data, notify, event, prior_identities)
                 ownership = dict(previous_ownership, execution_identity=dict(runner.identity), attempt_id=runner.attempt)
                 claimed = dict(job, assistant_session=data['session'], state='queued', message='当前 Agent 已领取，正在准备正文')
                 audit_saved = False

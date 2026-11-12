@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import sys
 import importlib
@@ -38,6 +39,10 @@ def check_dependencies(root=ROOT):
         pillow=importlib.import_module('PIL')
     except ImportError:
         raise ValueError('缺少图片校验依赖Pillow；助手应在Skill目录按requirements.txt补齐依赖后再采集') from None
+    version = re.fullmatch(r'(\d+)\.(\d+)(?:\.\d+)?(?:\+[\w.]+)?', pillow.__version__)
+    if not version or not (10, 4) <= tuple(map(int, version.groups())) < (13, 0):
+        raise ValueError(f'当前Pillow为{pillow.__version__}，需要10.4及以上且低于13。'
+                         '请在Skill目录运行 python -m pip install --upgrade --target .vendor -r requirements.txt')
     try:
         importlib.import_module('fontTools');importlib.import_module('brotli')
         subsetting=True
@@ -55,7 +60,7 @@ def manifest(root=ROOT):
             continue
         kind='text-lf' if p.suffix.lower() in {'.py','.js','.cjs','.svg','.xml','.html','.css','.md','.txt','.json','.yaml','.yml','.template'} else 'binary'
         files.append({'path':relative.as_posix(),'sha256':file_hash(p,kind),'hash_kind':kind,'bytes':p.stat().st_size})
-    return {'version':'2026.11.03','files':files}
+    return {'version':'2026.11.12','files':files}
 
 
 def file_hash(path,kind='binary'):

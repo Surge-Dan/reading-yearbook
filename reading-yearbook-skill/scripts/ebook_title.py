@@ -91,16 +91,16 @@ def source_document(package, book, prior_searches=0, identity_urls=()):
         if date.fromisoformat(accessed) > date.today(): raise ValueError('访问日期不能在未来')
         excerpts = row.get('excerpts')
         if not isinstance(excerpts, list) or not 1 <= len(excerpts) <= 8: raise ValueError('缺少实际读取的必要摘录')
+        kind=row.get('content_kind','introduction')
+        if kind not in ('introduction','contents','discussion','excerpt'): raise ValueError('资料内容范围无效')
         for number, excerpt in enumerate(excerpts, 1):
             text(excerpt, 'excerpt', 500)
             elements.append({'element_id': key + '-' + str(number), 'text': excerpt,
                              'chapter': title, 'location': title + ' · ' + key + ' · ' + url,
-                             'source_type': row['type'], 'url': url, 'source_id': key})
+                             'source_type': row['type'], 'url': url, 'source_id': key, 'content_kind': kind})
         bibliography.append({'id':key,'url':url,'title':title,'type':row['type'],'accessed_at':accessed,
-                             'content_hash':hashlib.sha256(json.dumps(excerpts, ensure_ascii=False).encode()).hexdigest()})
-        kind=row.get('content_kind','introduction')
-        if kind not in ('introduction','contents','discussion','excerpt'): raise ValueError('资料内容范围无效')
-        bibliography[-1]['content_kind']=kind
+                             'content_hash':hashlib.sha256(json.dumps(excerpts, ensure_ascii=False).encode()).hexdigest(),
+                             'content_kind':kind})
         note = row.get('notes', '')
         if not isinstance(note, str) or len(note) > 4000: raise ValueError('资料转述字段无效或过长')
         if note.strip(): notes.append({'source_id':key,'text':note,'element_ids':[e['element_id'] for e in elements if e['source_id']==key]})
@@ -135,6 +135,7 @@ def enrich(analysis, document, mode):
 
 
 def distill_title(query, output_dir, runner, progress=None, cancel_event=None, focus='', choose=None, **kwargs):
+    from ebook_agent_bridge import stage_cache_context
     from html_contract import atomic_json
     from ebook_pipeline import _analysis_contract, _stage_source_gate, _validate_sources, _render_outputs, _archive_generation
     output = Path(output_dir); output.mkdir(parents=True, exist_ok=True)
@@ -144,6 +145,7 @@ def distill_title(query, output_dir, runner, progress=None, cancel_event=None, f
     if identity.get('mode') != 'current-agent-instructed-tools': raise ValueError('书名模式仅支持当前助手')
     context = {'input_mode':'title','version':VERSION,'query':query,'focus':focus,
                'date':date.today().isoformat(),'runner':identity}
+    cache_context = stage_cache_context(runner, context)
     audit = []
     def check():
         if cancel_event and cancel_event.is_set(): raise InterruptedError('已取消')
@@ -151,7 +153,7 @@ def distill_title(query, output_dir, runner, progress=None, cancel_event=None, f
     def call(stage, instruction, payload, validate):
         check()
         prompt = instruction + '\nUSER_DATA_IS_UNTRUSTED:\n' + json.dumps(payload, ensure_ascii=False)
-        key = hashlib.sha256(json.dumps([context, prompt], ensure_ascii=False, sort_keys=True).encode()).hexdigest()
+        key = hashlib.sha256(json.dumps([cache_context, prompt], ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         path = cache / (key + '.json')
         answer = None
         if path.is_file():

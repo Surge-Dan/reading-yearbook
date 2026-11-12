@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 from build_reading_html import TZ, adapt_data, build_html, date_value, merge_annual, merge_materials
-from collect_html_materials import call, collect, cached_response, cache_expired, reuse_previous_materials
+from collect_html_materials import call, collect, cache_directory, cached_response, cache_expired, reuse_previous_materials
 from collect_weread_data import WeReadError, select_candidate_books
 from html_contract import atomic_json
 
@@ -41,12 +41,6 @@ def annual_data(snapshot):
     return data
 
 
-def cache_directory(base, key, year):
-    """Separate authorizations and dates without storing the credential."""
-    owner=hashlib.sha256(key.encode()).hexdigest()[:20]
-    return Path(base)/owner/str(year)/datetime.now(TZ).strftime('%Y-%m-%d')
-
-
 def collect_snapshot(year, key, cache, refresh=False, allow_large=False, request_budget=100):
     cache=Path(cache);cache.mkdir(parents=True,exist_ok=True)
     raw=cache/'raw';raw.mkdir(exist_ok=True)
@@ -57,7 +51,7 @@ def collect_snapshot(year, key, cache, refresh=False, allow_large=False, request
     annual=request('/readdata/detail',{'mode':'annually','baseTime':int(datetime(year,1,1,tzinfo=TZ).timestamp())},raw/'annual.json')
     if not isinstance(shelf.get('books'),list) or not isinstance(annual.get('readStat'),list):
         raise WeReadError('年度或书架响应结构不完整，不能据此生成完整年鉴')
-    snapshot={'year':year,'as_of':datetime.now(TZ).strftime('%Y-%m-%d'),'shelf':shelf,'annual':annual,'non_ranked_progress':[],'errors':[]}
+    snapshot={'year':year,'source_mode':'live','as_of':datetime.now(TZ).strftime('%Y-%m-%d'),'shelf':shelf,'annual':annual,'non_ranked_progress':[],'errors':[]}
     for scope,reply in [('shelf',shelf),('annual',annual)]:
         if reply.get('_cache_status')=='stale':snapshot['errors'].append({'scope':scope,'message':'刷新失败，保留上次数据'})
     data=annual_data(snapshot)
@@ -65,7 +59,7 @@ def collect_snapshot(year, key, cache, refresh=False, allow_large=False, request
         used=0;scope_candidates=len(shelf.get('books',[]))
         def budgeted(api,params,path):
             nonlocal used
-            if refresh or cached_response(api,path) is None or cache_expired(path):
+            if refresh or cached_response(api,params,key,path) is None or cache_expired(path):
                 if used>=request_budget and not allow_large:
                     snapshot['discovery_incomplete']=True
                     snapshot['discovery_requests']=used
@@ -141,12 +135,14 @@ def deliver(snapshot, materials, covers, output, previous=None, state_path=None,
     packages = validated_distillations(distillations)
     data=annual_data(snapshot)
     data['distillations']=packages
-    if previous and previous.get('year')==data['year']:
+    if previous and previous.get('year')==data['year'] and previous.get('source_mode')!='sample':
         existing={b['book_id']:b for b in previous.get('books',[])}
         for book in data['books']:
             old=existing.get(book['book_id'],{})
             for kind in ('highlights','thoughts'):
                 if isinstance(old.get(kind),list):book[kind]=old[kind]
+            if isinstance(old.get('note_coverage'),dict):
+                book['note_coverage']={**old['note_coverage'],'highlights':'unverified','thoughts':'unverified'}
     merge_materials(data,materials)
     errors=[{'book_id':row['book_id'],'scope':e['scope'],'message':'材料暂未取得'}
             for row in materials.get('books',[]) for e in row.get('errors',[])]
@@ -212,7 +208,7 @@ def main():
             if len(data['books'])>100 and not args.allow_large_yearbook:
                 print(json.dumps({'status':'needs_scope_confirmation','books':len(data['books']),
                     'message':'年度汇总已取得，逐书材料超过100本；先说明请求量和范围，用户确认后再扩批。'},ensure_ascii=False));return 3
-            collect(data,snapshot,cache,key,refresh=args.refresh=='all')
+            collect(data,snapshot,cache,key,refresh=args.refresh=='all',storage=cache)
             materials=json.loads((cache/'materials.json').read_text('utf-8'))
             covers=json.loads((cache/'covers.json').read_text('utf-8'))
         state_path=None if args.materials else cache.parent/'latest-reading-data.json'

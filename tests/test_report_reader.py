@@ -16,9 +16,10 @@ import build_reading_html as builder
 from serve_ebook import workbench_page
 
 
-def bundle(sample=False, title='受控短篇'):
+def bundle(sample=False, title='受控短篇', author='测试作者'):
     analysis, document = fixture()
     analysis['book']['title'] = document['book']['title'] = title
+    analysis['book']['author'] = document['book']['author'] = author
     if sample:
         document['source_mode'] = 'sample'
     return make_bundle(analysis, document)
@@ -33,6 +34,25 @@ def report_data(packages=None, sample=False):
 
 
 class ReportReaderTests(unittest.TestCase):
+    def test_same_title_distillation_requires_unambiguous_public_identity(self):
+        data=report_data([
+            bundle(title='同名作品',author='公开作者'),
+            bundle(title='同名作品',author='私密作者'),
+            bundle(title='同名作品',author=''),
+            bundle(title='同名作品',author='其他作者'),
+        ])
+        data['books']=adapt_data({'year':2026,'books':[
+            {'book_id':'public','title':'同名作品','author':'公开作者'},
+            {'book_id':'private','title':'同名作品','author':'私密作者','secret':True},
+        ]})['books']
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'index.html'
+            build_html(data,path)
+            page=path.read_text('utf-8')
+            embedded=json.loads(page.split('<script id="reading-data" type="application/json">')[1].split('</script>')[0])
+            self.assertEqual([b['analysis']['book']['author'] for b in embedded['distillations']],['公开作者'])
+            self.assertNotIn('私密作者',page)
+
     def test_deliver_without_distillation_writes_report_and_state(self):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'index.html'; state=Path(tmp)/'state.json'

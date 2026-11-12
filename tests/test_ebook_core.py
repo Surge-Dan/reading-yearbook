@@ -125,6 +125,38 @@ class CoreTests(unittest.TestCase):
             self.assertIn('作者序言',text); self.assertIn('完整正文',text); self.assertIn('末段',text)
             self.assertEqual(len(doc['exclusions']),3); self.assertEqual(doc['warnings'],[])
 
+    def test_epub_resolves_percent_encoded_spine_and_cover_paths_safely(self):
+        m = self.module('ebook_document')
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / 'encoded.epub'
+            for href in ('../Text/Chapter%201%23%E7%AB%A0.xhtml?edition=1#section',
+                         '%2e%2e/%2e%2e/escape.xhtml', '%5Cescape.xhtml', '%2Fescape.xhtml',
+                         'https://example.org/escape.xhtml'):
+                with self.subTest(href=href), zipfile.ZipFile(p, 'w') as z:
+                    z.writestr('META-INF/container.xml', '<container><rootfile full-path="OPS/book.opf"/></container>')
+                    z.writestr('OPS/book.opf', f'<package xmlns="urn:test"><manifest><item id="a" href="{href}"/>'
+                               '<item id="cover" href="../Text/Cover%20Page.xhtml"/></manifest>'
+                               '<spine><itemref idref="cover"/><itemref idref="a"/></spine>'
+                               '<guide><reference type="cover" href="../Text/Cover Page.xhtml#start"/></guide></package>')
+                    z.writestr('Text/Chapter 1#章.xhtml', '<p>Readable chapter.</p>')
+                    z.writestr('Text/Cover Page.xhtml', '<p>Cover only.</p>')
+                if href.startswith('../'):
+                    document = m.parse_document(p)
+                    self.assertEqual([row['text'] for row in document['elements']], ['Readable chapter.\n'])
+                    self.assertEqual(document['exclusions'][0]['document'], 'Text/Cover Page.xhtml')
+                else:
+                    with self.assertRaisesRegex(ValueError, 'Unsafe EPUB spine path'):
+                        m.parse_document(p)
+
+    def test_legacy_stage_and_source_validation_reject_blank_quote(self):
+        m = self.module('ebook_pipeline')
+        element = {'element_id': 'e1', 'text': 'Real source text.', 'location': 'line 1'}
+        theme = {'title': 'Unrelated claim', 'sources': [{'element_id': 'e1', 'quote': ' ', 'location': 'line 1'}]}
+        analysis = dict(themes=[theme], methods=[], cases=[], counterexamples=[], glossary=[])
+        with self.assertRaises(ValueError):
+            m._stage_source_gate(analysis, [element])
+        self.assertEqual(m._validate_sources(analysis, {'elements': [element]}), ['Unrelated claim'])
+
     def test_bad_source_never_validated(self):
         m=self.module('ebook_pipeline')
         doc={'elements':[{'element_id':'e1','text':'真实原文','location':'line 1'}]}

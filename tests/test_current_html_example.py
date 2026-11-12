@@ -22,6 +22,9 @@ class CurrentExampleTests(unittest.TestCase):
         self.assertNotIn('id="ebookUpload"',page)
         embedded=json.loads(re.search(r'<script id="reading-data" type="application/json">(.*?)</script>',page,re.S).group(1))
         self.assertEqual(embedded['distillations'][0]['source_mode'],'sample')
+        sample = json.loads((DEMO / 'demo-data.json').read_text('utf-8'))
+        self.assertTrue(sample['features']['daily'])
+        self.assertEqual(embedded['features']['daily'], sample['features']['daily'])
 
     def test_demo_materials_are_fictional_and_statistics_agree(self):
         data = json.loads((DEMO / 'demo-data.json').read_text('utf-8'))

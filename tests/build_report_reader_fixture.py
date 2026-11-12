@@ -19,7 +19,8 @@ def sample_bundle(index,mode):
     source_hash=hashlib.sha256(text.encode('utf-8')).hexdigest()
     document={'book':book,'source_hash':source_hash,'source_mode':'sample','input_mode':mode,
               'elements':[{'element_id':source['element_id'],'text':text,'location':source['location'],
-                           'source_type':'preview' if mode=='title' else 'text'}]}
+                           'source_type':'preview' if mode=='title' else 'text',
+                           **({'content_kind':'excerpt'} if mode=='title' else {})}]}
     analysis={'schema_version':1,'book':book,'source_hash':source_hash,'input_mode':mode,
               'overview':('先核实日期，资料不足时询问负责人。' if index==1 else '给未知条件分配核实责任与返回时间。'),
               'themes':[{'title':'先核实再行动' if index==1 else '为未知安排下一步',

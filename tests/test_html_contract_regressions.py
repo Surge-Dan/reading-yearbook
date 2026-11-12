@@ -81,7 +81,9 @@ class HtmlContractRegressions(unittest.TestCase):
 
     def test_refresh_failure_keeps_old_materials_with_explicit_stale_state(self):
         with tempfile.TemporaryDirectory() as tmp:
-            cache=Path(tmp)/'response.json';cache.write_text('{"updated":[{"markText":"旧原文"}]}',encoding='utf-8')
+            cache=Path(tmp)/'response.json'
+            with patch('collect_html_materials.gateway_call',return_value={'updated':[{'markText':'旧原文'}]}):
+                call('/book/bookmarklist',{},'synthetic',cache,threading.Event())
             with patch('collect_html_materials.gateway_call',side_effect=WeReadError('temporary','network')):
                 result=call('/book/bookmarklist',{},'synthetic',cache,threading.Event(),refresh=True)
             self.assertEqual(result['_cache_status'],'stale')
@@ -97,7 +99,7 @@ class HtmlContractRegressions(unittest.TestCase):
             with patch('collect_html_materials.gateway_call',return_value={'title':'新书'}):
                 call('/book/info',{},'synthetic',cache,threading.Event())
             meta=json.loads(cache.with_suffix('.json.meta.json').read_text('utf-8'))
-            self.assertEqual(meta['version'],1);self.assertIn('fetched_at',meta)
+            self.assertEqual(meta['version'],2);self.assertIn('fetched_at',meta)
         shelf={'books':[{'bookId':str(i),'title':'书','readUpdateTime':stamp(2026)} for i in range(2)]}
         with tempfile.TemporaryDirectory() as tmp:
             import hashlib

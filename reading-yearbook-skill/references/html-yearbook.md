@@ -43,7 +43,7 @@ python -X utf8 scripts/collect_html_materials.py --input share-job.json --annual
 python -X utf8 scripts/build_reading_html.py --input share-job.json --distillation output/books/已完成任务/deep/distillation.json --annual-snapshot annual-snapshot.json --book-materials private/html-materials/materials.json --covers private/html-materials/covers.json --output output/reading/index.html
 ```
 
-采集脚本读取环境变量中的Key，两个并发任务、复用有效缓存、按游标拉取全部个人想法；单书最多20页，超过时停止扩批，版本升级或鉴权失败停止新请求。可用`--legacy-cache`复用旧的`bookId-highlights.json`／`bookId-thoughts.json`。缓存及封面留在私人目录，错误状态不写成空笔记。构建器只合并当前年鉴已有书籍，不让额外书目混入。
+采集脚本从环境变量读取Key，默认两路并发，按游标拉取个人想法，单书最多20页。版本升级或鉴权失败时停止新请求。原始回包和封面按授权、年份和日期存放。首次升级时，缺少授权或请求参数记录的旧缓存会重新采集。构建器只合并当前年鉴已有书籍。用于示例年鉴的快照和逐书材料都须标明`source_mode: sample`。
 
 详情默认载入该书全部历史记录，并注明范围；年度时间线只取本年事件。确认接口完整返回0条时写“已核查，无记录”，请求失败或只取了片段时写“未完整载入”。年度统计优先读取官方`readStat/readDays/totalReadTime`及月度分桶；当前进度100%的筛选和官方年度读完汇总分别保留，不能为了对齐数字篡改任何一方。刷新统计同时更新采集日期。划线区支持按书籍筛选，导出保留材料范围。
 
@@ -120,7 +120,7 @@ PDF打开浏览器打印对话框，包含当前筛选书架及对应详情、�
 
 默认`--refresh reuse`复用当天校验通过的私人缓存；跨日期复用同账号、同年份的封面及带获取时间的原始材料，旧阅读记录仍重新请求，临时错误才回退旧材料并标记stale；`--refresh missing`重试缺失或结构失效材料；用户明确重新同步时用`--refresh all`。成功返回空列表可清空旧笔记，失败保留旧内容并标明未完整取得。更新周期按北京时间，临时文件校验通过后原子替换正式文件。
 
-原始缓存保持接口结构；伴随的`.meta.json`记录缓存版本、接口名与北京时间获取时间。旧缓存通过结构校验后兼容读取；损坏或不兼容版本需要重新采集。强制刷新遇到暂时错误时，校验通过的旧材料标为`stale`；鉴权／升级／参数错误仍停止，不以缓存掩盖。候选预算包含笔记本分页和逐书扩查的新请求，不含最初的书架与年度汇总两项；接口内部重试最多一次。已核验书目的材料采集为每本3项＋想法分页，默认两并发、每本想法最多20页；超过100本先确认范围。没有token节省率承诺。
+原始缓存保留接口结构。`.meta.json`记录缓存版本、接口名、请求与授权指纹及北京时间获取时间。只有当前授权和完整请求参数匹配的缓存才可复用。强制刷新遇到临时错误时，校验通过的旧材料标为`stale`，已保留的有效笔记继续可见。鉴权、升级或参数错误会停止采集。候选预算包含笔记本分页和逐书扩查的新请求，书架与年度汇总请求单独计数。接口内部重试最多一次。已核验书目默认两路并发，每本想法最多20页，超过100本先确认范围。
 
 本机同一Python环境可用`skill_release.py --install 目标目录 --with-local-dependencies`同步已安装的`.vendor`；它不是跨操作系统的二进制依赖包。新设备按自身Python安装`requirements.txt`。资源清单不会删除安装目录里用户自行保存的文件。
 

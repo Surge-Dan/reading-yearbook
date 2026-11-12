@@ -33,8 +33,14 @@ class ReadingChartDesignTests(unittest.TestCase):
         raw = fixture()
         for book, seconds in zip(raw['books'], (3600,1815,None)):
             book['reading_seconds'] = seconds
+        daily_seconds = [0, 899, 900, 901, 1799, 1800, 1801, 3599, 3600, 3601]
+        data = adapt_data(raw)
+        data['features'] = {
+            'daily': {f'2026-01-{i:02d}': value for i, value in enumerate(daily_seconds, 1)},
+            'category_time': [{'name': 'VeryLongUnbrokenCategory' * 6, 'seconds': 1200}],
+        }
         with tempfile.TemporaryDirectory() as tmp, sync_playwright() as p:
-            path = Path(tmp)/'index.html'; build_html(adapt_data(raw), path)
+            path = Path(tmp)/'index.html'; build_html(data, path)
             browser = p.chromium.launch(executable_path='C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', headless=True)
             try:
                 page = browser.new_page(reduced_motion='reduce')
@@ -47,20 +53,27 @@ class ReadingChartDesignTests(unittest.TestCase):
                 values = rows.evaluate_all('(ns)=>ns.map(n=>({seconds:Number(n.dataset.seconds),width:Number(n.querySelector(".duration-fill").getAttribute("width"))}))')
                 self.assertAlmostEqual(values[1]['width']/values[0]['width'], 1815/3600)
                 self.assertEqual(rows.locator('.investment-cover').count(), 2)
-                for width in (375,768,1440):
+                for width in (320,390,768,1440):
                     page.set_viewport_size({'width':width,'height':900})
                     self.assertFalse(page.evaluate('document.documentElement.scrollWidth>innerWidth'))
+                    with self.subTest(width=width):
+                        overflow = page.locator('.insight-grid, .insight-chart, .insight-ring-legend li').evaluate_all(
+                            '(nodes) => nodes.filter(n => n.scrollWidth > n.clientWidth + 1).map(n => n.className || n.tagName)')
+                        self.assertEqual(overflow, [])
                 page.locator('[data-category="方法"]').click()
                 self.assertEqual(page.locator('[data-category="方法"]').get_attribute('aria-pressed'), 'true')
                 rows.first.click()
                 self.assertTrue(page.locator('#detail').is_visible())
                 page.locator('#detail').evaluate('(e)=>e.close()')
+                daily_card = page.locator('.insight-chart', has=page.get_by_role('heading', name='阅读日时长分布', exact=True))
+                labels = daily_card.locator('.insight-bar > span').all_text_contents()
+                counts = list(map(int, daily_card.locator('.insight-bar > b').all_text_contents()))
+                self.assertEqual(counts, [2, 3, 3, 1])
                 for ratio in ('1:1','3:4','4:5'):
                     layouts = page.evaluate("""async ratio=>{
                         const data=JSON.parse(document.querySelector('#reading-data').textContent),art=JSON.parse(document.querySelector('#reading-art').textContent);
                         const loadImage=src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=src;});
                         const renderer=ReadingShareArtwork.create({data,art,loadImage}),out=[];
-                        data.features={daily:{[data.year+'-01-01']:0,[data.year+'-01-02']:900,[data.year+'-01-03']:1800,[data.year+'-01-04']:3600,[data.year+'-01-05']:3601}};
                         for(const kind of ['distribution','stats','cover'])out.push((await renderer.render({id:kind,kind},ratio)).readingLayout);
                         return out;
                     }""", ratio)
@@ -68,10 +81,49 @@ class ReadingChartDesignTests(unittest.TestCase):
                     self.assertEqual(sum(c['count'] for c in categories), 3)
                     self.assertTrue(all(c.get('encoding')=='share-bar' for c in categories))
                     daily = next(c for c in layouts[1]['charts'] if c['kind']=='day-distribution')
-                    self.assertEqual([b['count'] for b in daily['bins']], [1, 1, 1, 1])
-                    self.assertEqual(daily['total'], 4)
+                    self.assertEqual([b['label'] for b in daily['bins']], labels)
+                    self.assertEqual([b['count'] for b in daily['bins']], counts)
+                    self.assertEqual(daily['total'], 9)
                     self.assertEqual([c['kind'] for c in layouts[2]['charts']], ['calendar'])
                 self.assertEqual(errors, [])
+            finally:
+                browser.close()
+
+    def test_sparse_distribution_keeps_placeholder_book_names_in_all_ratios(self):
+        with tempfile.TemporaryDirectory() as tmp, sync_playwright() as p:
+            path = Path(tmp)/'index.html'
+            build_html(adapt_data(fixture()), path)
+            browser = p.chromium.launch(executable_path='C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless=True)
+            try:
+                page = browser.new_page(reduced_motion='reduce')
+                page.goto(path.as_uri(), wait_until='load')
+                layouts = page.evaluate("""async () => {
+                    const data=JSON.parse(document.querySelector('#reading-data').textContent), out=[];
+                    const art=JSON.parse(document.querySelector('#reading-art').textContent);
+                    const loadImage=()=>Promise.reject(new Error('invalid image'));
+                    const titles=['第一本','第二本','第三本'];
+                    for (const categories of [2,3]) {
+                        data.books.forEach((book,i) => Object.assign(book, {
+                            category:'分类'+i%categories, title:titles[i], cover:i===1?'invalid':''
+                        }));
+                        const renderer=ReadingShareArtwork.create({data,art,loadImage});
+                        for (const ratio of ['1:1','3:4','4:5']) {
+                            out.push((await renderer.render({id:'distribution',kind:'distribution'},ratio)).readingLayout);
+                        }
+                    }
+                    return out;
+                }""")
+                for layout in layouts:
+                    names = [row for row in layout['text'] if row['text'] in ('第一本', '第二本', '第三本')]
+                    with self.subTest(height=layout['height'], categories=len(layout['charts'])):
+                        self.assertEqual(len(names), 3)
+                        for name in names:
+                            self.assertLess(name['y'] + name['h'], layout['footerTop'] - 12)
+                        for i, left in enumerate(layout['text']):
+                            for right in layout['text'][i+1:]:
+                                dx = min(left['x']+left['w'], right['x']+right['w']) - max(left['x'], right['x'])
+                                dy = min(left['y']+left['h'], right['y']+right['h']) - max(left['y'], right['y'])
+                                self.assertFalse(dx > 2 and dy > 2, (left['text'], right['text']))
             finally:
                 browser.close()
 

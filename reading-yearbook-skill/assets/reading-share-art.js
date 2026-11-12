@@ -187,7 +187,7 @@ window.ReadingShareArtwork = (() => {
     }
     async function coverPage(d){
       const {H,M,R,text,block,line,image,cover,metric,star}=d,square=H===900;
-      const titleY=square?230:302, shelfTop=square?290:395, shelfBottom=square?477:H-468;
+      const titleY=square?230:302, shelfTop=square?290:395, shelfBottom=square?441:H-468;
       text(String(data.year),M,square?188:221,{font:NUM,size:square?94:121,color:C.red,italic:true});
       await image(art.reading,575,120,247,118);
       text(data.books.length?'这一年，读了这些书':'这一年的阅读年鉴',M,titleY+34,{size:square?56:61,weight:600});
@@ -225,8 +225,10 @@ window.ReadingShareArtwork = (() => {
         if(known(seconds)&&days>0)text('按年度汇总，阅读日平均 '+duration(seconds/days),M,split+160,{font:SANS,size:24,color:C.muted});
         return;
       }
-      const bins=[['15分钟以内',900],['15至30分钟',1800],['30至60分钟',3600],['超过60分钟',Infinity]]
-        .map(([label,max],i,all)=>({label,count:durations.filter(value=>value<=max&&value>(all[i-1]?.[1]??0)).length}));
+      const bins=art.dailyDurationBins.map(([label,maximum])=>({label,maximum,count:0}));
+      for(const seconds of durations){
+        bins.find(row=>row.maximum===null||seconds<=row.maximum).count++;
+      }
       const max=Math.max(...bins.map(row=>row.count));
       const firstRow=split+(sparse?(square?73:85):(square?68:78));
       const stride=(H-139-firstRow)/4;
@@ -238,7 +240,7 @@ window.ReadingShareArtwork = (() => {
         text(row.count+'天',R,y,{font:SANS,size:23,color:C.muted,align:'right'});
       }
       text('按有正时长记录的'+durations.length+'天统计',M,firstRow+4*stride,{font:SANS,size:21,color:C.muted});
-      d.manifest.charts.push({kind:'day-distribution',bins,total:durations.length});
+      d.manifest.charts.push({kind:'day-distribution',bins:bins.map(({label,count})=>({label,count})),total:durations.length});
     }
     async function distributionPage(d){
       const {H,M,R,text,block,rect,section,cover}=d,square=H===900;
@@ -254,10 +256,11 @@ window.ReadingShareArtwork = (() => {
       const omitted=counts.length-retained.length;
       const rows=omitted?[...retained,{name:'其他'+omitted+'类',count:counts.slice(retained.length).reduce((n,r)=>n+r.count,0),other:true}]:retained;
       const sparse=rows.length<=3;
+      const compactShelf=square&&rows.length>1&&sparse;
       const sectionY=square?(sparse?378:359):(sparse?410:376);
       section('按书目数量统计',M,sectionY,R-M,'01');
       const firstRow=sectionY+(sparse?(square?72:84):70);
-      const lastRow=rows.length===1?firstRow:sparse?(square?610:730):H-(omitted?171:160);
+      const lastRow=rows.length===1?firstRow:sparse?(compactShelf?564:730):H-(omitted?171:160);
       const stride=rows.length>1?(lastRow-firstRow)/(rows.length-1):0;
       for(const [i,row]of rows.entries()){
         const y=firstRow+i*stride,pct=row.count/data.books.length;
@@ -269,7 +272,7 @@ window.ReadingShareArtwork = (() => {
       if(omitted)text('其余分类合并统计，包含'+rows.at(-1).count+'本书',M,lastRow+54,{font:SANS,size:22,color:C.muted});
       if(rows.length<=3){
         const books=data.books.slice(0,4),spacing=(R-M)/books.length;
-        const top=lastRow+(square?82:116);
+        const top=lastRow+(compactShelf?64:square?82:116);
         const imageTop=top+42;
         const wide=rows.length===1?(square?138:218):108;
         const height=H-121-imageTop;

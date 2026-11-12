@@ -21,7 +21,7 @@ from html_contract import atomic_json, valid_response
 from build_reading_html import TZ
 
 
-CACHE_VERSION = 1
+CACHE_VERSION = 2
 COVER_HOSTS = {
     'cdn.weread.qq.com', 'res.weread.qq.com',
     'wfqqreader-1252317822.image.myqcloud.com',
@@ -46,17 +46,27 @@ class PartialReviews(WeReadError):
         super().__init__(message,'pagination');self.rows=rows
 
 
-def cached_response(api, cache):
-    """Read legacy raw caches too; reject malformed or incompatible entries."""
+def cache_directory(base, api_key, year):
+    """Separate authorizations and dates without storing the credential."""
+    owner = hashlib.sha256(api_key.encode()).hexdigest()[:20]
+    return Path(base) / owner / str(year) / datetime.now(TZ).strftime('%Y-%m-%d')
+
+
+def cache_fingerprint(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+
+
+def cached_response(api, params, api_key, cache):
+    """Only reuse a response stamped for this authorization and request."""
     cache = Path(cache)
     try:
         meta = cache.with_suffix(cache.suffix + '.meta.json')
-        if meta.exists():
-            info = json.loads(meta.read_text('utf-8'))
-            if info.get('version') != CACHE_VERSION or info.get('api') != api:
-                return None
+        info = json.loads(meta.read_text('utf-8'))
+        if (info.get('version') != CACHE_VERSION or info.get('api') != api
+                or info.get('request') != cache_fingerprint([api_key, params])):
+            return None
         value = json.loads(cache.read_text('utf-8'))
-        return value if valid_response(api, value) else None
+        return value if valid_response(api, value) and info.get('response') == cache_fingerprint(value) else None
     except (ValueError, OSError, AttributeError):
         return None
 
@@ -64,8 +74,6 @@ def cached_response(api, cache):
 def cache_expired(cache):
     """Daily reading records must refresh; retain old cache only for recovery."""
     meta = Path(cache).with_suffix(Path(cache).suffix + '.meta.json')
-    if not meta.exists():
-        return False  # Legacy cache in the current dated directory.
     try:
         fetched = datetime.fromisoformat(json.loads(meta.read_text('utf-8'))['fetched_at'])
         return fetched.astimezone(TZ).date() < datetime.now(TZ).date()
@@ -124,7 +132,7 @@ def reuse_previous_materials(cache):
 def call(api, params, api_key, cache, stopped, refresh=False):
     if stopped.is_set():
         raise WeReadError('鉴权或版本问题，已停止后续采集', 'stopped')
-    cached = cached_response(api, cache)
+    cached = cached_response(api, params, api_key, cache)
     if cached is not None and not refresh and not cache_expired(cache):
         return cached
     try:
@@ -137,9 +145,11 @@ def call(api, params, api_key, cache, stopped, refresh=False):
         elif cached is not None:
             return {**cached, '_cache_status': 'stale'}
         raise
+    metadata = {'version': CACHE_VERSION, 'api': api, 'request': cache_fingerprint([api_key, params]),
+                'response': cache_fingerprint(result), 'fetched_at': datetime.now(TZ).isoformat()}
     atomic_json(cache, result)
     atomic_json(cache.with_suffix(cache.suffix + '.meta.json'),
-                {'version': CACHE_VERSION, 'api': api, 'fetched_at': datetime.now(TZ).isoformat()})
+                metadata)
     return result
 
 
@@ -195,10 +205,15 @@ def download_cover(url, target, refresh=False):
     return target
 
 
-def collect(data, snapshot, output, api_key, legacy_cache=None, refresh=False):
+def collect(data, snapshot, output, api_key, legacy_cache=None, refresh=False, *, storage=None):
+    if data.get('source_mode') == 'sample' or snapshot.get('source_mode') == 'sample':
+        raise ValueError('示例数据不能用于真实逐书采集')
     output = Path(output).resolve(); output.mkdir(parents=True, exist_ok=True)
-    cache = output/'raw';cache.mkdir(exist_ok=True)
-    cover_dir = output/'covers';cover_dir.mkdir(exist_ok=True)
+    storage = Path(storage).resolve() if storage is not None else cache_directory(output, api_key, data['year'])
+    if storage != output and not refresh:
+        reuse_previous_materials(storage)
+    cache = storage/'raw';cache.mkdir(parents=True, exist_ok=True)
+    cover_dir = storage/'covers';cover_dir.mkdir(exist_ok=True)
     shelf = {str(b['bookId']): b for b in snapshot.get('shelf', {}).get('books', [])}
     stopped = threading.Event()
 
@@ -221,9 +236,10 @@ def collect(data, snapshot, output, api_key, legacy_cache=None, refresh=False):
         for kind, api, params in [('info','/book/info',{'bookId':book_id}),
                                   ('progress','/book/getprogress',{'bookId':book_id}),
                                   ('highlights','/book/bookmarklist',{'bookId':book_id})]:
-            legacy = Path(legacy_cache)/f'{book_id}-{kind}.json' if legacy_cache else None
             try:
-                responses[kind] = json.loads(legacy.read_text('utf-8')) if legacy and legacy.exists() and not refresh else call(api,params,api_key,cache/f'{safe}-{kind}.json',stopped,refresh=refresh)
+                legacy = Path(legacy_cache)/f'{book_id}-{kind}.json' if legacy_cache else None
+                cached = cached_response(api,params,api_key,legacy) if legacy and not refresh and not cache_expired(legacy) else None
+                responses[kind] = cached if cached is not None else call(api,params,api_key,cache/f'{safe}-{kind}.json',stopped,refresh=refresh)
                 reply = responses[kind]
                 if kind == 'highlights' and not isinstance(reply.get('updated'), list):
                     raise WeReadError('划线响应缺少updated列表')
@@ -241,7 +257,7 @@ def collect(data, snapshot, output, api_key, legacy_cache=None, refresh=False):
                     raise
         try:
             legacy = Path(legacy_cache)/f'{book_id}-thoughts.json' if legacy_cache else None
-            cached = json.loads(legacy.read_text('utf-8')) if legacy and legacy.exists() and not refresh else None
+            cached = cached_response('/review/list/mine', {'bookid':book_id,'count':50,'synckey':0}, api_key, legacy) if legacy and not refresh and not cache_expired(legacy) else None
             responses['thoughts'] = cached if cached is not None and not cached.get('hasMore') else reviews(book_id,api_key,cache/f'{safe}-thoughts.json',stopped,refresh=refresh)
             if not isinstance(responses['thoughts'].get('reviews'), list):
                 raise WeReadError('个人想法缓存缺少reviews列表')
@@ -292,7 +308,7 @@ def collect(data, snapshot, output, api_key, legacy_cache=None, refresh=False):
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         rows = list(pool.map(one, data['books']))
-    materials = {'year':data['year'], 'books':rows}
+    materials = {'year':data['year'], 'source_mode':'live', 'books':rows}
     atomic_json(output/'materials.json',materials)
     covers = {b['book_id']: b['cover_path'] for b in rows if b.get('cover_path')}
     atomic_json(output/'covers.json',covers)

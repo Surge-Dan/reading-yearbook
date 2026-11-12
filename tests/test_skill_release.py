@@ -3,13 +3,22 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'reading-yearbook-skill/scripts'))
-from skill_release import manifest,verify,check_resources,REQUIRED
+from skill_release import manifest,verify,check_resources,check_dependencies,REQUIRED
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_pillow_preflight_enforces_declared_version_range(self):
+        for version in ('10.2.0', '13.0.0'):
+            with self.subTest(version=version), patch('skill_release.importlib.import_module', return_value=SimpleNamespace(__version__=version)):
+                with self.assertRaisesRegex(ValueError, 'requirements.txt'):
+                    check_dependencies()
+        with patch('skill_release.importlib.import_module', return_value=SimpleNamespace(__version__='10.4.0')):
+            self.assertEqual(check_dependencies()['pillow'], '10.4.0')
+
     def test_generated_book_sources_caches_and_private_state_never_ship(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

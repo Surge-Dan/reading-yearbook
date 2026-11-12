@@ -48,7 +48,9 @@ def main():
     if expected != data: raise ValueError('视觉重建意外改动了阅读数据')
     old_art = ReadingData('reading-art'); old_art.feed(source.read_text('utf-8'))
     new_art = ReadingData('reading-art'); new_art.feed(target.read_text('utf-8'))
-    if json.loads(''.join(old_art.parts)) != json.loads(''.join(new_art.parts)):
+    def illustrations(parsed):
+        return {key: value for key, value in json.loads(''.join(parsed.parts)).items() if key != 'dailyDurationBins'}
+    if illustrations(old_art) != illustrations(new_art):
         raise ValueError('原年鉴包含不同插画，停止更新；请显式提供原自定义素材后再重建')
     if args.screenshots:
         from playwright.sync_api import sync_playwright

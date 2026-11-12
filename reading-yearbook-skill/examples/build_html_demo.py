@@ -93,8 +93,6 @@ def main():
                        'note_count': sum(len(b['highlights']) + len(b['thoughts']) for b in books),
                        'total_read_seconds': sum(seconds),
                        'monthly_read_seconds': monthly}}
-    (out / 'demo-data.json').write_bytes((json.dumps(raw,ensure_ascii=False,indent=2)+'\n').encode('utf-8'))
-    data = adapt_data(raw)
     daily = {}
     weights = [3, 9, 2, 4, 11, 1, 7, 4, 17, 5, 6, 3]
     for month, total in enumerate(monthly, 1):
@@ -103,8 +101,10 @@ def main():
         reading_days = dict(zip(range(2, 26, 2), values[month % 12:] + values[:month % 12]))
         days = (31, 28, 31, 30, 31, 30, 31, 31, 30)[month - 1]
         daily.update({f'2026-{month:02d}-{day:02d}': reading_days.get(day, 0) for day in range(1, days + 1)})
-    data['features'] = {'daily': daily}
-    merge_materials(data, {'year': 2026, 'books': [{**b, 'notes_scope': 'all_time',
+    raw['features'] = {'daily': daily}
+    (out / 'demo-data.json').write_bytes((json.dumps(raw,ensure_ascii=False,indent=2)+'\n').encode('utf-8'))
+    data = adapt_data(raw)
+    merge_materials(data, {'year': 2026, 'source_mode': 'sample', 'books': [{**b, 'notes_scope': 'all_time',
                      'collection': {'highlights': 'complete', 'thoughts': 'complete'}} for b in books]})
     result = build_html(data, out / 'index.html', covers, require_all_covers=True)
     print(json.dumps(result, ensure_ascii=False))

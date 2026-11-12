@@ -28,6 +28,56 @@ def fixture():
 
 
 class ReadingHtmlTests(unittest.TestCase):
+    def test_normalized_data_cannot_be_relabeled_with_another_year(self):
+        raw=adapt_data({'year':2025,'summary':{'total_read_seconds':7200},'books':[]})
+        with self.assertRaisesRegex(ValueError,'年份'):
+            adapt_data(raw, 2026)
+
+    def test_features_roundtrip_from_ordinary_input(self):
+        raw={'year':2026,'as_of':'2026-10-01','source_mode':'sample','summary':{},'books':[],
+             'features':{'daily':{'2025-12-31':10,'2026-09-30':0,'2026-10-01':100,'2026-10-02':200},
+                         'hourly':list(range(24)),'category_time':[{'name':'示例','seconds':100}]}}
+        data=adapt_data(raw)
+        self.assertEqual(data['features']['daily'],{'2026-09-30':0,'2026-10-01':100})
+        self.assertEqual(adapt_data(data)['features'],data['features'])
+
+    def test_sample_and_live_supplemental_inputs_are_separated(self):
+        for input_mode, supplied_mode in [('sample','live'),('sample',None),('live','sample')]:
+            data=adapt_data({'year':2026,'source_mode':input_mode})
+            source={'year':2026,'books':[]}
+            if supplied_mode:
+                source['source_mode']=supplied_mode
+            for merge in (merge_annual,merge_materials):
+                with self.subTest(input_mode=input_mode,supplied_mode=supplied_mode,merge=merge.__name__):
+                    with self.assertRaisesRegex(ValueError,'示例'):
+                        merge(data,source)
+
+    def test_existing_audio_applies_current_shelf_privacy(self):
+        data=adapt_data({'year':2026,'books':[{'book_id':'audio-123','title':'private audio marker','kind':'audio'}]})
+        snapshot={'year':2026,'shelf':{'books':[],'albums':[{'albumInfo':{'albumId':123},'albumInfoExtra':{'secret':1}}]},
+                  'annual':{'readLongest':[{'albumInfo':{'albumId':123,'name':'private audio marker'},'readTime':120}]}}
+        merge_annual(data,snapshot)
+        self.assertTrue(data['books'][0]['secret'])
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'index.html'
+            build_html(data,path)
+            self.assertNotIn('private audio marker',path.read_text('utf-8'))
+
+    def test_stale_empty_retains_last_good_notes_but_fresh_empty_clears(self):
+        data=adapt_data({'year':2026,'books':[{'book_id':'one','highlights':[{'text':'last highlight'}],
+                                            'thoughts':[{'text':'last thought'}]}]})
+        row={'book_id':'one','collection':{'highlights':'stale','thoughts':'stale'},
+             'highlights':[],'thoughts':[]}
+        merge_materials(data,{'year':2026,'books':[row]})
+        book=data['books'][0]
+        self.assertEqual([n['text'] for n in book['highlights']],['last highlight'])
+        self.assertEqual([n['text'] for n in book['thoughts']],['last thought'])
+        self.assertEqual(book['note_coverage']['thoughts'],'stale')
+        row['collection']={'highlights':'complete','thoughts':'complete'}
+        merge_materials(data,{'year':2026,'books':[row]})
+        self.assertEqual(book['highlights'],[])
+        self.assertEqual(book['thoughts'],[])
+
     def test_delivery_omits_private_book_and_its_portrait_evidence(self):
         raw = fixture()
         raw['books'][0]['secret'] = True
@@ -61,7 +111,7 @@ class ReadingHtmlTests(unittest.TestCase):
 
     def test_complete_materials_include_historical_notes_without_changing_year_totals(self):
         data=adapt_data(fixture())
-        material={'year':2026,'books':[{'book_id':'one','progress':84,'notes_scope':'all_time',
+        material={'year':2026,'source_mode':'sample','books':[{'book_id':'one','progress':84,'notes_scope':'all_time',
                    'collection':{'progress':'complete','highlights':'complete','thoughts':'complete'},
                    'highlights':[{'text':'old personal highlight','created_at':'2025-10-01','source_id':'old'}],
                    'thoughts':[]}]}
@@ -73,20 +123,20 @@ class ReadingHtmlTests(unittest.TestCase):
 
     def test_failed_material_collection_preserves_existing_notes(self):
         data=adapt_data(fixture())
-        merge_materials(data,{'year':2026,'books':[{'book_id':'one','collection':{'highlights':'failed'},'highlights':[]}]})
+        merge_materials(data,{'year':2026,'source_mode':'sample','books':[{'book_id':'one','collection':{'highlights':'failed'},'highlights':[]}]})
         self.assertEqual(len(data['books'][0]['highlights']),1)
         self.assertEqual(data['books'][0]['note_coverage']['highlights'],'unverified')
 
     def test_material_year_mismatch_and_unrelated_books(self):
         data=adapt_data(fixture())
         with self.assertRaisesRegex(ValueError,'年份'):
-            merge_materials(data,{'year':2025,'books':[]})
-        merge_materials(data,{'year':2026,'books':[{'book_id':'unrelated'}]})
+            merge_materials(data,{'year':2025,'source_mode':'sample','books':[]})
+        merge_materials(data,{'year':2026,'source_mode':'sample','books':[{'book_id':'unrelated'}]})
         self.assertEqual(len(data['books']),3)
 
     def test_official_annual_totals_refresh_without_overwriting_current_progress(self):
         data=adapt_data(fixture())
-        merge_annual(data,{'year':2026,'as_of':'2026-10-05','annual':{'readStat':[{'stat':'读过','counts':'3本'}, {'stat':'读完','counts':'2本'}, {'stat':'笔记','counts':'9条'}], 'readDays':174, 'totalReadTime':163315}})
+        merge_annual(data,{'year':2026,'source_mode':'sample','as_of':'2026-10-05','annual':{'readStat':[{'stat':'读过','counts':'3本'}, {'stat':'读完','counts':'2本'}, {'stat':'笔记','counts':'9条'}], 'readDays':174, 'totalReadTime':163315}})
         self.assertEqual(data['summary']['finished'],2)
         self.assertEqual(data['summary']['notes'],9)
         self.assertEqual(data['summary']['seconds'],163315)
@@ -186,7 +236,7 @@ class ReadingHtmlTests(unittest.TestCase):
         self.assertEqual(b['source_category'],'社会-城市')
 
     def test_only_positive_year_activity_merges_not_entire_shelf(self):
-        snap={'year':2026,'shelf':{'books':[{'bookId':'unread','title':'Unread'}]},'annual':{'readLongest':[]},
+        snap={'year':2026,'source_mode':'sample','shelf':{'books':[{'bookId':'unread','title':'Unread'}]},'annual':{'readLongest':[]},
               'non_ranked_progress':[{'book_id':'unread','is_started':0,'last_read':'2026-09-01'},
                                      {'book_id':'old','is_started':1,'last_read':'2025-09-01'}]}
         data=merge_annual(adapt_data(fixture()),snap)
@@ -194,7 +244,7 @@ class ReadingHtmlTests(unittest.TestCase):
 
     def test_snapshot_wrong_year_cannot_pollute_annual_books(self):
         with self.assertRaisesRegex(ValueError,'年份'):
-            merge_annual(adapt_data(fixture()),{'year':2025,'annual':{}})
+            merge_annual(adapt_data(fixture()),{'year':2025,'source_mode':'sample','annual':{}})
 
     def test_private_payload_fields_are_whitelisted(self):
         raw=fixture();raw['WEREAD_API_KEY']='private-key';raw['books'][0]['cookie']='private-cookie'

@@ -12,7 +12,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'reading-yearbook-s
 def fixture(mode='upload'):
     source = {'element_id':'e1','quote':'先检查输入。','location':'第一节'}
     document = {'source_hash':'a'*64,'book':{'title':'受控短篇','author':'测试作者'},
-                'elements':[dict(source, text='先检查输入。然后根据条件行动。', source_type='preview' if mode=='title' else 'text')]}
+                'elements':[dict(source, text='先检查输入。 然后根据条件行动。', source_type='preview' if mode=='title' else 'text')]}
+    if mode=='title':
+        document['elements'][0]['content_kind']='excerpt'
     analysis = {'schema_version':1,'book':dict(document['book']),'overview':'这篇短文介绍行动前的检查。',
                 'themes':[{'title':'先检查','explanation':'先判断输入是否齐全。','sources':[source]}],
                 'methods':[],'cases':[],'counterexamples':[],'glossary':[],'limitations':[],
@@ -81,6 +83,63 @@ class BundleTests(unittest.TestCase):
             if change=='note': document['elements'][0]['source_type']='source_notes'
             if change=='kind': analysis['reading_lenses'][0]['kind']='intent'
             with self.subTest(change=change), self.assertRaises(ValueError): api.make_bundle(analysis,document)
+
+    def test_blank_quotes_fail_at_generation_and_bundle_import(self):
+        api = self.api()
+        analysis, document = fixture()
+        source = dict(analysis['themes'][0]['sources'][0], quote=' ')
+        analysis['content_map'] = [{'sources': [source]}]
+        with self.assertRaises(ValueError):
+            api.make_bundle(analysis, document)
+        bundle = api.make_bundle(*fixture())
+        bundle['analysis']['content_map'] = analysis['content_map']
+        bundle['checks']['evidence'].append(dict(bundle['checks']['evidence'][0], quote_hash=api._hash(' ')))
+        bundle['bundle_hash'] = api.bundle_hash(bundle)
+        with self.assertRaises(ValueError):
+            api.validate_bundle(bundle)
+
+    def test_preview_introduction_cannot_be_a_memorable_passage(self):
+        api = self.api()
+        analysis, document = fixture('title')
+        element = document['elements'][0]
+        element['content_kind'] = 'introduction'
+        analysis['memorable_passages'][0]['sources'][0]['content_kind'] = 'excerpt'
+        with self.assertRaises(ValueError):
+            api.make_bundle(analysis, document)
+
+    def test_title_bundle_binds_passages_to_content_kind(self):
+        api = self.api()
+        bundle = api.make_bundle(*fixture('title'))
+        self.assertEqual(bundle['analysis']['memorable_passages'][0]['sources'][0]['content_kind'], 'excerpt')
+        self.assertEqual(bundle['checks']['evidence'][0]['content_kind'], 'excerpt')
+        changed = copy.deepcopy(bundle)
+        changed['checks']['evidence'][0]['content_kind'] = 'introduction'
+        changed['bundle_hash'] = api.bundle_hash(changed)
+        with self.assertRaises(ValueError):
+            api.validate_bundle(changed)
+
+    def test_legacy_title_passage_requires_matching_excerpt_bibliography(self):
+        api = self.api()
+        analysis, document = fixture('title')
+        element = document['elements'][0]
+        element.update(element_id='s1-1', source_id='s1', url='https://example.org/book',
+                       location='试读 · s1 · https://example.org/book')
+        for citation in api._citations(analysis):
+            citation['element_id'] = element['element_id']
+        analysis['bibliography'] = [{'id': 's1', 'url': element['url'], 'title': '试读',
+                                     'type': 'preview', 'content_kind': 'excerpt'}]
+        legacy = api.make_bundle(analysis, document)
+        for citation in api._citations(legacy['analysis']):
+            citation.pop('content_kind', None)
+        for evidence in legacy['checks']['evidence']:
+            for field in ('content_kind', 'source_id', 'url'):
+                evidence.pop(field, None)
+        legacy['bundle_hash'] = api.bundle_hash(legacy)
+        self.assertEqual(api.validate_bundle(legacy), legacy)
+        legacy['analysis']['bibliography'][0]['content_kind'] = 'introduction'
+        legacy['bundle_hash'] = api.bundle_hash(legacy)
+        with self.assertRaises(ValueError):
+            api.validate_bundle(legacy)
 
     def test_private_fields_are_not_exported_and_resealed_empty_sources_fail(self):
         api=self.api();analysis,document=fixture()

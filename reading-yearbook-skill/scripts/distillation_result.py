@@ -9,13 +9,15 @@ from ebook_reading import _sources, validate_context, validate_review
 READING_FIELDS_CONTRACT = ('Optional reading_lenses:[{id,kind:values|tone|tension|connections,title,text,sources}] '
     'and memorable_passages:[{text,why_it_matters,sources}]. Choose relevant lenses only; support interpretations '
     'with evidence and never infer private author motives. Passage text must be an exact contiguous original '
-    'quotation in its cited element AND quote; title mode only source_type=preview may supply original passages, '
+    'quotation in its cited element AND quote; title mode only source_type=preview with content_kind=excerpt '
+    'may supply original passages, '
     'never secondary paraphrases or source_notes. Empty optional lists are valid; literature needs no invented methods.')
 
 # Every public object has an explicit shape, including objects below optional
 # reader fields. Scalar leaves cannot carry arbitrary nested pipeline payloads.
 BOOK = {'id':str,'title':str,'author':str,'edition':str,'identity_url':str}
-SOURCE = {'element_id':str,'quote':str,'location':str,'url':str,'source_type':str,'source_id':str}
+SOURCE = {'element_id':str,'quote':str,'location':str,'url':str,'source_type':str,'source_id':str,'content_kind':str}
+SOURCE_PROVENANCE = ('url', 'source_type', 'source_id', 'content_kind')
 VERIFICATION = {'status':str,'reason':str,'V1':bool,'V2':bool,'V3':bool,
     'source_sufficiency':{'reason':str},
     'walkthrough':{'input':str,'steps':[str],'output':str,'completion_standard':str},
@@ -53,7 +55,7 @@ PUBLIC_SCHEMA = {'schema_version':int,'book':BOOK,'overview':str,
     'bibliography':[{'id':str,'url':str,'title':str,'type':str,'accessed_at':str,
         'content_hash':str,'content_kind':str}]}
 CHECKS_SCHEMA = {'book':BOOK,'source_hash':str,'input_mode':str,'source_validation':str,
-    'semantic_validation':str,'evidence':[{'element_id':str,'quote_hash':str,'location':str,'source_type':str}]}
+    'semantic_validation':str,'evidence':[{k: v for k, v in SOURCE.items() if k != 'quote'} | {'quote_hash':str}]}
 PUBLIC_FIELDS = set(PUBLIC_SCHEMA)
 
 
@@ -93,7 +95,9 @@ def validate_reading_fields(analysis, elements, mode):
                 seen.add(row['id'])
             else:
                 if not any(row['text'] in s['quote'] and row['text'] in index[s['element_id']]['text'] for s in row['sources']): raise ValueError('Passage is not an exact cited quotation')
-                if mode=='title' and any(index[s['element_id']].get('source_type')!='preview' for s in row['sources']): raise ValueError('Public secondary material is not original book text')
+                if mode=='title' and any(index[s['element_id']].get('source_type')!='preview' or
+                                         index[s['element_id']].get('content_kind')!='excerpt' for s in row['sources']):
+                    raise ValueError('Public passages require a verified book-text excerpt')
             row['source_verified']=True
 
 
@@ -147,7 +151,8 @@ def make_bundle(analysis, document, digest=''):
     for citation in _citations(analysis):
         _sources([citation],elements)
         record={'element_id':citation['element_id'],'quote_hash':_hash(citation['quote']),
-                'location':citation['location'],'source_type':index[citation['element_id']].get('source_type','text')}
+                'location':citation['location'],'source_type':'text'}
+        record.update({key:citation[key] for key in SOURCE_PROVENANCE if key in citation})
         if record not in evidence: evidence.append(record)
     # Only public reader fields leave the private pipeline.
     analysis=_public({key:value for key,value in analysis.items() if key in PUBLIC_FIELDS})
@@ -159,6 +164,18 @@ def make_bundle(analysis, document, digest=''):
                       'semantic_validation':'not_independent','evidence':evidence}}
     bundle['bundle_hash']=bundle_hash(bundle)
     return validate_bundle(bundle)
+
+
+def _bibliography_kind(element, bibliography):
+    # Version 1 originally recorded the kind only in the bibliography. The
+    # original title pipeline binds it to this exact ID, location and type.
+    source_id, _, suffix = element['element_id'].rpartition('-')
+    if suffix not in ('1','2','3','4','5','6','7','8'):
+        return None
+    matches = [row for row in bibliography if row.get('id') == source_id
+               and row.get('type') == element.get('source_type')
+               and element['location'] == f"{row.get('title')} · {source_id} · {row.get('url')}"]
+    return matches[0].get('content_kind') if len(matches) == 1 else None
 
 
 def validate_bundle(bundle):
@@ -174,15 +191,34 @@ def validate_bundle(bundle):
         if checks.get('book')!=analysis['book']: raise ValueError('Book identity binding mismatch')
         evidence=checks.get('evidence')
         if not isinstance(evidence,list) or not evidence: raise ValueError('Missing checked evidence')
+        checked_quotes={}
+        public_elements={}
+        for record in evidence:
+            eid=record['element_id']
+            element={key:value for key,value in record.items() if key!='quote_hash'}
+            if public_elements.setdefault(eid,element)!=element:
+                raise ValueError('Conflicting checked source provenance')
+            checked_quotes.setdefault(eid,set()).add(record['quote_hash'])
+        quotes={eid:[] for eid in public_elements}
         for citation in _citations(analysis):
-            if not isinstance(citation,dict) or not all(isinstance(citation.get(k),str) and citation[k] for k in ('element_id','quote','location')): raise ValueError('Invalid public citation')
-            if not any(e.get('element_id')==citation['element_id'] and e.get('quote_hash')==_hash(citation['quote']) and e.get('location')==citation['location'] for e in evidence): raise ValueError('Unchecked public citation')
+            if not isinstance(citation,dict) or not all(isinstance(citation.get(k),str) and citation[k].strip() for k in ('element_id','quote','location')): raise ValueError('Invalid public citation')
+            eid=citation['element_id']; element=public_elements.get(eid)
+            if not element or element['location']!=citation['location'] or _hash(citation['quote']) not in checked_quotes[eid]:
+                raise ValueError('Unchecked public citation')
+            if (citation.get('source_type','text')!=element.get('source_type','text') or
+                citation.get('content_kind')!=element.get('content_kind') or
+                any(key in element and citation.get(key)!=element[key] for key in ('source_id','url'))):
+                raise ValueError('Citation provenance does not match checked source')
+            quotes[eid].append(citation['quote'])
         # Reapply optional reader structure and exact passage/secondary boundaries using
         # checked short quotations; full source text is deliberately not in this file.
-        public_elements=[]
-        for e in evidence:
-            quotes=[s['quote'] for s in _citations(analysis) if s['element_id']==e['element_id']]
-            public_elements.append({'element_id':e['element_id'],'text':'\n'.join(quotes),'location':e['location'],'source_type':e.get('source_type')})
+        for eid, element in public_elements.items():
+            if analysis['input_mode']=='title':
+                kind=_bibliography_kind(element, analysis.get('bibliography',[]))
+                if kind is not None and element.setdefault('content_kind',kind)!=kind:
+                    raise ValueError('Checked source does not match bibliography')
+            element['text']='\n'.join(quotes[eid])
+        public_elements=list(public_elements.values())
         for key in ('themes','methods','cases','counterexamples','glossary','references','insights'):
             for row in analysis.get(key,[]): _sources(copy.deepcopy(row.get('sources')),public_elements)
         validate_context(copy.deepcopy(analysis),public_elements)

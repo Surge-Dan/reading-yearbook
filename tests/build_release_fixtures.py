@@ -33,7 +33,7 @@ def main():
             'summary':{'book_count':count,'finished_count':count//3,'note_count':count*2,'read_days':174,'total_read_seconds':3600*45+21*60,'monthly_read_seconds':[3600,None,0,7200,1800,1200,4400,6600,3300,120]},'books':books}
         raw['distillations']=[bundle(sample=True)]
         data=adapt_data(raw)
-        merge_materials(data,{'year':2026,'books':[{**b,'notes_scope':'all_time','collection':{'highlights':'complete','thoughts':'complete'}} for b in books]})
+        merge_materials(data,{'year':2026,'source_mode':'sample','books':[{**b,'notes_scope':'all_time','collection':{'highlights':'complete','thoughts':'complete'}} for b in books]})
         if name=='mixed':
             data['features']={'daily':{'2026-01-01':120,'2026-01-02':300,'2026-06-01':0},'hourly':[3600 if i==6 else 0 for i in range(24)],
                 'category_time':[{'name':'文学','seconds':3000,'books':4}], 'read_seconds':3600,'listen_seconds':1800,'day_average':180,'comparison':-.2}

@@ -129,6 +129,23 @@ class AgentBridgeTests(unittest.TestCase):
         self.runner.submit('chat-1', request['request_id'], {})
         self.assertEqual(self.runner.deadline, deadline)
 
+    def test_failed_candidate_write_leaves_request_waiting_and_retryable(self):
+        request = self.start()
+        deadline = self.runner.deadline
+        self.clock[0] += 10
+        with patch('ebook_agent_bridge.atomic_json', side_effect=OSError('disk full')):
+            with self.assertRaises(OSError):
+                self.runner.submit('chat-1', request['request_id'], {'summary': 'unpersisted'})
+        self.assertIsNone(self.runner.pending['answer'])
+        self.assertEqual(self.runner.pending['status'], 'waiting')
+        self.assertEqual(self.runner.deadline, deadline)
+        answer = {'summary': 'saved retry'}
+        self.assertEqual(self.runner.submit('chat-1', request['request_id'], answer), 'submitted')
+        self.thread.join(2)
+        self.assertEqual(self.results, [answer])
+        candidate = self.runner.directory / (request['request_id'] + '-candidate.json')
+        self.assertEqual(json.loads(candidate.read_text('utf-8')), answer)
+
 
 class AgentStoreTests(unittest.TestCase):
     def test_late_release_cannot_cancel_new_attempt(self):

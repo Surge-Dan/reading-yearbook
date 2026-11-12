@@ -6,6 +6,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 class _HTML(HTMLParser):
     def __init__(self):
@@ -36,6 +37,21 @@ def _decode(data):
         except UnicodeDecodeError: pass
     raise ValueError('Unsupported text encoding; export UTF-8 text.')
 
+
+def _epub_spine_path(base, href):
+    try:
+        reference = urlsplit(href)
+        path = unquote(reference.path, errors='strict')
+    except ValueError as error:
+        raise ValueError('Unsafe EPUB spine path') from error
+    if (not path or reference.scheme or reference.netloc or path.startswith('/') or '\\' in path
+        or ':' in path.split('/', 1)[0] or re.search(r'[\x00-\x1f\x7f]', href + path)):
+        raise ValueError('Unsafe EPUB spine path')
+    name = posixpath.normpath(posixpath.join(base, path))
+    if name in ('.', '..') or name.startswith('../'):
+        raise ValueError('Unsafe EPUB spine path')
+    return name
+
 def parse_document(path):
     path=Path(path); raw=path.read_bytes(); source_hash=hashlib.sha256(raw).hexdigest()
     elements=[]; warnings=[]; exclusions=[]; title=path.stem; author=''; encoding=''; chapter=''
@@ -59,14 +75,14 @@ def parse_document(path):
             rootfile=next(x for x in container.iter() if x.tag.endswith('rootfile')).attrib['full-path']
             package=ET.fromstring(archive.read(rootfile)); base=posixpath.dirname(rootfile)
             manifest={x.attrib['id']:x.attrib for x in package.iter() if x.tag.endswith('}item')}
-            cover_hrefs={x.attrib.get('href','').split('#')[0] for x in package.iter() if x.tag.endswith('}reference') and x.attrib.get('type')=='cover'}
+            covers={_epub_spine_path(base,x.attrib['href']) for x in package.iter()
+                    if x.tag.endswith('}reference') and x.attrib.get('type')=='cover' and x.attrib.get('href')}
             for x in package.iter():
                 if x.tag.endswith('}title') and x.text: title=x.text
                 if x.tag.endswith('}creator') and x.text: author=x.text
             for item in (x for x in package.iter() if x.tag.endswith('}itemref')):
-                entry=manifest[item.attrib['idref']]; href=entry['href'].split('#')[0]; name=posixpath.normpath(posixpath.join(base,href))
-                if name.startswith('../') or name.startswith('/'): raise ValueError('Unsafe EPUB spine path')
-                if 'nav' in entry.get('properties','').split() or href in cover_hrefs:
+                entry=manifest[item.attrib['idref']]; name=_epub_spine_path(base,entry['href'])
+                if 'nav' in entry.get('properties','').split() or name in covers:
                     exclusions.append({'kind':'epub-navigation' if 'nav' in entry.get('properties','').split() else 'epub-cover','document':name}); continue
                 parser=_HTML(); parser.feed(archive.read(name).decode('utf-8-sig')); chapter=name
                 exclusions.extend(dict(exclusion,document=name) for exclusion in parser.exclusions)

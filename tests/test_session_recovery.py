@@ -109,6 +109,47 @@ class SessionRecoveryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.recover(job, session='third-chat')
 
+    def test_recovered_book_reuses_checked_stages_only_for_same_known_host_and_model(self):
+        from test_ebook_light import LightRunner
+        self.store.close()
+        for host, model, new_host, new_model, expected in (
+            ('host-a', 'known', 'host-a', 'known', 'light-compose'),
+            ('host-a', 'unknown', 'host-a', 'unknown', 'light-read'),
+            ('host-a', 'known', 'host-b', 'known', 'light-read'),
+            ('host-a', 'known', 'host-a', 'other', 'light-read'),
+        ):
+            with self.subTest(host=host, model=model, new_host=new_host, new_model=new_model):
+                root = self.root / f'{host}-{model}-{new_host}-{new_model}'
+                self.store = JobStore(root, AgentRunner())
+                try:
+                    job = self.create()
+                    self.store.agent_action(job, 'claim', {'session': 'old-chat', 'host': host, 'model': model})
+                    request = self.pending(job, 'old-chat')
+                    self.assertEqual(request['stage'], 'light-read')
+                    runner = self.store.runners[job]
+                    full = runner.next('old-chat')
+                    runner.submit('old-chat', full['request_id'], LightRunner().generate(full['prompt']))
+                    for _ in range(200):
+                        request = self.pending(job, 'old-chat')
+                        if request['stage'] == 'light-compose':
+                            break
+                        time.sleep(.005)
+                    self.assertEqual(request['stage'], 'light-compose')
+                    self.store.agent_action(job, 'release', {'session': 'old-chat'})
+                    self.drain()
+                    self.store.close()
+                    self.store = JobStore(root, AgentRunner())
+                    self.recover(job)
+                    self.store.agent_action(job, 'retry', {'session': 'new-chat'})
+                    self.drain()
+                    self.store.agent_action(job, 'claim', {'session': 'new-chat', 'host': new_host, 'model': new_model})
+                    request = self.pending(job, 'new-chat')
+                    self.assertEqual(request['stage'], expected)
+                    new_runner = self.store.runners[job]
+                    self.assertEqual(new_runner.next('new-chat')['execution_identity']['session'], 'new-chat')
+                finally:
+                    self.store.close()
+
     def test_active_pending_approval_and_completed_states_cannot_transfer(self):
         job = self.create()
         for state in ('queued', 'running', 'awaiting_agent', 'awaiting_response',

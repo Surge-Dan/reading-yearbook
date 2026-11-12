@@ -4,6 +4,12 @@ from datetime import date,timedelta
 from collections import Counter,defaultdict
 
 PAIRS=(('EI','外倾','内倾'),('SN','实感','直觉'),('TF','思考','情感'),('JP','判断','感知'))
+DAILY_DURATION_BINS = (
+    ('15分钟以内', 900),
+    ('15至30分钟', 1800),
+    ('30至60分钟', 3600),
+    ('超过60分钟', None),
+)
 
 def profile(signals,books,year):
     if not isinstance(signals,list):raise ValueError('阅读倾向标注须为列表')
@@ -100,8 +106,12 @@ def section(data):
             result+=('<span class="unknown" title="'+key+' · 未取得"></span>') if n is None else '<span style="opacity:'+str(.2+.8*n/peak)+'" title="'+key+' · '+str(round(n/60))+'分钟"></span>'
             day+=timedelta(days=1)
         result+='</div><p class="muted">未取得的日期不补零。</p></article>'
-        bins=Counter('0–15分钟' if n<900 else '15–30分钟' if n<1800 else '30–60分钟' if n<3600 else '60分钟以上' for n in daily.values() if n>0)
-        result+=bars('阅读日时长分布',[(k,bins[k]) for k in ('0–15分钟','15–30分钟','30–60分钟','60分钟以上')])
+        bins=Counter()
+        for seconds in daily.values():
+            if seconds > 0:
+                label = next(label for label, maximum in DAILY_DURATION_BINS if maximum is None or seconds <= maximum)
+                bins[label] += 1
+        result+=bars('阅读日时长分布',[(label,bins[label]) for label,_ in DAILY_DURATION_BINS])
     categories=[r for r in features.get('category_time',[]) if r.get('seconds') is not None and r['seconds']>0]
     if categories:
         result+=bars('分类投入 · 小时',[(r['name'],round(r['seconds']/3600,1)) for r in categories])

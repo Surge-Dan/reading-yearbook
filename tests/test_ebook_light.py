@@ -146,6 +146,30 @@ class LightTests(unittest.TestCase):
             self.assertIn('公开资料',a['coverage']['scope_note'])
             self.assertEqual(load_bundle(Path(tmp)/'distillation.json')['input_mode'],'title')
 
+    def test_title_preview_quotes_require_body_excerpts_end_to_end(self):
+        from distillation_result import load_bundle
+        class PreviewRunner(LightRunner):
+            def generate(self, prompt, **kwargs):
+                value = super().generate(prompt, **kwargs)
+                if 'STAGE:title-research\n' in prompt:
+                    value['sources'][0].update(type='preview', content_kind=kind)
+                if 'STAGE:light-compose\n' in prompt:
+                    source = value['themes'][0]['sources'][0]
+                    value['memorable_passages'] = [dict(text=source['quote'], why_it_matters='记录比较方法', sources=[source])]
+                return value
+        for kind in ('introduction', 'excerpt'):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as tmp:
+                args = ({'title': '测试书', 'author': '作者'}, tmp, PreviewRunner())
+                result = Path(tmp) / 'distillation.json'
+                if kind == 'introduction':
+                    with self.assertRaises(ValueError):
+                        self.engine().distill_title(*args)
+                    self.assertFalse(result.exists())
+                else:
+                    self.engine().distill_title(*args)
+                    source = load_bundle(result)['analysis']['memorable_passages'][0]['sources'][0]
+                    self.assertEqual((source['source_type'], source['content_kind']), ('preview', 'excerpt'))
+
     def test_default_job_store_dispatches_light_engine(self):
         from serve_ebook import JobStore
         with tempfile.TemporaryDirectory() as tmp:

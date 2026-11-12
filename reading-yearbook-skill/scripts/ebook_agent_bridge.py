@@ -12,6 +12,18 @@ _UNSET = object()
 def digest(value):
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, allow_nan=False).encode()).hexdigest()
 
+
+def stage_cache_context(runner, context):
+    if not isinstance(runner, AgentRunner) or not runner.identity:
+        return context
+    if runner.cache_session == runner.identity['session']:
+        return context
+    # Only the cache key uses the transferred identity. Ownership and requests
+    # continue to identify the current attempt and conversation.
+    identity = dict(context['runner']['execution_identity'], session=runner.cache_session)
+    return dict(context, runner=dict(context['runner'], execution_identity=identity))
+
+
 class AgentRunner:
     def __init__(self, timeout=180, clock=time.monotonic):
         if type(timeout) is not int or not 30 <= timeout <= 900:
@@ -25,11 +37,19 @@ class AgentRunner:
         self.revoked = None
         self.cancel_event = None
 
-    def bind(self, directory, job_id, identity, notify=None, cancel_event=None):
+    def bind(self, directory, job_id, identity, notify=None, cancel_event=None, previous_identities=()):
         if not isinstance(identity, dict) or any(not isinstance(identity.get(k), str) or not identity[k].strip() or len(identity[k]) > 200 for k in ('session', 'host', 'model')):
             raise ValueError('请声明当前 Agent 的 session、host、model；未知模型填 unknown')
         bound = AgentRunner(self.timeout, self.clock)
         bound.identity = {k: identity[k] for k in ('session', 'host', 'model')}
+        bound.cache_session = identity['session']
+        if identity['model'].strip().casefold() != 'unknown':
+            # Use the first matching conversation to retain existing validated
+            # stage files through explicit transfers, including server restarts.
+            for previous in previous_identities:
+                if previous.get('host') == identity['host'] and previous.get('model') == identity['model']:
+                    bound.cache_session = previous['session']
+                    break
         bound.directory = Path(directory).resolve() / '.agent' / uuid.uuid4().hex
         bound.directory.mkdir(parents=True)
         bound.attempt = bound.directory.name
@@ -106,9 +126,10 @@ class AgentRunner:
                 raise ValueError('同一请求禁止提交不同输出')
             if self.pending['digest']:
                 return self.pending['status']
-            self.pending.update(answer=json.loads(json.dumps(answer)), digest=fingerprint, status='submitted')
+            candidate = json.loads(json.dumps(answer))
+            atomic_json(self.directory / (request_id + '-candidate.json'), candidate)
+            self.pending.update(answer=candidate, digest=fingerprint, status='submitted')
             self.deadline = self.clock() + self.timeout
-            atomic_json(self.directory / (request_id + '-candidate.json'), answer)
             self.condition.notify_all()
             return 'submitted'
 

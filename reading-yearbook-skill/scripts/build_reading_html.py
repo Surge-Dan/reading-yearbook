@@ -90,6 +90,15 @@ def adapt_data(raw, year=None):
         raise ValueError('年鉴数据须为对象')
     for key in ('period','coverage','sources'):
         if key in raw and not isinstance(raw[key],dict):raise ValueError(key+'须为对象')
+    try:
+        years = {int(value) for value in (year, raw.get('year'), raw.get('period', {}).get('year')) if value is not None}
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError('年鉴年份须为整数') from None
+    if len(years) > 1:
+        raise ValueError('指定年份与输入数据年份不一致，请提供对应年度的数据')
+    year = next(iter(years), datetime.now(TZ).year)
+    if not 1900 <= year <= 2200:
+        raise ValueError('年份须在1900—2200之间')
     normalized = raw.get('schema_version') in ('reading-html/1.1','reading-html/1.2')
     if str(raw.get('schema_version','')).startswith('reading-html/') and not normalized:
         raise ValueError('不支持的HTML数据版本')
@@ -101,9 +110,6 @@ def adapt_data(raw, year=None):
         raw['summary'] = {**summary, **{dest:summary.get(src) for src,dest in
             [('read','book_count'),('finished','finished_count'),('notes','note_count'),
              ('seconds','total_read_seconds'),('monthly','monthly_read_seconds')]}}
-    year = int(year or raw.get('year') or raw.get('period', {}).get('year') or datetime.now(TZ).year)
-    if not 1900 <= year <= 2200:
-        raise ValueError('年份须在1900—2200之间')
     share = 'sources' in raw and 'annual_summary' in raw
     sources = raw.get('sources', {}) if share else {}
     summary = raw.get('annual_summary' if share else 'summary', {})
@@ -112,10 +118,13 @@ def adapt_data(raw, year=None):
         raise ValueError('books须为列表，summary须为对象')
     if 'shelf' in raw and 'stats' in raw:
         from yearbook_core import normalize_yearbook
-        data=adapt_data(normalize_yearbook(raw, year), year)
+        ordinary = normalize_yearbook(raw, year)
+        ordinary.update({key: raw[key] for key in ('as_of','period','features') if key in raw})
+        data=adapt_data(ordinary, year)
         if 'distillations' in raw:
             data['distillations'] = validated_distillations(raw['distillations'], raw.get('source_mode'))
-        merge_annual(data,{'year':year,'as_of':raw.get('as_of'),'shelf':raw['shelf'],'annual':raw['stats']})
+        merge_annual(data,{'year':year,'as_of':data['as_of'],'source_mode':data['source_mode'],
+                           'shelf':raw['shelf'],'annual':raw['stats']})
         if not any(row.get('stat')=='读过' for row in raw['stats'].get('readStat',[])):
             data['summary']['read']=None;data['coverage']['annual_books']=None;data['coverage']['complete']=False
         return data
@@ -212,6 +221,7 @@ def adapt_data(raw, year=None):
         coverage=raw.get('coverage',{})
         data['coverage']['complete'] = data['coverage']['complete'] and coverage.get('complete') is True
         data['coverage']['reason'] = str(coverage.get('reason') or '')
+    if normalized or 'features' in raw:
         data['features']=features_data(raw.get('features'),year,as_of)
     if 'distillations' in raw:
         data['distillations'] = validated_distillations(raw['distillations'], data['source_mode'])
@@ -222,8 +232,16 @@ def adapt_data(raw, year=None):
     return data
 
 
+def check_source_mode(data, supplement):
+    if not isinstance(supplement, dict):
+        raise ValueError('年度快照或书籍材料须为对象')
+    if (data.get('source_mode') == 'sample') != (supplement.get('source_mode') == 'sample'):
+        raise ValueError('示例年鉴仅接受明确标记为 sample 的示例材料，真实年鉴仅接受真实材料')
+
+
 def merge_annual(data, snapshot):
     """Merge positively identified year activity, never the entire shelf."""
+    check_source_mode(data, snapshot)
     annual = snapshot.get('annual') or {}
     if not isinstance(annual,dict) or not isinstance(snapshot.get('shelf',{}),dict):
         raise ValueError('年度或书架快照须为对象')
@@ -300,8 +318,15 @@ def merge_annual(data, snapshot):
             b['reading_seconds'] = number(ranked[key]['readTime'])
         if info.get('finished_on'):
             b['finish_date'] = date_value(info['finished_on'])
-    data['books'] = list(existing.values())
-    albums={str((x.get('albumInfo') or {}).get('albumId')):x for x in (snapshot.get('shelf',{}).get('albums') or []) if isinstance(x,dict) and isinstance(x.get('albumInfo') or {},dict)}
+    shelf_snapshot = snapshot.get('shelf',{})
+    albums={str((x.get('albumInfo') or {}).get('albumId')):x for x in (shelf_snapshot.get('albums') or []) if isinstance(x,dict) and isinstance(x.get('albumInfo') or {},dict)}
+    for album_id, source in albums.items():
+        extra = source.get('albumInfoExtra') or {}
+        book = existing.get('audio-' + album_id)
+        secret = extra.get('secret') if isinstance(extra,dict) else None
+        if book is not None and secret in (True, False, 0, 1):
+            if secret or shelf_snapshot.get('_cache_status') != 'stale':
+                book['secret'] = bool(secret)
     for item in annual.get('readLongest',[]):
         album=item.get('albumInfo') or {}
         if not album.get('albumId') or not number(item.get('readTime')):
@@ -309,10 +334,10 @@ def merge_annual(data, snapshot):
         key='audio-'+str(album['albumId'])
         if key in existing:
             continue
-        source=albums.get(str(album['albumId']),{})
+        extra=albums.get(str(album['albumId']),{}).get('albumInfoExtra') or {}
         book=adapt_data({'year':data['year'],'books':[{'book_id':key,'title':album.get('name') or album.get('title'),
             'author':album.get('authorName'),'intro':album.get('intro'),'kind':'audio','cover_url':album.get('cover'),
-            'secret':source.get('albumInfoExtra',{}).get('secret'), 'annual_reading_seconds':item['readTime']}], 'summary':{}})['books'][0]
+            'secret':extra.get('secret') if isinstance(extra,dict) else None, 'annual_reading_seconds':item['readTime']}], 'summary':{}})['books'][0]
         existing[key]=book
     data['books']=list(existing.values())
     data['coverage']['annual_books'] = data['summary']['read']
@@ -333,15 +358,19 @@ def merge_annual(data, snapshot):
         if (seconds is not None and seconds>0) or (count is not None and count>0):
             categories.append({'name':str(row.get('parentCategoryTitle') or row.get('categoryTitle') or '未分类'),
                                'seconds':seconds,'books':count})
-    data['features']=features_data({'daily':daily,'hourly':([number(times[(hour-6)%24]) for hour in range(24)] if isinstance(times,list) and len(times)==24 else []),
-                      'category_time':categories,'read_seconds':number(annual.get('wrReadTime')),
-                      'listen_seconds':number(annual.get('wrListenTime')),'day_average':number(annual.get('dayAverageReadTime')),
-                      'comparison':annual.get('compare')},data['year'],data['as_of'])
+    supplied = {'dailyReadTimes':('daily',daily),
+                'preferTime':('hourly',[times[(hour-6)%24] for hour in range(24)] if isinstance(times,list) and len(times)==24 else []),
+                'preferCategory':('category_time',categories),'wrReadTime':('read_seconds',annual.get('wrReadTime')),
+                'wrListenTime':('listen_seconds',annual.get('wrListenTime')),
+                'dayAverageReadTime':('day_average',annual.get('dayAverageReadTime')),'compare':('comparison',annual.get('compare'))}
+    combined = {**data.get('features',{}), **dict(value for field,value in supplied.items() if field in annual)}
+    data['features']=features_data(combined,data['year'],data['as_of'])
     return data
 
 
 def merge_materials(data, materials):
     """Fill known books only. Failed collection never means an empty notebook."""
+    check_source_mode(data, materials)
     if materials.get('year') != data['year']:
         raise ValueError('书籍材料年份与年鉴不一致')
     existing = {b['book_id']: b for b in data['books']}
@@ -367,14 +396,22 @@ def merge_materials(data, materials):
             if finish and int(finish[:4]) == data['year']:
                 b['finish_date'] = finish
         note_year = None if row.get('notes_scope') == 'all_time' else data['year']
+        states = {}
         for key in ('highlights', 'thoughts'):
-            if coverage.get(key) in ('complete','unsupported','stale'):
-                b[key] = notes(row.get(key, []), note_year)
-            elif coverage.get(key)=='partial':
-                b[key]=notes([*row.get(key,[]),*b.get(key,[])],note_year)
-        b['note_coverage'] = {'scope': 'all_time' if note_year is None else 'year',
-                              'highlights': coverage.get('highlights') if coverage.get('highlights') in ('complete','unsupported','stale','partial') else 'unverified',
-                              'thoughts': coverage.get('thoughts') if coverage.get('thoughts') in ('complete','unsupported','stale','partial') else 'unverified',
+            state = coverage.get(key)
+            if state in ('complete','unsupported') and isinstance(row.get(key),list):
+                b[key] = notes(row[key], note_year)
+            elif state in ('stale','partial'):
+                fetched = notes(row.get(key),note_year)
+                combined = [*b[key],*fetched] if state == 'stale' else [*fetched,*b[key]]
+                b[key] = notes(combined, None)
+            else:
+                state = 'unverified'
+            states[key] = state
+        retains_history = (b.get('note_coverage',{}).get('scope') == 'all_time'
+                           and any(state in ('stale','partial','unverified') for state in states.values()))
+        b['note_coverage'] = {'scope': 'all_time' if note_year is None or retains_history else 'year',
+                              **states,
                               'collected_on': date_value(row.get('collected_on'))}
     data['material_coverage'] = {'books_with_checked_highlights': sum(b.get('note_coverage', {}).get('highlights') == 'complete' for b in data['books']),
                                  'books_with_checked_thoughts': sum(b.get('note_coverage', {}).get('thoughts') == 'complete' for b in data['books']),
@@ -389,13 +426,27 @@ def embed_image(path):
     return image_data(path.read_bytes(),path.name)
 
 
+def distillation_can_be_shared(bundle, private, public):
+    identity = bundle['analysis']['book']
+    title = identity['title'].strip().casefold()
+    same_title = [book for book in private if book['title'].strip().casefold() == title]
+    if not same_title:
+        return True
+    author = identity['author'].strip().casefold()
+    if not author or author == '作者未记录':
+        return False
+    if any(book['author'].strip().casefold() in ('','作者未记录',author) for book in same_title):
+        return False
+    return any(book['title'].strip().casefold() == title and book['author'].strip().casefold() == author
+               for book in public)
+
+
 def build_html(data, output, covers=None, art_assets=None, require_all_covers=False, allow_draft=False):
     """Whitelist data at adapter boundary; no raw payload embedded."""
     validated_distillations(data.get('distillations'), data.get('source_mode'))
     private_books = [book for book in data['books'] if book.get('secret')]
     if private_books:
         private_ids = {book['book_id'] for book in private_books}
-        private_titles = {book['title'].strip().casefold() for book in private_books}
         private_notes = {(kind, note['source_id']) for book in private_books
                          for kind, field in (('highlight', 'highlights'), ('thought', 'thoughts'))
                          for note in book[field]}
@@ -407,7 +458,7 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
                                        if (signal.get('source_kind', 'thought'), signal['source_id']) not in private_notes]
         if 'distillations' in data:
             data['distillations'] = [bundle for bundle in data['distillations']
-                                     if bundle['analysis']['book']['title'].strip().casefold() not in private_titles]
+                                     if distillation_can_be_shared(bundle, private_books, books)]
         if 'collection_status' in data:
             data['collection_status'] = {key: data['collection_status'][key] for key in ('complete', 'message')
                                          if key in data['collection_status']}
@@ -444,8 +495,8 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
     if re.search(r'wrk-[A-Za-z0-9_-]{8,}', serialized):
         raise ValueError('交付内容中检测到密钥格式，请移除后重试')
     template = (ROOT / 'assets' / 'reading-template.html').read_text('utf-8')
-    from reading_portrait import section
-    # Art belongs to presentation, never the user's exported reading JSON.
+    from reading_portrait import DAILY_DURATION_BINS, section
+    # Presentation assets and chart settings stay outside the user's exported reading JSON.
     unknown = set(art_assets or {}) - {'hero', 'reading', 'rhythm', 'readingRecord'}
     if unknown:
         raise ValueError('未知艺术素材字段：' + ', '.join(sorted(unknown)))
@@ -454,6 +505,7 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
                               ('readingRecord', 'reading-record.png')]}
     empty_shelf = (ROOT / 'assets/yearbook-art/empty-shelf.svg').read_bytes()
     art['emptyShelf'] = 'data:image/svg+xml;base64,' + base64.b64encode(empty_shelf).decode('ascii')
+    art['dailyDurationBins'] = DAILY_DURATION_BINS
     replacements = {'__DATA__': serialized, '__STYLE__': (ROOT / 'assets' / 'reading-app.css').read_text('utf-8') + '\n' + (ROOT / 'assets' / 'reading-art.css').read_text('utf-8') + '\n' + (ROOT / 'assets' / 'ebook-app.css').read_text('utf-8'),
                     '__ART__': json.dumps(art),
                     '__APP__': (ROOT / 'assets' / 'reading-app.js').read_text('utf-8'),

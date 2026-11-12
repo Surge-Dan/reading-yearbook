@@ -19,11 +19,12 @@ class DailyReuseTests(unittest.TestCase):
         previous = Path(base) / 'owner' / '2026' / str(today - timedelta(days=1))
         raw = previous / 'raw'; raw.mkdir(parents=True)
         source = raw / 'book-info.json'
-        source.write_text(json.dumps({'title': 'Book'}), 'utf-8')
-        source.with_suffix('.json.meta.json').write_text(json.dumps({
-            'version': 1, 'api': '/book/info',
-            'fetched_at': datetime.now(TZ).replace(hour=0).isoformat()[:10].replace(str(today), str(today - timedelta(days=1))) + 'T00:00:00+08:00',
-        }), 'utf-8')
+        with patch('collect_html_materials.gateway_call',return_value={'title':'Book'}):
+            call('/book/info', {}, 'synthetic', source, threading.Event())
+        sidecar = source.with_suffix('.json.meta.json')
+        metadata = json.loads(sidecar.read_text('utf-8'))
+        metadata['fetched_at'] = (datetime.now(TZ) - timedelta(days=1)).isoformat()
+        sidecar.write_text(json.dumps(metadata), 'utf-8')
         return Path(base) / 'owner' / '2026' / str(today)
 
     def test_cross_day_data_refreshes_and_preserves_fetch_date(self):
