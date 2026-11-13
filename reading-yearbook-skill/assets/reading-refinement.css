@@ -40,17 +40,18 @@ a:hover{color:var(--blue)}
 nav a{border-radius:6px;padding-inline:5px}
 nav a:hover{background:#fff0cd}
 nav a[aria-current]:after{background:var(--red)}
-:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:6px}
+:focus-visible{outline:3px solid var(--control);outline-offset:3px;border-radius:6px}
 input:not([type=checkbox]):not([type=radio]),select,.select-trigger{min-height:44px;background:var(--paper);border:1px solid #c8a879;border-radius:10px;padding:10px 14px;line-height:1.4}
 input::placeholder{color:#796b57}
 input[type=checkbox],input[type=radio]{width:18px;height:18px;accent-color:var(--red);flex-shrink:0}
 .search{border-color:#c8a879;border-radius:10px;background:var(--paper);padding:0 12px}
 .search input{border:0!important;background:transparent!important;padding:11px 8px!important}
+.search input:focus,.search input:focus-visible{outline:none;box-shadow:none}
 .select-trigger{gap:14px;text-align:left}
 .paper-select{max-width:100%;min-width:0}
 .select-menu{padding:6px;background:var(--paper);border:1px solid #c8a879;border-radius:12px;box-shadow:0 8px 24px #643b181a}
 .select-menu [role=option]{padding:11px 13px;min-height:44px;border-radius:8px;line-height:1.5}
-.select-menu [role=option]:hover,.select-menu [role=option]:focus{background:#eaf0ff;color:var(--blue)}
+.select-menu [role=option]:hover,.select-menu [role=option]:focus{background:var(--warm-soft);color:var(--control)}
 .select-menu [role=option][aria-selected=true]{background:#ffe2a0;color:#692b14}
 .book-share-tools{padding:8px 4px;gap:8px;border-color:var(--warm-rule);flex-wrap:wrap}
 .share-page{border-radius:9px;padding:8px;gap:10px}
@@ -85,7 +86,7 @@ dialog::backdrop{background:#39261266;backdrop-filter:blur(2px)}
 .ebook-workbench .text-button{color:var(--blue);border-radius:8px;min-height:36px;padding:6px 10px}
 .ebook-workbench .text-button:hover{background:#eaf0ff;color:#164894}
 .ebook-workbench select,.ebook-workbench input:not([type=checkbox]):not([type=radio]),.ebook-workbench textarea{background:var(--paper);color:var(--ink);border:1px solid #c8a879;border-radius:10px;min-height:44px;padding:10px 14px}
-.ebook-workbench :focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.ebook-workbench :focus-visible{outline:3px solid var(--control);outline-offset:3px}
 .ebook-workbench summary{color:var(--blue);padding:9px 12px;border-radius:8px;min-height:40px}
 .ebook-workbench summary:hover{background:#eaf0ff}
 .ebook-workbench details[open]>summary{background:#fff0cf;color:#903323}

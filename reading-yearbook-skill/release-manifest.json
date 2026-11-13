@@ -15,9 +15,9 @@
     },
     {
       "path": "assets/ebook-app.css",
-      "sha256": "87d13bcf4c0ca9adcba7fdb15f84d627158b0e4bcd83671948789666d7b5e4dd",
+      "sha256": "b650195003e06f592098058f9a2cfdc1ab1add3d937a2af0004aa3da50af7c7e",
       "hash_kind": "text-lf",
-      "bytes": 6899
+      "bytes": 6914
     },
     {
       "path": "assets/ebook-app.js",
@@ -69,9 +69,9 @@
     },
     {
       "path": "assets/reading-app.css",
-      "sha256": "57b91f69fda5a4564dfeba28e5be100c96e193a66c5eb2d2570805b6ee807bf2",
+      "sha256": "afd5cb2409877b3ab90c941ebba3f5a08ffd7a134c93d2c410d31f89ff6d92d5",
       "hash_kind": "text-lf",
-      "bytes": 16884
+      "bytes": 16898
     },
     {
       "path": "assets/reading-app.js",
@@ -81,15 +81,15 @@
     },
     {
       "path": "assets/reading-art.css",
-      "sha256": "f41ec851ff0a5a058cae5009674e1e39c6b835d46a7ed3205071f802de58f738",
+      "sha256": "1c4d2d2f52eef263118ad5e96c70bc1be58366923873f075983e7baff5559ae4",
       "hash_kind": "text-lf",
-      "bytes": 28740
+      "bytes": 28695
     },
     {
       "path": "assets/reading-refinement.css",
-      "sha256": "7683a816482e3f9f5c8532a08f791350b52399ec4fc2f9013b0cc20f1f7ef48b",
+      "sha256": "83dfed3f55b5f28eee92b6f7473ec0ae1d3002f7ae35043230f3cae218228f74",
       "hash_kind": "text-lf",
-      "bytes": 11227
+      "bytes": 11323
     },
     {
       "path": "assets/reading-share-art.js",
@@ -405,9 +405,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "cbbd38a9b8625d089c6a943c3e21903fe73c1823832f465c6dee3eb9d11f8701",
+      "sha256": "e0bcf71b924a42b38fde13bdd1037d2afd9328083e855c97778b3ccc36691bcd",
       "hash_kind": "text-lf",
-      "bytes": 7939381
+      "bytes": 7939461
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",

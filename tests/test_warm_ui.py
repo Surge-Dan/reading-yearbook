@@ -8,6 +8,27 @@ from report_reader import reader_page
 from test_report_reader import bundle
 
 class WarmUITests(unittest.TestCase):
+    def test_searches_avoid_nested_focus_rings_and_keyboard_focus_is_warm(self):
+        with tempfile.TemporaryDirectory() as tmp,sync_playwright() as p:
+            data=adapt_data(json.loads((ROOT/'reading-yearbook-skill/examples/reading-html-demo/demo-data.json').read_text('utf-8')))
+            target=Path(tmp)/'report.html';build_html(data,target)
+            browser=p.chromium.launch(executable_path='C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless=True)
+            try:
+                page=browser.new_page(reduced_motion='reduce')
+                page.goto(target.as_uri(),wait_until='networkidle')
+                page.locator('#bookShareTrigger').click()
+                for selector in ('#shareBookSearch','#search'):
+                    control=page.locator(selector);control.click()
+                    self.assertEqual(control.evaluate('el=>getComputedStyle(el).outlineStyle'),'none')
+                    self.assertEqual(control.evaluate('el=>getComputedStyle(el).boxShadow'),'none')
+                    self.assertEqual(control.evaluate('el=>getComputedStyle(el.closest(".search")).boxShadow'),'none')
+                    self.assertEqual(control.evaluate('el=>getComputedStyle(el.closest(".search")).borderColor'),'rgb(154, 92, 42)')
+                page.keyboard.press('Tab')
+                self.assertEqual(page.locator(':focus-visible').evaluate('el=>getComputedStyle(el).outlineColor'),'rgb(184, 50, 37)')
+                page.locator('#quoteBookTrigger').focus()
+                self.assertEqual(page.locator('#quoteBookTrigger').evaluate('el=>getComputedStyle(el).outlineColor'),'rgb(184, 50, 37)')
+            finally:browser.close()
+
     def test_standalone_reader_controls_share_report_theme(self):
         with tempfile.TemporaryDirectory() as tmp,sync_playwright() as p:
             target=Path(tmp)/'reader.html'
