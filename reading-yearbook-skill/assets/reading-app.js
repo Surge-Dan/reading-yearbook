@@ -233,7 +233,7 @@
     const b=bookMap.get(id);if(!b)return;
     if(!$('#detail').open){previousFocus=document.activeElement;originalHash=location.hash;}
     $('#detailContent').innerHTML=bookDetails(b);
-    if(!$('#detail').open)$('#detail').showModal();$('#detail').scrollTop=0;
+    if(!$('#detail').open)$('#detail').showModal();$('#detailContent').scrollTop=0;
     if(!fromHash){history.pushState(null,'','#book='+encodeURIComponent(id));dialogPushed=true;}
   }
   function closeBook(){if(!$('#detail').open)return;$('#detail').close();if(dialogPushed&&location.hash.startsWith('#book=')){history.back();}else if(location.hash.startsWith('#book=')){history.replaceState(null,'',originalHash.startsWith('#book=')?'#shelf':originalHash||'#shelf');}dialogPushed=false;previousFocus?.isConnected&&previousFocus.focus({preventScroll:true});}
