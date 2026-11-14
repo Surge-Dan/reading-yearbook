@@ -62,7 +62,7 @@ input[type=checkbox],input[type=radio]{width:18px;height:18px;accent-color:var(-
 .reading-portrait select{min-width:190px;background:var(--paper);border-color:#c8a879;padding:10px 14px}
 summary{min-height:40px;padding:9px 12px;border-radius:8px;color:var(--blue);line-height:1.5}
 summary:hover{background:#eaf0ff}
-details[open]>summary{color:#903323;background:#fff0cf}
+details[open]>summary{color:#903323;background:transparent}
 .portrait-axis details{margin-top:12px}
 .portrait-axis blockquote{color:var(--ink);background:#fff4db;padding:12px;border-radius:8px}
 .book{border-radius:10px}
@@ -89,7 +89,7 @@ dialog::backdrop{background:#39261266;backdrop-filter:blur(2px)}
 .ebook-workbench :focus-visible{outline:3px solid var(--control);outline-offset:3px}
 .ebook-workbench summary{color:var(--blue);padding:9px 12px;border-radius:8px;min-height:40px}
 .ebook-workbench summary:hover{background:#eaf0ff}
-.ebook-workbench details[open]>summary{background:#fff0cf;color:#903323}
+.ebook-workbench details[open]>summary{background:transparent;color:#903323}
 .portrait-scope{margin-bottom:20px}
 .insight-ring-layout{display:grid;grid-template-columns:minmax(100px,148px) minmax(0,1fr);align-items:center;gap:clamp(12px,3vw,26px)}
 .insight-ring{display:grid;place-items:center;aspect-ratio:1}
@@ -114,3 +114,6 @@ dialog::backdrop{background:#39261266;backdrop-filter:blur(2px)}
 @media print{#expandFocus,#exportFocus{display:none}#investment .investment-row[hidden]{display:grid!important}}
 
 #expandFocus,#exportFocus{color:var(--control)}
+
+/* Expanded disclosure headers never retain the hover fill. */
+body details[open]>summary,body details[open]>summary:hover{background:transparent}
