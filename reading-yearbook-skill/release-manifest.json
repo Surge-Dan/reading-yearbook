@@ -93,9 +93,9 @@
     },
     {
       "path": "assets/reading-share-art.js",
-      "sha256": "8904b0321ba47e57bfbf4668fd44c285cc301152cef62a978d678aefa79a50a1",
+      "sha256": "fe801964d346515b9ead86aa804f6db7b99b137e83f549ba326946b077c4277b",
       "hash_kind": "text-lf",
-      "bytes": 35669
+      "bytes": 36180
     },
     {
       "path": "assets/reading-template.html",
@@ -345,69 +345,69 @@
     },
     {
       "path": "examples/reading-html-demo/images/01-cover.png",
-      "sha256": "252932d142d7a3b31d32e0c6f48601b7af5bb5bfc98658e849598a0b8ff3be46",
+      "sha256": "ccddce87a83a76c8163eca9c4825455c0ac4c32caeb24ecf339fafd710cef29f",
       "hash_kind": "binary",
-      "bytes": 256839
+      "bytes": 219092
     },
     {
       "path": "examples/reading-html-demo/images/02-stats.png",
-      "sha256": "286e4d265b16a8ec943a676b1bd37ce3df9c4d51c5a75d9379fe65d7c39968d0",
+      "sha256": "56c2a9580aa41e45d88474c3c24e81dc682b9eac9d6c2bb08561a2ff0955dfe0",
       "hash_kind": "binary",
-      "bytes": 156587
+      "bytes": 126657
     },
     {
       "path": "examples/reading-html-demo/images/03-distribution.png",
-      "sha256": "bba9347ee7a592ecf6e51b302bf11290bb8e58a53d7e6035a78a2a5006050699",
+      "sha256": "5434c601b3e8deaa45a7cad78a2e11d5dbc54f7ef35a8cf5cd6fa8454033cc9c",
       "hash_kind": "binary",
-      "bytes": 128386
+      "bytes": 101458
     },
     {
       "path": "examples/reading-html-demo/images/04-timeline.png",
-      "sha256": "d554763680697ae6560d8b512ee68ae8979bad664f78bf5ed20dacb01feb8da4",
+      "sha256": "00237ffb246fe75dfc5e102fb66dce1d65050073d0f9b119e446f906edb5605a",
       "hash_kind": "binary",
-      "bytes": 184438
+      "bytes": 157170
     },
     {
       "path": "examples/reading-html-demo/images/05-book-demo-001.png",
-      "sha256": "99ad2f47824fbdb6616745bf07b69d7507545906e14e30a6097d5557637f2124",
+      "sha256": "b84ac835ef0e741c2575b837a332f116b902fba47271bbdb959933ce16aa0d1d",
       "hash_kind": "binary",
-      "bytes": 172673
+      "bytes": 147270
     },
     {
       "path": "examples/reading-html-demo/images/06-book-demo-002.png",
-      "sha256": "1f4d971ff205ba9ef42178c16c0f1709537eb6d11e0e4e68cf9206b05f9308bf",
+      "sha256": "9785b338ae7f01692d5ff1d22250cc7d6102bcccc27c396054d2c7c26fc58854",
       "hash_kind": "binary",
-      "bytes": 177088
+      "bytes": 151709
     },
     {
       "path": "examples/reading-html-demo/images/07-book-demo-003.png",
-      "sha256": "9bc17bf224d8907e73e72886bca5550f20fe85111723b8a075b3d4d2f64943c5",
+      "sha256": "cd259305e7785fd934980b489a7438672104e9ccd18a1c8e9b75813bdb16c51f",
       "hash_kind": "binary",
-      "bytes": 203242
+      "bytes": 178679
     },
     {
       "path": "examples/reading-html-demo/images/08-book-demo-004.png",
-      "sha256": "86dfc4733fb4f3a9b5bc8bda6df2052538634b9d2f90c97350d9a217d4123cf1",
+      "sha256": "87c764c59857b9248cbd00c6d4fa79c76719c245a4eb5ad4677f0e012484cbe7",
       "hash_kind": "binary",
-      "bytes": 171749
+      "bytes": 147244
     },
     {
       "path": "examples/reading-html-demo/images/09-book-demo-005.png",
-      "sha256": "ff5bb30843175a71a038ad2f443d5ccec8a102d3b883f7214e9edd2e58dfd7f1",
+      "sha256": "a9df407219c5481dff872afbf066bb830697ffb1a8baa4ca82ef85aed1e52b3e",
       "hash_kind": "binary",
-      "bytes": 173625
+      "bytes": 148605
     },
     {
       "path": "examples/reading-html-demo/images/10-book-demo-006.png",
-      "sha256": "6f2193799df157c10f2567baf98fd1dbae53b58ef1e36e44702afd14706686de",
+      "sha256": "14d746e11900a5470f4ee5a1d4b57a0b9c82822198e7f5c8f6e9056e81dc1bdb",
       "hash_kind": "binary",
-      "bytes": 184159
+      "bytes": 159681
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "ea4f18bfb77f0067e14d2c32ce54bf40085cb7b02f6c12f06602b351e9203a40",
+      "sha256": "fb6ec818684b18827bc6740f5d183905b144b7020258cd0601918a00b9257532",
       "hash_kind": "text-lf",
-      "bytes": 7944912
+      "bytes": 7945423
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
@@ -423,15 +423,15 @@
     },
     {
       "path": "examples/reading-html-demo/share-overview.png",
-      "sha256": "3cc95b88471c949ffcc9aac31418dd753ae39ee81b831de195dddfae2e8e53d9",
+      "sha256": "9fc75be0e2430fcfc1bde37a1500c68eec0dae61a9c0c80668deea0a79a26c78",
       "hash_kind": "binary",
-      "bytes": 571956
+      "bytes": 447460
     },
     {
       "path": "examples/reading-html-demo/web-preview.png",
-      "sha256": "4c6e7577b5e299ef630e5047f0e01c5b08c8ae265b197720d4e1b3ee46259df8",
+      "sha256": "45bb1354d1321ff626163b778c3bc857702baf3cb7e310acd3d20746f1c77e62",
       "hash_kind": "binary",
-      "bytes": 867010
+      "bytes": 867337
     },
     {
       "path": "examples/README.md",

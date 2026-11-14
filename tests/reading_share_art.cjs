@@ -36,16 +36,18 @@ const {chromium}=require('playwright'),{pathToFileURL}=require('url'),fs=require
    for(const gap of r.layout.spacing)assert(gap.gap>=14,`${label}: number and label too close: ${gap.gap}`);
    for(const im of r.layout.images){assert(im.x>=30&&im.x+im.w<=870,`${label}: image exceeds frame`);assert(im.y+im.h<=r.layout.footerTop-16,`${label}: rotated image reaches footer`);}
    if(r.layout.page==='cover'){
-     const time=r.layout.text.find(t=>t.text==='每天的阅读记录'),units=r.layout.text.filter(t=>['本读过','本读完','天阅读','条笔记'].includes(t.text));
+     const time=r.layout.text.find(t=>['每天的阅读记录','每月阅读时长','年度阅读时长'].includes(t.text)),units=r.layout.text.filter(t=>['本读过','本读完','天阅读','条笔记'].includes(t.text));
      assert(time&&units.length===4);
      assert(time.y-Math.max(...units.map(t=>t.y+t.h))>=24,`${label}: time group too close to headline metrics`);
    }
    if(r.layout.page==='stats'){
      assert(r.layout.text.some(t=>t.text==='每月阅读时长'),`${label}: missing monthly trend heading`);
-     assert(r.layout.text.some(t=>t.text==='单日阅读时长分布'),`${label}: missing daily distribution heading`);
+     assert(r.layout.text.some(t=>['单日阅读时长分布','阅读与记录'].includes(t.text)),`${label}: missing daily distribution heading`);
      const distribution=r.layout.charts.find(c=>c.kind==='day-distribution');
      if(distribution)assert.equal(distribution.bins.reduce((n,b)=>n+b.count,0),distribution.total);
    }
+   if(['cover','stats'].includes(r.layout.page))assert(!r.layout.text.some(t=>/本次未取得逐日时长|暂无可统计的正时长日记录/.test(t.text)));
+   const bars=r.layout.charts.find(c=>c.kind==='monthly-bars');if(bars)assert.deepEqual(bars.values,r.summary.monthly.slice(0,r.summary.complete_months));
    const chart=r.layout.charts.find(c=>c.kind==='monthly');if(chart)for(const p of chart.points.filter(Boolean)){assert.equal(p.value,r.summary.monthly[p.month-1]);assert(Math.abs(p.y-(chart.base-p.value/3600/chart.top*(chart.base-chart.upper)))<1e-7);}
    const categories=r.layout.charts.filter(c=>c.kind==='category');if(categories.length)assert.equal(categories.reduce((n,c)=>n+c.count,0),r.books);
    checks.push(label+' geometry, spacing and data');

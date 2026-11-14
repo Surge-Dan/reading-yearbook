@@ -3,7 +3,7 @@
  * Each canvas carries a local layout manifest for export regression checks. */
 window.ReadingShareArtwork = (() => {
   'use strict';
-  const C={paper:'#fffdf6',ink:'#30271f',muted:'#735c4b',secondaryInk:'#554333',quietBlue:'#205ac5',red:'#b83225',blue:'#205ac5',gold:'#d5a126',green:'#167c70',line:'#e8cfab',cream:'#fff1d4'};
+  const C={paper:'#f5efdf',ink:'#342e28',muted:'#7a6a5b',secondaryInk:'#51463b',quietBlue:'#8c3b43',red:'#8c3b43',blue:'#8c3b43',gold:'#a98f6c',green:'#69715c',line:'#dfd4c2',cream:'#eae0cd'};
   const SERIF='ReadingSerif,"Noto Serif SC","Songti SC",SimSun,serif';
   const SANS='ReadingSans,"Noto Sans SC","Microsoft YaHei",sans-serif';
   const NUM='Georgia,"Noto Serif",serif';
@@ -17,7 +17,7 @@ window.ReadingShareArtwork = (() => {
     const categories=new Map();for(const b of data.books)categories.set(b.category,(categories.get(b.category)||0)+1);
     const counts=[...categories].map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'zh'));
     const colors=new Map(counts.map((r,i)=>[r.name,palette[i%palette.length]]));
-    const chartPalette=['#bd5143','#4477a1','#b8973b','#5c897c','#ac7b84','#897b9e','#71828b'];
+    const chartPalette=['#8c3b43','#b29d82','#797f67','#aa745d','#9c7d85','#77745f','#b2a798'];
     const chartColors=new Map([...categories].sort((a,b)=>b[1]-a[1]).map(([name],i)=>[name,chartPalette[i%chartPalette.length]]));
     const bookAccents=new Map(),bookColor=b=>bookAccents.get(b.book_id)||colors.get(b.category)||C.blue;
     async function coverAccent(b){
@@ -71,10 +71,10 @@ window.ReadingShareArtwork = (() => {
         fit.rows.forEach((s,i)=>text(s,x,y+fit.size+i*fit.step,{...style,size:fit.size}));
         manifest.blocks.push({x,y,w,h,cut:fit.cut});return {bottom:y+fit.height,lines:fit.rows.length,cut:fit.cut};
       }
-      function rect(x,y,w,h,fill,stroke){ctx.fillStyle=fill;ctx.fillRect(x,y,w,h);if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.strokeRect(x,y,w,h);}}
+      function rect(x,y,w,h,fill,stroke){if(w<=0||h<=0)return;ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(4,w/2,h/2));ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}}
       function line(x1,y1,x2,y2,color=C.line,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
       function dot(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
-      function section(label,x,y,w,no){line(x,y-12,x+w,y-12);text(no||'',x,y+22,{font:NUM,size:25,color:C.red,italic:true});text(label,x+(no?45:0),y+22,{size:27,weight:500,font:SANS});return y+48;}
+      function section(label,x,y,w,no){line(x,y-12,x+w,y-12);text(label,x,y+22,{size:27,weight:500,font:SANS});return y+48;}
       function scribble(x,y,w,color=C.red){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<=30;i++){const xx=x+w*i/30,yy=y+Math.sin(i*.85)*1.5+i*.05;i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy);}ctx.stroke();}
       function star(x,y,r,color=C.gold){for(let i=0;i<4;i++){const a=i*Math.PI/4;line(x-Math.cos(a)*r,y-Math.sin(a)*r,x+Math.cos(a)*r,y+Math.sin(a)*r,color,1.5);}}
       async function image(src,x,y,w,h,{angle=0,shadow=false,fit='contain'}={}){
@@ -127,9 +127,6 @@ window.ReadingShareArtwork = (() => {
       }
       function base(){
         rect(0,0,W,H,C.paper);
-        let seed=281;ctx.fillStyle='#635237';ctx.globalAlpha=.045;for(let i=0;i<3600;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const x=seed%W;seed=(Math.imul(seed,1664525)+1013904223)>>>0;ctx.fillRect(x,seed%H,1,1);}ctx.globalAlpha=1;
-        ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.strokeRect(22,22,W-44,H-44);
-        rect(22,22,48,3,C.red);rect(W-70,H-25,48,3,C.gold);
         text('年年阅',M,72,{size:28,weight:600});
         const labels={cover:'阅读年鉴',stats:'阅读的节奏',distribution:'阅读分布',timeline:'阅读时间线',book:'书页之间',focus:'专注力排行'};
         text(labels[p.kind],W/2,71,{font:SANS,size:24,align:'center',color:C.muted});text(`${data.year}${data.source_mode==='sample'?' · 示例':''}`,R,72,{font:NUM,size:27,align:'right'});line(M,95,R,95);
@@ -160,11 +157,14 @@ window.ReadingShareArtwork = (() => {
       const pitch=Math.min(14,width/weeks),size=pitch-2;
       const colors=['#efe4d4','#efcf9b','#dda366','#bf6246','#923a30'];
       const keys=Object.keys(daily);
-      d.text('每天的阅读记录',x,y,{font:SANS,size:24,weight:500});
       if(!keys.length){
-        d.text('本次未取得逐日时长',x,y+62,{font:SANS,size:27,color:C.muted});
+        if(months.some(known)){
+          d.text('每月阅读时长',x,y,{font:SANS,size:24,weight:500});
+          d.trend(x,y+40,width,88,{small:true});
+        }else d.text('年度阅读时长',x,y,{font:SANS,size:24,weight:500});
         return;
       }
+      d.text('每天的阅读记录',x,y,{font:SANS,size:24,weight:500});
       const gridY=y+48;
       for(let time=start;time<end;time+=day){
         const date=new Date(time),index=(time-start)/day+offset;
@@ -205,14 +205,14 @@ window.ReadingShareArtwork = (() => {
     async function coverPage(d){
       const {H,M,R,text,block,line,image,cover,metric,star}=d,square=H===900;
       const titleY=square?230:302, shelfTop=square?290:395, shelfBottom=square?441:H-468;
-      text(String(data.year),M,square?188:221,{font:NUM,size:square?94:121,color:C.red,italic:true});
-      await image(art.reading,575,120,247,118);
-      text(data.books.length?'这一年，读了这些书':'这一年的阅读年鉴',M,titleY+34,{size:square?56:61,weight:600});
-      d.scribble(M,titleY+53,363,C.blue);star(800,titleY+19,13);
-      const chosen=[...data.books.filter(b=>b.selected),...data.books.filter(b=>!b.selected)].slice(0,5);
+      text(String(data.year),M,square?188:221,{font:NUM,size:square?94:121,color:C.red});
+      text('READING JOURNAL',R,156,{font:SANS,size:19,color:C.muted,align:'right'});
+      text(data.books.length?'我的阅读手记':'这一年的阅读年鉴',M,titleY+34,{size:square?56:61,weight:600});
+
+      const chosen=[...data.books.filter(b=>b.selected),...data.books.filter(b=>!b.selected)].slice(0,3);
       if(chosen.length){
-        const cw=square?139:167,gap=cw*.83,total=cw+(chosen.length-1)*gap,left=(900-total)/2;
-        for(const [i,b]of chosen.entries())await cover(b,left+i*gap,shelfTop+(i%2?9:0),cw,shelfBottom-shelfTop-18,{angle:[-4,3,-2,4,-3][i],shadow:true});
+        const cw=square?175:230,gap=cw*.84,total=cw+(chosen.length-1)*gap,left=(900-total)/2;
+        for(const [i,b]of chosen.entries())await cover(b,left+i*gap,shelfTop+(i%2?9:0),cw,shelfBottom-shelfTop-18,{angle:[-7,0,6][i],shadow:true});
       }else{
         if(art.emptyShelf)await image(art.emptyShelf,M,shelfTop-10,R-M,shelfBottom-shelfTop-39);
         block(data.coverage.complete?'这一年还没有阅读记录。':'本次未取得书目。',M,shelfBottom-48,R-M,46,{size:27,min:25,color:C.muted});
@@ -220,28 +220,41 @@ window.ReadingShareArtwork = (() => {
       line(M,shelfBottom+8,R,shelfBottom+8);
       const metrics=[[data.summary.read,'本读过'],[data.summary.finished,'本读完'],[data.summary.read_days,'天阅读'],[data.summary.notes,'条笔记']];
       for(const [i,[value,label]]of metrics.entries())metric(value,label,M+i*193,shelfBottom+70,169,{size:48,labelSize:21});
-      text(duration(data.summary.seconds),R,H-288,{font:SANS,size:23,align:'right',color:C.quietBlue});
+      if(known(data.summary.seconds))text('累计 '+duration(data.summary.seconds),R,H-288,{font:SANS,size:23,align:'right',color:C.quietBlue});
       calendar(d,M,H-288,R-M);
     }
     async function statsPage(d){
       const {H,M,R,text,rect,trend,section}=d,square=H===900;
       text('阅读的节奏',M,174,{size:56,weight:600});
       section('每月阅读时长',M,227,R-M,'01');
-      trend(M,285,R-M,square?187:275);
+      if(known(data.summary.seconds))text(duration(data.summary.seconds),R,174,{font:NUM,size:28,color:C.red,align:'right'});
+      const chartX=M+24,chartY=285,chartW=R-M-48,chartH=square?160:275;
+      const top=Math.max(1,...months.filter(known).map(v=>v/3600));
+      const step=chartW/Math.max(1,months.length),barW=Math.min(48,step*.62),base=chartY+chartH;
+      text('小时',M,chartY-10,{font:SANS,size:21,color:C.muted});
+      months.forEach((seconds,i)=>{
+        const x=chartX+step*(i+.5),height=known(seconds)?seconds/3600/top*chartH:0;
+        if(known(seconds)){
+          rect(x-barW/2,base-height,barW,height,seconds/3600===top?C.red:'#b5a187');
+          if(months.length<=10||i%2===0)text((seconds/3600).toFixed(1),x,base-height-13,{font:NUM,size:21,color:C.muted,align:'center'});
+        }
+        if(months.length<=10||i%2===0||i===months.length-1)text((i+1)+'月',x,base+33,{font:SANS,size:21,color:C.muted,align:'center'});
+      });
+      d.manifest.charts.push({kind:'monthly-bars',values:months,rounded:true});
       const valid=months.map((v,i)=>({v,i})).filter(row=>known(row.v));
       const peak=valid.length?valid.reduce((a,b)=>b.v>a.v?b:a):null;
       const durations=Object.values(data.features?.daily??{}).filter(value=>known(value)&&value>0);
       const sparse=durations.length<12||data.books.length<=3;
       const split=(square?531:668)+(sparse?(square?12:40):0);
-      const peakY=square?493:597;
+      const peakY=square?510:650;
       if(peak?.v>0)text(peak.i+1+'月读得最久 · '+duration(peak.v),M,peakY,{font:SANS,size:22,color:C.quietBlue});
-      section('单日阅读时长分布',M,split,R-M,'02');
       if(!durations.length){
-        text('暂无可统计的正时长日记录',M,split+105,{font:SANS,size:28,color:C.muted});
-        const {seconds,read_days:days}=data.summary;
-        if(known(seconds)&&days>0)text('按年度汇总，阅读日平均 '+duration(seconds/days),M,split+160,{font:SANS,size:24,color:C.muted});
+        section('阅读与记录',M,split,R-M);
+        d.metric(data.summary.read_days,'天与书相伴',M,split+115,320,{size:58,labelSize:23});
+        d.metric(data.summary.notes,'条笔记记录',M+386,split+115,320,{size:58,labelSize:23});
         return;
       }
+      section('单日阅读时长分布',M,split,R-M);
       const bins=art.dailyDurationBins.map(([label,maximum])=>({label,maximum,count:0}));
       for(const seconds of durations){
         bins.find(row=>row.maximum===null||seconds<=row.maximum).count++;
@@ -349,7 +362,7 @@ window.ReadingShareArtwork = (() => {
       if(rich&&!long){
         const coverH=Math.min(330,available-90),qx=M+286,qw=R-qx;
         await cover(b,M+7,bodyY+8,222,coverH,{angle:-2,shadow:true});
-        line(M+254,bodyY+5,M+254,mainBottom-9,color,1);
+
         const q=excerpt(primary,qx,bodyY+57,qw,available-63,kind);
         const secondary=[...b.thoughts.map(n=>({...n,label:'我的笔记'})),...b.highlights.map(n=>({...n,label:'另一处划线'}))],seen=new Set([primary]);
         let nextTop=q.bottom+55,added=0;
@@ -370,12 +383,12 @@ window.ReadingShareArtwork = (() => {
       }else if(b.intro){
         const cw=244,ch=Math.min(377,available-24),tx=M+312;
         await cover(b,M+9,bodyY+9,cw,ch,{angle:-2,shadow:true});
-        line(M+279,bodyY+5,M+279,mainBottom-9,color,1);
+
         excerpt(b.intro,tx,bodyY+57,R-tx,available-63,'内容简介');
       }else{
         const cw=296,tx=M+370,tw=R-tx;
         await cover(b,M+15,bodyY+7,cw,available-19,{angle:-2,shadow:true});
-        line(M+335,bodyY+5,M+335,mainBottom-9,color,1);
+
         let next=bodyY;
         if(known(b.progress)){
           text('阅读状态',tx,next+27,{size:25,font:SANS,color:C.muted});
