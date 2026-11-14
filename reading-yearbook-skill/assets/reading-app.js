@@ -173,15 +173,28 @@
   }).join('')+'</div>':'<p class="empty">暂无可统计书目</p>';
   revealChart('distribution');
   $$('[data-category]').forEach(button=>button.onclick=()=>{state.category=state.category===button.dataset.category?'':button.dataset.category;drawBooks();$('#shelf').scrollIntoView({block:'start'});});
-  const timedBooks=data.books.filter(b=>b.reading_seconds!=null).sort((a,b)=>b.reading_seconds-a.reading_seconds);
+  const focus=ReadingShareArtwork.focusRanking(data.books),timedBooks=focus.rows;
+  const audio=ReadingShareArtwork.focusRanking(data.books,true);
   const maxSeconds=Math.max(...timedBooks.map(b=>b.reading_seconds),1);
-  $('#investmentScope').textContent=timedBooks.length?`已记录时长的${timedBooks.length}本 · 横条按实际时长同比例显示`:'暂未载入逐书阅读时长';
+  $('#investmentScope').textContent=timedBooks.length?`${data.year}年 · 已取得年度时长的${timedBooks.length}本，非全部书籍排行`:'暂未载入逐书阅读时长';
+  const leader=timedBooks[0],ties=timedBooks.filter(b=>b.reading_seconds===leader?.reading_seconds).length;
+  $('#focusSummary').innerHTML=leader?.reading_seconds>0?`<div><p class="muted">${ties>1?'并列投入最多 · '+ties+'本':'时间停留最久的一本书'}</p><button class="focus-leader" data-open-book="${esc(leader.book_id)}">${esc(leader.title)}</button><strong>${esc(duration(leader.reading_seconds))}</strong></div><div class="focus-totals"><span>已知逐书时长合计 <b>${esc(duration(focus.total))}</b></span>${focus.topShare===null?'':`<span>前3本投入占比 <b>${Math.round(focus.topShare*100)}%</b><small>占已知逐书时长</small></span>`}</div>`:'';
+  $('#exportFocus').hidden=!leader||focus.total===0;
+  $('#audioFocus').hidden=!audio.rows.length;
+  $('#audioFocusRows').innerHTML=audio.rows.map(b=>`<p>${esc(b.title)} · ${esc(duration(b.reading_seconds))}</p>`).join('');
   $('#investment').innerHTML=timedBooks.length?timedBooks.map((b,i)=>{
     const color=categoryPalette[categoryCounts.findIndex(c=>c.name===b.category)%7],width=b.reading_seconds/maxSeconds*480;
-    return `<button class="tick-row investment-row" data-open-book="${esc(b.book_id)}" data-seconds="${b.reading_seconds}" aria-label="${esc(b.title)}，${esc(duration(b.reading_seconds))}，查看详情"><span class="investment-cover" aria-hidden="true"><span>书</span>${b.cover?`<img src="${esc(b.cover)}" alt="" loading="lazy">`:''}</span><span class="tick-label">${esc(b.title)}</span><svg viewBox="0 0 480 28" aria-hidden="true"><rect y="8" width="480" height="12" rx="3" fill="#e9e1cf"/><path d="M120 6v16M240 6v16M360 6v16" stroke="#c9c4b3" stroke-width=".6"/><rect class="duration-fill fade" style="animation-delay:${i*.045}s" y="8" width="${width}" height="12" rx="3" fill="${color}"/></svg><span class="tick-time">${esc(duration(b.reading_seconds))}</span></button>`;
+    return `<button class="tick-row investment-row" data-open-book="${esc(b.book_id)}" data-seconds="${b.reading_seconds}" aria-label="${esc(b.title)}，${esc(duration(b.reading_seconds))}，查看详情"><span class="investment-cover" aria-hidden="true"><span>书</span>${b.cover?`<img src="${esc(b.cover)}" alt="" loading="lazy">`:''}</span><span class="tick-label"><small class="focus-rank">${b.focus_rank===null?'—':String(b.focus_rank).padStart(2,'0')}</small>${esc(b.title)}</span><svg viewBox="0 0 480 28" aria-hidden="true"><rect y="8" width="480" height="12" rx="3" fill="#e9e1cf"/><path d="M120 6v16M240 6v16M360 6v16" stroke="#c9c4b3" stroke-width=".6"/><rect class="duration-fill fade" style="animation-delay:${i*.045}s" y="8" width="${width}" height="12" rx="3" fill="${color}"/></svg><span class="tick-time">${esc(duration(b.reading_seconds))}</span></button>`;
   }).join(''):'<p class="empty">有逐书数据时，这里会呈现每本书的阅读投入。</p>';
   $$('.investment-cover img').forEach(img=>img.addEventListener('error',()=>{img.hidden=true;}));
   $('#investmentTable').innerHTML='<table><thead><tr><th>书名</th><th>时长</th><th>秒数</th></tr></thead><tbody>'+timedBooks.map(b=>`<tr><td>${esc(b.title)}</td><td>${esc(duration(b.reading_seconds))}</td><td>${b.reading_seconds}</td></tr>`).join('')+'</tbody></table>';
+  let focusExpanded=false;
+  const expandFocus=()=>{
+    $$('#investment .investment-row').forEach((row,i)=>row.hidden=!focusExpanded&&i>=5);
+    $('#expandFocus').hidden=timedBooks.length<=5;
+    $('#expandFocus').textContent=focusExpanded?'收起排行':'展开其余'+(timedBooks.length-5)+'本';
+  };
+  $('#expandFocus').onclick=()=>{focusExpanded=!focusExpanded;expandFocus();};expandFocus();
   revealChart('investment');
   const events=[]; const seenEvents=new Set();
   data.books.forEach(b=>{for(const [type,list] of [['划线',b.highlights],['笔记',b.thoughts]])list.forEach(n=>{if(n.created_at&&Number(n.created_at.slice(0,4))===data.year){const key=`${b.book_id}|${type}|${n.source_id||n.text+'|'+n.created_at}`;if(!seenEvents.has(key)){seenEvents.add(key);events.push({date:n.created_at,type,book:b,text:n.text});}}});
@@ -382,6 +395,7 @@
   function download(blob,name){const link=document.createElement('a'),url=URL.createObjectURL(blob);link.href=url;link.download=name;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
   const filename = p => `${data.year}-${String(pages.indexOf(p)+1).padStart(2,'0')}-${p.id.replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,80)||'page'}.png`;
   async function runExport(task){if(state.busy)return;state.busy=true;$('#ratio').disabled=true;drawShare();$('#exportStatus').textContent='正在准备字体、书封与分享画布…';try{await task();$('#exportStatus').textContent='下载已发起，请查看浏览器下载记录。';}catch(e){$('#exportStatus').textContent='导出失败：'+e.message+'。已保留选择，可以重试。';}finally{state.busy=false;$('#ratio').disabled=false;drawShare();}}
+  $('#exportFocus').onclick=()=>runExport(async()=>{download(await blobCanvas(await shareArtwork.render({id:'focus',kind:'focus'},state.ratio)),`${data.year}-focus-ranking.png`);});
   $('#exportOne').onclick=()=>runExport(async()=>{const p=pages.find(p=>p.id===state.preview);const cv=await canvasPage(p,state.ratio);download(await blobCanvas(cv),filename(p));});
   // Dependency-free stored ZIP. CRC32 + UTF8 filenames; tested against Python zipfile.
   function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let i=0;i<8;i++)c=(c>>>1)^((c&1)?0xedb88320:0);}return(c^0xffffffff)>>>0;}

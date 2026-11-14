@@ -75,9 +75,9 @@
     },
     {
       "path": "assets/reading-app.js",
-      "sha256": "5fc10c1a44c895675318ced0603f6c278332fe031f17063815d04aa630209937",
+      "sha256": "c8f6a7e34681bd846367d3134c9937991f3f69b3b18723ed5d2f894606413c1b",
       "hash_kind": "text-lf",
-      "bytes": 47360
+      "bytes": 48988
     },
     {
       "path": "assets/reading-art.css",
@@ -87,21 +87,21 @@
     },
     {
       "path": "assets/reading-refinement.css",
-      "sha256": "83dfed3f55b5f28eee92b6f7473ec0ae1d3002f7ae35043230f3cae218228f74",
+      "sha256": "305626281c2fa45bf9429201363cbe5389f0741e2420152c16c7b4bf130b6f7a",
       "hash_kind": "text-lf",
-      "bytes": 11323
+      "bytes": 12394
     },
     {
       "path": "assets/reading-share-art.js",
-      "sha256": "f421024713b58bd59ed2e1fafbae9fb625b804dd042cb54a5a3695b110a0b5ae",
+      "sha256": "8904b0321ba47e57bfbf4668fd44c285cc301152cef62a978d678aefa79a50a1",
       "hash_kind": "text-lf",
-      "bytes": 33576
+      "bytes": 35669
     },
     {
       "path": "assets/reading-template.html",
-      "sha256": "4b43e64a6cabf31ac8203e027cf82c24a638f19553213f184fa9e5575a26df51",
+      "sha256": "2363f5015021782e8231d5413680f5940292a685ac189caad93ec237ccc34da4",
       "hash_kind": "text-lf",
-      "bytes": 11683
+      "bytes": 12163
     },
     {
       "path": "assets/sample-data.json",
@@ -405,9 +405,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "e0bcf71b924a42b38fde13bdd1037d2afd9328083e855c97778b3ccc36691bcd",
+      "sha256": "f93063a935032a6856a42e2c9bb8ace905e1372ede00ebbc1445dc4d5f26a0f1",
       "hash_kind": "text-lf",
-      "bytes": 7939461
+      "bytes": 7944733
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
@@ -627,9 +627,9 @@
     },
     {
       "path": "references/html-yearbook.md",
-      "sha256": "8bebbdaea78d1ee6d0bf484b3ee02f8bd83c4e432725a2c1eb95d0ec09bef522",
+      "sha256": "27b893289518385cf0614ab37a9d3574c1c2a08b344d64193d2bc23b815ab71d",
       "hash_kind": "text-lf",
-      "bytes": 21107
+      "bytes": 21921
     },
     {
       "path": "references/light-reading.md",

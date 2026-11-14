@@ -131,11 +131,11 @@ window.ReadingShareArtwork = (() => {
         ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.strokeRect(22,22,W-44,H-44);
         rect(22,22,48,3,C.red);rect(W-70,H-25,48,3,C.gold);
         text('年年阅',M,72,{size:28,weight:600});
-        const labels={cover:'阅读年鉴',stats:'阅读的节奏',distribution:'阅读分布',timeline:'阅读时间线',book:'书页之间'};
+        const labels={cover:'阅读年鉴',stats:'阅读的节奏',distribution:'阅读分布',timeline:'阅读时间线',book:'书页之间',focus:'专注力排行'};
         text(labels[p.kind],W/2,71,{font:SANS,size:24,align:'center',color:C.muted});text(`${data.year}${data.source_mode==='sample'?' · 示例':''}`,R,72,{font:NUM,size:27,align:'right'});line(M,95,R,95);
         const idx=p.kind==='book'?5+data.books.findIndex(b=>b.book_id===p.book.book_id):['cover','stats','distribution','timeline'].indexOf(p.kind)+1;
         line(M,H-84,R,H-84);
-        text(`${String(idx).padStart(2,'0')} / ${String(4+data.books.length).padStart(2,'0')}`,M,H-44,{font:NUM,size:24,color:C.muted,role:'footer'});
+        text(p.kind==='focus'?'年度阅读投入':`${String(idx).padStart(2,'0')} / ${String(4+data.books.length).padStart(2,'0')}`,M,H-44,{font:NUM,size:24,color:C.muted,role:'footer'});
         text(p.kind==='book'?(p.quote?(p.textKind==='thought'?'个人笔记与阅读记录':'原文摘录与阅读记录'):'阅读记录'):'我的阅读年鉴',R,H-44,{size:23,font:SANS,align:'right',color:C.muted,role:'footer'});
       }
       return {ctx,W,H,M,R,text,block,measureBlock,rect,line,dot,section,scribble,star,image,cover,metric,progress,trend,base,manifest};
@@ -147,6 +147,7 @@ window.ReadingShareArtwork = (() => {
       else if(p.kind==='stats')await statsPage(D);
       else if(p.kind==='distribution')await distributionPage(D);
       else if(p.kind==='timeline')await timelinePage(D);
+      else if(p.kind==='focus')await focusPage(D);
       else{await coverAccent(p.book);await bookPage(D,p);}
       return cv;
     }
@@ -184,6 +185,22 @@ window.ReadingShareArtwork = (() => {
       colors.forEach((fill,i)=>d.rect(x+540+i*19,legendY-13,14,14,fill));
       d.text('超过60分钟',x+645,legendY,{font:SANS,size:18,color:C.muted});
       d.manifest.charts.push({kind:'calendar',weeks,days:keys.length});
+    }
+    async function focusPage(d){
+      const {M,R,H,text,cover,rect}=d,rank=focusRanking(data.books);
+      text('专注力排行',M,178,{size:56,weight:600});
+      text('这一年，你把时间留给了哪些书',M,228,{font:SANS,size:25,color:C.muted});
+      text('已知逐书时长 '+duration(rank.total),M,285,{font:SANS,size:26});
+      const rows=rank.rows.slice(0,5),max=rows[0]?.reading_seconds||1,stride=(H-470)/5;
+      for(const [i,b] of rows.entries()){
+        const y=330+i*stride;
+        await cover(b,M,y,42,58);
+        d.block((b.focus_rank===null?'—':String(b.focus_rank).padStart(2,'0'))+'  '+b.title,M+60,y+5,510,38,{size:26,min:20});
+        text(duration(b.reading_seconds),R,y+30,{font:SANS,size:21,align:'right',color:C.muted});
+        rect(M+60,y+48,510*b.reading_seconds/max,6,C.red);
+      }
+      text(rows.length?'按年度时长排序 · 展示前'+rows.length+'本':'暂无可用的逐书年度时长',M,H-154,{font:SANS,size:22,color:C.muted});
+      text('反映时间投入，不代表连续阅读或注意力测量',M,H-118,{font:SANS,size:21,color:C.muted});
     }
     async function coverPage(d){
       const {H,M,R,text,block,line,image,cover,metric,star}=d,square=H===900;
@@ -404,5 +421,17 @@ window.ReadingShareArtwork = (() => {
     }
     return {pages,render};
   }
-  return {create,createDigest};
+  function focusRanking(books, audio=false){
+    const unique=new Map();
+    for(const b of books){
+      if(b.secret || (b.kind==='audio')!==audio || typeof b.reading_seconds!=='number' || !Number.isFinite(b.reading_seconds) || b.reading_seconds<0 || !Number.isSafeInteger(b.reading_seconds) || unique.has(b.book_id))continue;
+      unique.set(b.book_id,b);
+    }
+    const rows=[...unique.values()].sort((a,b)=>b.reading_seconds-a.reading_seconds);
+    let rank=0;
+    const ranked=rows.map((book,i)=>{if(!i||book.reading_seconds!==rows[i-1].reading_seconds)rank=i+1;return {...book,focus_rank:book.reading_seconds>0?rank:null};});
+    const total=rows.reduce((n,b)=>n+b.reading_seconds,0);
+    return {rows:ranked,total,topShare:rows.filter(b=>b.reading_seconds>0).length>=3&&total>0?rows.slice(0,3).reduce((n,b)=>n+b.reading_seconds,0)/total:null};
+  }
+  return {create,createDigest,focusRanking};
 })();
