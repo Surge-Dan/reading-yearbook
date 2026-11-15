@@ -7,3 +7,46 @@
 #ebookResult [data-reading-section="references"] details{margin:14px 0;overflow-wrap:anywhere}
 #ebookResult [data-reading-section="book-context"] article{border-left:0;padding-left:0}
 .ebook-workbench .button,.ebook-workbench input[type=text],.ebook-workbench select{border-radius:8px}.ebook-book-picker{max-width:620px;margin-bottom:24px}.ebook-book-picker label{display:block;font-size:14px;margin-bottom:8px}
+
+/* Shared annual and standalone distillation reader. */
+#ebook{--distill-red:#b83225;--distill-ink:#302c27;--distill-rule:#e8d8c1;padding-top:44px;overflow:visible}
+#ebook .ebook-heading{border:0;margin:0 0 32px;padding:0}
+#ebook .ebook-heading h2{font-size:36px;color:var(--distill-red);font-weight:700;margin:0 0 10px;letter-spacing:.03em}
+#ebook .ebook-heading p{font-size:14px;color:#826d59}
+#ebook .ebook-result-heading{border:0;padding:0;display:flex;align-items:center;gap:22px;margin:0 0 22px}
+#ebook .distill-cover{width:78px;height:108px;object-fit:contain;filter:drop-shadow(0 4px 5px #302c2720);flex:none}
+#ebook .distill-identity h3{font-size:29px;line-height:1.4;margin:0;color:var(--distill-ink)}
+#ebook #ebookAuthor{font-size:17px;line-height:1.6;margin:8px 0 0;color:#826d59}
+#ebook #ebookQuality:empty,#ebook #ebookActionStatus:empty{display:none}
+#ebook .ebook-actions{gap:10px;margin:0 0 28px}
+#ebook .ebook-actions button{border:1px solid var(--distill-red);color:var(--distill-red);border-radius:9px;background:transparent;min-height:42px;padding:9px 17px;font:inherit;font-size:14px;text-decoration:none;box-shadow:none}
+#ebook .ebook-actions button:hover{background:#b8322509}
+#ebook .ebook-result{width:100%;max-width:none;padding:0 0 22px;overflow:visible}
+#ebook .ebook-reading-nav{position:sticky;top:var(--distill-nav-top,74px);z-index:8;background:#fffaf0;border:0;border-bottom:1px solid var(--distill-rule);padding:0;margin:0 0 34px;box-shadow:none}
+#ebook .ebook-reading-nav nav{padding:0 0 3px;display:flex;gap:32px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+#ebook .ebook-reading-nav nav::-webkit-scrollbar{display:none}
+#ebook .ebook-reading-nav a{position:relative;color:#796753;font-size:15px;text-decoration:none!important;border:0;border-radius:0;background:transparent;box-shadow:none;padding:17px 2px;min-height:54px;white-space:nowrap}
+#ebook .ebook-reading-nav a:hover{color:var(--distill-red);background:transparent}
+#ebook .ebook-reading-nav a[data-active]{color:var(--distill-red);font-weight:600;border:0;text-decoration:none}
+#ebook .ebook-reading-nav a:after{content:none}
+#ebook .ebook-reading-nav a[data-active]:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:3px;background:var(--distill-red);border-radius:3px}
+#ebook .ebook-result section{border:0;padding:0;margin:0 0 40px;scroll-margin-top:calc(var(--distill-nav-top,74px) + 82px);animation:none}
+#ebook .ebook-result section>h3{font-size:25px;color:var(--distill-red);font-weight:650;margin:0 0 18px;line-height:1.5}
+#ebook .ebook-result p{font-size:16px;color:var(--distill-ink);line-height:1.95;margin:0 0 16px}
+#ebook .ebook-result [data-ebook-copy]{font-size:13px;color:var(--distill-red);text-decoration:none!important;border:0!important;box-shadow:none!important;background:transparent;min-height:32px;padding:5px 0;margin:0;outline-offset:3px}
+#ebook .ebook-result [data-ebook-copy]:hover{color:#852b22;background:transparent;text-decoration:none}
+#ebook .ebook-result [data-ebook-copy]:after{content:none}
+#ebook .distill-theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+#ebook .distill-theme-grid article{margin:0;padding:24px 26px 18px;border:1px solid var(--distill-rule);border-radius:12px;background:#fffaf060;display:flex;flex-direction:column;align-items:flex-start}
+#ebook .distill-theme-grid h4{font-size:19px;color:#9a3b32;line-height:1.6;margin:0 0 12px;font-weight:650}
+#ebook .distill-theme-grid article>p{margin:0 0 10px;font-size:15px;line-height:1.95}
+#ebook .distill-theme-grid [data-ebook-copy]{margin-top:auto}
+#ebook .ebook-result .ebook-review-paragraph{margin:0;padding:26px 30px;border-radius:12px;background:#f6efdf80}
+#ebook .ebook-result .ebook-review-paragraph p{margin:0 0 12px;line-height:2}
+#ebook .ebook-result [data-reading-section=references]{display:none}
+@media(max-width:850px){#ebook .distill-theme-grid{grid-template-columns:1fr}#ebook .ebook-reading-nav nav{gap:22px}#ebook .ebook-heading h2{font-size:30px}#ebook .ebook-actions{gap:8px}#ebook .distill-theme-grid article{padding:20px}#ebook .ebook-result .ebook-review-paragraph{padding:22px}}
+@media print{#ebook .ebook-reading-nav{display:none}#ebook .distill-theme-grid{display:block}#ebook .distill-theme-grid article{break-inside:avoid;margin-bottom:15px}}
+
+#ebook .ebook-heading h2{color:var(--ink,#302c27);font-size:28px;line-height:1.4;letter-spacing:normal;font-weight:600}
+#ebook .ebook-result-heading h3{font-size:27px}#ebook #ebookAuthor{font-size:17px}#ebook .ebook-result section>h3,#ebook .distill-theme-grid h4{color:var(--ink,#302c27)}
+.ebook-standalone #ebook{padding-top:24px}.ebook-standalone #ebook .ebook-reading-nav{top:0}

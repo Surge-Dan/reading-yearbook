@@ -30,7 +30,7 @@ python -X utf8 scripts/build_reading_html.py --input reading-data.json --distill
 
 `--distillation` 可选且可重复，或已有输入包含 `distillations:[bundle]`。缺失或空列表正常生成报告；有包才由 build_html、deliver 和自动生成入口执行共享验证，坏包、篡改包、失败任务或真实报告中的 sample 都拒绝。包公开 analysis/digest 直接内嵌到安全转义的 JSON，不包含原始整书、私有路径、令牌或过程输出。`input_mode:upload|title` 与 `source_mode:real|sample` 独立，书名资料保持未核验全文的范围。
 
-底部默认选第一本，多书切换只改变精华内容；复制、Markdown、独立HTML、PNG与ZIP来自当前所选同一结果并保留来源边界。可选阅读视角与金句按[读懂与表达](book-reading-writing.md)，有内容才出现；旧结果缺字段继续读取，不伪造新内容。
+底部“蒸馏一本书”默认选第一本，多书切换只改变精华内容；复制、Markdown、独立HTML来自当前所选同一结果，不附加来源说明或参考资料。来源证据保留在有效结果包中，不删除核验数据。蒸馏区不提供分享图；年度报告原有分享功能保留。标题沿用年度报告黑色28px标题，操作按钮统一红框红字；目录直接显示并吸顶，独立HTML使用相同布局。可选阅读视角与金句按[读懂与表达](book-reading-writing.md)，有内容才出现；旧结果缺字段继续读取，不伪造新内容。
 
 `--covers covers.json`映射书籍ID到本地PNG/JPEG/WebP路径，路径相对covers.json。构建时检查图片完整解码，缺失、路径失效或图片损坏时清除无效图片并使用已有书名占位样式，保留书目、统计、笔记和其他真实封面。工作台照常载入缺封面的旧HTML，仅书目数据损坏时拒绝载入。只有明确要求全真实封面时才使用`--require-all-covers`，此模式缺图会在写文件前停止并保留上一版。网页和离线构建本身不请求远程封面，材料采集阶段取得的有效真实封面会内嵌，不生成伪装成真实版本的封面。
 

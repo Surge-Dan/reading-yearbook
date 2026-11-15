@@ -21,24 +21,27 @@
     function textParts(item,kind){const out=[];if(kind==='overview')return describe(item);if(item.case_origin==='ai_exercise')out.push('应用示例（不是原书案例）');for(const k of ['explanation','interpretation','text','why_it_matters'])if(item[k])out.push(readerText(item[k]));if(item.trigger)out.push('什么时候用：'+item.trigger);if(item.steps?.length)out.push('怎么做：\n'+item.steps.map((s,i)=>`${i+1}. ${s}`).join('\n'));if(item.example)out.push('案例／示例：'+item.example);if(item.boundaries?.length)out.push('使用提醒：\n'+item.boundaries.join('\n'));for(const k of ['summary','definition'])if(item[k])out.push(readerText(item[k]));return out.join('\n\n');}
     function digestText(){
       if(!result?.analysis)return '';
-      const a=result.analysis,parts=[result.digest||('# '+(a.book?.title||'书籍精华')+'\n\n'+describe(a.overview))];
-      if(!result.digest)for(const [key,title]of [['book_context','读懂这本书'],['themes','核心观点'],['methods','值得带走的方法'],['cases','关键案例'],['counterexamples','反例'],['insights','读完想试的一件事'],['references','参考资料'],['glossary','小词表'],['decision_rules','决策速查']])if(a[key]?.length)parts.push('## '+title,...a[key].map(item=>'### '+(item.title||item.term||'')+'\n\n'+textParts(item,key)));
-      for(const item of a.reading_lenses||[])if(!parts[0].includes(item.title)||!parts[0].includes(item.text))parts.push('## '+item.title+'\n\n'+item.text);
-      for(const item of a.memorable_passages||[])if(!parts[0].includes(item.text)||!parts[0].includes(item.why_it_matters))parts.push('## 值得保留的金句\n\n> '+item.text.replace(/\n/g,'\n> ')+'\n\n'+item.why_it_matters);
-      if(!result.digest){if(a.review?.status==='ready')parts.push('## 我的书评',...a.review.paragraphs.map(p=>p.text));parts.push('## 参考资料',scope(),a.coverage?.scope_note||'',a.source_notice||'',a.evaluation_limit||'',...(a.limitations||[]));for(const key of ['book_context','themes','methods','cases','counterexamples','insights','reading_lenses','memorable_passages','references','glossary','decision_rules'])for(const item of a[key]||[])for(const s of item.sources||[])parts.push((s.location||s.element_id)+'\n\n> '+s.quote.replace(/\n/g,'\n> ')+(s.url?'\n\n'+s.url:''));}
-      if(!parts.join('\n\n').includes(scope()))parts.push(scope());
+      const a=result.analysis,parts=['# '+(a.book?.title||'书籍精华'),describe(a.overview)];
+      for(const [key,title]of [['book_context','读懂这本书'],['themes','核心观点'],['methods','值得带走的方法'],['cases','关键案例'],['counterexamples','反例'],['insights','读完想带走的东西']])if(a[key]?.length)parts.push('## '+title,...a[key].map(item=>'### '+(item.title||'')+'\n\n'+textParts(item,key)));
+      for(const item of a.reading_lenses||[])parts.push('## '+item.title,item.text);
+      for(const item of a.memorable_passages||[])parts.push('## 值得保留的金句','> '+item.text.replace(/\n/g,'\n> '),item.why_it_matters);
+      if(a.review?.status==='ready')parts.push('## 读后余味',...a.review.paragraphs.map(p=>p.text));
       return parts.filter(Boolean).join('\n\n');
     }
-    function copyButton(parent,text){const b=el('button','复制这条','text-button');b.type='button';b.dataset.ebookCopy='true';b.onclick=()=>copy(text+'\n\n'+scope());parent.append(b);}
+    function copyButton(parent,text){const b=el('button','复制这条','text-button');b.type='button';b.dataset.ebookCopy='true';b.onclick=()=>copy(text);parent.append(b);}
     function resultSection(title){const s=el('section');s.append(el('h3',title));$('ebookResult').append(s);return s;}
-    let readingObserver;
+    let readingObserver,updateReading=()=>{};
+    const masthead=document.querySelector('.masthead');
+    const resizeReading=()=>root.style.setProperty('--distill-nav-top',((masthead?.getBoundingClientRect().height||0)+1)+'px');
+    resizeReading();if(masthead)new ResizeObserver(resizeReading).observe(masthead);
+    window.addEventListener('scroll',()=>updateReading(),{passive:true});
     function renderResult(){
       if(!result?.analysis)return;
-      const a=result.analysis,light=a.pipeline_version?.startsWith('reading-light-'),container=$('ebookResult');window.EBOOK_RESULT=result;++renderSequence;sharePages=[];$('ebookPage').replaceChildren();$('ebookCanvas').getContext('2d').clearRect(0,0,$('ebookCanvas').width,$('ebookCanvas').height);$('ebookExportPng').disabled=$('ebookExportZip').disabled=true;
+      const a=result.analysis,light=a.pipeline_version?.startsWith('reading-light-'),container=$('ebookResult');window.EBOOK_RESULT=result;
       readingObserver?.disconnect();$('ebookResultShell').hidden=false;container.replaceChildren();shareItems=[];
       $('ebookBookTitle').textContent=a.book?.title||'电子书精华';$('ebookAuthor').textContent=(a.book?.author||'')+(a.book?.edition?' · '+a.book.edition:'');
       $('ebookQuality').textContent='';$('ebookQuality').hidden=true;
-      const nav=el('details',null,'ebook-reading-nav');nav.open=matchMedia('(min-width: 900px)').matches;nav.append(el('summary','阅读目录'));const links=el('nav');links.setAttribute('aria-label','阅读章节');nav.append(links);container.append(nav);
+      const nav=el('div',null,'ebook-reading-nav');const links=el('nav');links.setAttribute('aria-label','阅读章节');nav.append(links);container.append(nav);
       const sections=[];
       function section(title,key){const node=resultSection(title);node.id='ebook-reading-'+key;node.dataset.readingSection=key;const link=el('a',title);link.href='#'+node.id;links.append(link);sections.push({node,link});return node;}
       function details(parent,label){const d=el('details');d.append(el('summary',label));parent.append(d);return d;}
@@ -62,22 +65,14 @@
           const body=paragraph.text,shareText=paragraph.text;
           copyButton(article,body);s.append(article);shareItems.push({id:'review-'+i,kind:'review',title:reviewTitle+' · '+(i+1),text:shareText});});
       }
-      const refs=section('参考资料','references');
-      refs.append(el('p',scope(),'ebook-meta'));
-      if(a.book?.identity_url)sourceLink(refs,a.book.identity_url,'书目信息');
-      const evidence=details(refs,'内容出处');for(const key of ['book_context','themes','methods','cases','counterexamples','insights','reading_lenses','memorable_passages','references','glossary','decision_rules'])for(const item of a[key]||[]){if(!item.sources?.length&&!item.verification)continue;evidence.append(el('h4',item.title||item.term||''));sources(evidence,item);if(item.verification){const d=details(evidence,'核查记录');d.append(el('p',describe(item.verification),'ebook-meta'));}}
-      if(a.bibliography?.length){const d=details(refs,'实际读取的资料');for(const s of a.bibliography){const row=el('p',(sourceTypes[s.type]||'公开资料')+' · '+(s.title||'')+' · '+(s.accessed_at||''));if(s.url)sourceLink(row,s.url,'查看资料');d.append(row);}}
-      if(review?.paragraphs?.some(p=>p.sources?.length)){const d=details(refs,'书评依据');review.paragraphs.forEach((p,i)=>{if(!p.sources?.length)return;d.append(el('h4','第 '+(i+1)+' 段'));sources(d,p);});}
-      for(const [key,title]of [['references','补充参考与待核查内容'],['glossary','小词表'],['decision_rules','决策速查']])if(a[key]?.length){const d=details(refs,title);a[key].forEach((item,i)=>addItem(d,item,key,i));}
-      if(a.structure_index?.length){const d=details(refs,'章节／资料主题索引');a.structure_index.forEach(row=>d.append(el('p',row.title+' · '+(row.element_ids||[]).length+' 个证据片段')));}
-      const audit=details(refs,'资料范围与处理详情'),coverage=a.coverage||{};audit.append(el('p',a.input_mode==='title'?'已读取 '+(coverage.sources_read??'未记录')+' 个公开内容来源；未核验整书覆盖。':`已处理正文分块 ${coverage.chunks_processed??'未记录'} / ${coverage.chunks_total??'未记录'} · ${coverage.complete?'覆盖检查完成':'覆盖尚不完整'}`));
-      for(const text of [a.reading_status?.label,a.reading_status?.reason,a.source_notice,a.evaluation_limit])if(text)audit.append(el('p',text,'ebook-meta'));
-      if(review?.status==='unavailable')audit.append(el('p','书评暂未生成：'+review.reason,'ebook-meta ebook-review-unavailable'));
-      if(coverage.scope_note)audit.append(el('p',coverage.scope_note));for(const warning of [...(a.limitations||[]),...(coverage.warnings||[])])audit.append(el('p',prose(warning)));
-      for(const [label,key]of [['关键任务','key_tasks'],['任务覆盖核查','task_audit'],['候选处理记录','candidate_dispositions']])if(coverage[key]?.length){const d=details(audit,label);coverage[key].forEach(row=>d.append(el('p',describe(row),'ebook-meta')));}
-      $('ebookShareOptions').replaceChildren();for(const item of shareItems){const label=el('label',null,'ebook-share-choice'),input=el('input');input.type='checkbox';input.checked=true;input.dataset.ebookShare=item.id;input.onchange=prepareShare;label.append(input,el('span',item.title));$('ebookShareOptions').append(label);}shareArt=window.ReadingShareArtwork?.createDigest({analysis:a,source_mode:result.source_mode});if(!$('ebookShare').hidden)prepareShare();
-if('IntersectionObserver' in window&&sections.length){readingObserver=new IntersectionObserver(()=>{const edge=Math.max(150,(parseFloat(getComputedStyle(sections[0].node).scrollMarginTop)||0)+(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0)+2);const current=sections.filter(({node})=>node.getBoundingClientRect().top<=edge).at(-1)||sections[0];for(const entry of sections){if(entry===current)entry.link.setAttribute('aria-current','location');else entry.link.removeAttribute('aria-current');}},{rootMargin:'0px 0px -50% 0px',threshold:[0,.1,.5,1]});sections.forEach(({node})=>readingObserver.observe(node));}
-      if(sections.length)sections[0].link.setAttribute('aria-current','location');
+      const themes=container.querySelector('[data-reading-section="themes"]');
+      if(themes){const grid=el('div',null,'distill-theme-grid');themes.querySelectorAll(':scope>article').forEach(a=>grid.append(a));themes.append(grid);}
+      updateReading=()=>{
+        const edge=(masthead?.getBoundingClientRect().height||0)+155;
+        let current=sections.filter(({node})=>node.getBoundingClientRect().top<=edge).at(-1)||sections[0];
+        if(innerHeight+scrollY>=document.documentElement.scrollHeight-4)current=sections.at(-1);
+        for(const entry of sections){if(entry===current){entry.link.setAttribute('aria-current','location');entry.link.dataset.active='true';}else{entry.link.removeAttribute('aria-current');delete entry.link.dataset.active;}}
+      };updateReading();
     }
     async function api(path,options={}){const response=await fetch((config.apiBase||'')+path,{...options,credentials:'same-origin',headers:{'X-Ebook-Token':config.token,...options.headers}});let payload;try{payload=await response.json();}catch{throw Error('工作台返回了无法读取的响应');}if(!response.ok)throw Error(payload.error||payload.message||`请求失败 (${response.status})`);return payload;}
     function invalidateRequests(){clearTimeout(poll);return ++requestGeneration;}
@@ -101,27 +96,17 @@ function showJob(current){job=current;$('ebookTask').hidden=false;$('ebookFilena
     $('ebookCopyAll').onclick=()=>copy(digestText());$('ebookDownloadMd').onclick=()=>download(new Blob([digestText()],{type:'text/markdown;charset=utf-8'}),safeName()+'.md');
     $('ebookDownloadHtml').onclick=async()=>{try{
       let page;
-      if(online&&result.result_url){const response=await fetch(result.result_url,{credentials:'same-origin'});if(!response.ok)throw Error('结果 HTML 暂不可读取');page=await response.text();}
-      else{
+      {
         const section=root.cloneNode(true);delete section.dataset.mounted;section.dataset.readerMode='readonly';
         section.querySelector('.ebook-upload-area')?.remove();section.querySelector('#ebookTask')?.remove();
         section.querySelector('#ebookBookPicker')?.remove();section.querySelector('#ebookEmpty')?.remove();
-        section.querySelector('#ebookResult').replaceChildren();section.querySelector('#ebookShareOptions').replaceChildren();section.querySelector('#ebookPage').replaceChildren();
-        section.querySelector('#ebookResultShell').hidden=true;section.querySelector('#ebookShare').hidden=true;
+        section.querySelector('#ebookResult').replaceChildren();
+        section.querySelector('#ebookResultShell').hidden=true;
         const styles=[...document.querySelectorAll('style')].map(s=>s.outerHTML).join('\n'),scripts=[...document.scripts].filter(s=>s.id==='ebook-app-mounted'||s.id==='reading-share-mounted'||s.textContent.startsWith('/* Editorial share artwork.')).map(s=>s.outerHTML).join('\n'),safe=JSON.stringify({analysis:result.analysis,digest:digestText(),source_mode:result.source_mode}).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
         page='<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>年年阅 · 书籍精华</title>'+styles+'<script>window.EBOOK_RESULT='+safe+';<'+'/script></head><body class="ebook-standalone"><div class="paper"><main>'+section.outerHTML+'</main></div>'+scripts+'</body></html>';
       }
-      download(new Blob([page],{type:'text/html;charset=utf-8'}),safeName()+'.html');notice('独立 HTML 已导出，可离线阅读与导图。');
+      download(new Blob([page],{type:'text/html;charset=utf-8'}),safeName()+'.html');notice('独立 HTML 已导出，可离线阅读。');
     }catch(e){notice('导出失败：'+e.message);}};
-    $('ebookShareToggle').onclick=()=>{const hidden=!$('ebookShare').hidden;$('ebookShare').hidden=hidden;$('ebookShareToggle').setAttribute('aria-expanded',String(!hidden));if(!hidden)prepareShare();};
-    async function prepareShare(){const seq=++renderSequence;$('ebookExportPng').disabled=$('ebookExportZip').disabled=true;try{if(!shareArt)throw Error('分享绘制器尚未载入');const selected=new Set([...root.querySelectorAll('[data-ebook-share]:checked')].map(i=>i.dataset.ebookShare));sharePages=await shareArt.pages(shareItems.filter(i=>selected.has(i.id)),$('ebookRatio').value);if(seq!==renderSequence)return;$('ebookPage').replaceChildren();sharePages.forEach((p,i)=>{const opt=el('option',`${i+1} / ${sharePages.length} · ${p.title}`);opt.value=String(i);$('ebookPage').append(opt);});$('ebookShareCount').textContent=`已选择 ${selected.size} 项内容，共 ${sharePages.length} 页`;$('ebookShareStatus').textContent=sharePages.length?'':'请选择至少一项内容。';$('ebookExportPng').disabled=$('ebookExportZip').disabled=!sharePages.length;if(sharePages.length)await preview(seq);else $('ebookCanvas').getContext('2d').clearRect(0,0,900,1200);}catch(e){$('ebookShareStatus').textContent='预览失败：'+e.message;}}
-    async function preview(seq=renderSequence){try{const p=sharePages[Number($('ebookPage').value)||0];if(!p)return;const canvas=await shareArt.render(p,$('ebookRatio').value);if(seq!==renderSequence)return;const target=$('ebookCanvas');target.width=canvas.width;target.height=canvas.height;target.getContext('2d').drawImage(canvas,0,0);}catch(e){$('ebookShareStatus').textContent='预览失败：'+e.message;}}
-    $('ebookRatio').onchange=prepareShare;$('ebookPage').onchange=()=>preview();
-    const blobCanvas=canvas=>new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('PNG 生成失败')),'image/png'));
-    function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let i=0;i<8;i++)c=(c>>>1)^((c&1)?0xedb88320:0);}return(c^0xffffffff)>>>0;}
-    async function zip(files){const chunks=[],central=[],enc=new TextEncoder();let offset=0;for(const f of files){const name=enc.encode(f.name),bytes=new Uint8Array(await f.blob.arrayBuffer()),crc=crc32(bytes),local=new Uint8Array(30+name.length),l=new DataView(local.buffer);l.setUint32(0,0x04034b50,true);l.setUint16(4,20,true);l.setUint16(6,0x800,true);l.setUint32(14,crc,true);l.setUint32(18,bytes.length,true);l.setUint32(22,bytes.length,true);l.setUint16(26,name.length,true);local.set(name,30);chunks.push(local,bytes);const entry=new Uint8Array(46+name.length),v=new DataView(entry.buffer);v.setUint32(0,0x02014b50,true);v.setUint16(4,20,true);v.setUint16(6,20,true);v.setUint16(8,0x800,true);v.setUint32(16,crc,true);v.setUint32(20,bytes.length,true);v.setUint32(24,bytes.length,true);v.setUint16(28,name.length,true);v.setUint32(42,offset,true);entry.set(name,46);central.push(entry);offset+=local.length+bytes.length;}const end=new Uint8Array(22),v=new DataView(end.buffer);v.setUint32(0,0x06054b50,true);v.setUint16(8,files.length,true);v.setUint16(10,files.length,true);v.setUint32(12,central.reduce((n,x)=>n+x.length,0),true);v.setUint32(16,offset,true);return new Blob([...chunks,...central,end],{type:'application/zip'});}
-    async function exportImages(group){if(!sharePages.length)return;const selected=group?[...sharePages]:[sharePages[Number($('ebookPage').value)||0]],ratio=$('ebookRatio').value;const controls=[...root.querySelectorAll('[data-ebook-share]'),$('ebookRatio'),$('ebookPage'),$('ebookExportPng'),$('ebookExportZip'),$('ebookBookSelect')].filter(Boolean);controls.forEach(c=>c.disabled=true);try{const files=[];for(let i=0;i<selected.length;i++){$('ebookShareStatus').textContent=`正在生成 ${i+1} / ${selected.length} 页…`;files.push({name:safeName()+'-'+String(i+1).padStart(2,'0')+'.png',blob:await blobCanvas(await shareArt.render(selected[i],ratio))});}download(group?await zip(files):files[0].blob,group?safeName()+'-精华.zip':files[0].name);$('ebookShareStatus').textContent=`已导出 ${files.length} 页`;}catch(e){$('ebookShareStatus').textContent='导出失败：'+e.message;}finally{controls.forEach(c=>c.disabled=false);}}
-    $('ebookExportPng').onclick=()=>exportImages(false);$('ebookExportZip').onclick=()=>exportImages(true);
     if($('ebookBookSelect')){const select=$('ebookBookSelect');bundles.forEach((b,i)=>{const option=el('option',(b.analysis.book.title||'未命名书籍')+(b.analysis.book.author?' · '+b.analysis.book.author:''));option.value=String(i);select.append(option);});$('ebookBookPicker').hidden=bundles.length<2;select.onchange=()=>{if(!bundles[Number(select.value)])return;result=bundles[Number(select.value)];notice('');renderResult();};}
     if(result)renderResult();else if($('ebookEmpty'))$('ebookEmpty').hidden=false;
     if(!readonly)connect();
