@@ -710,7 +710,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
  * Each canvas carries a local layout manifest for export regression checks. */
 window.ReadingShareArtwork = (() => {
   'use strict';
-  const C={paper:'#f5efdf',ink:'#342e28',muted:'#7a6a5b',secondaryInk:'#51463b',quietBlue:'#8c3b43',red:'#8c3b43',blue:'#8c3b43',gold:'#a98f6c',green:'#69715c',line:'#dfd4c2',cream:'#eae0cd'};
+  const C={paper:'#f5efdf',ink:'#342e28',muted:'#7a6a5b',secondaryInk:'#302b28',quietBlue:'#8c3b43',red:'#8c3b43',blue:'#8c3b43',gold:'#a98f6c',green:'#69715c',line:'#dfd4c2',cream:'#eae0cd'};
+  const ACCENTS=['#9b4055','#3e887d','#c39936','#527aa0','#be7346','#8870a0'];
   const SERIF='ReadingSerif,"Noto Serif SC","Songti SC",SimSun,serif';
   const SANS='ReadingSans,"Noto Sans SC","Microsoft YaHei",sans-serif';
   const NUM='Georgia,"Noto Serif",serif';
@@ -720,11 +721,12 @@ window.ReadingShareArtwork = (() => {
   const duration=n=>!known(n)?'未记录':n>=3600?`${Math.floor(n/3600)}小时${Math.floor(n%3600/60)}分钟`:`${Math.floor(n/60)}分钟`;
   const status=b=>({finished:'已读完',reading:'在读',unstarted:'未开始',unknown:'状态未记录'}[b.status]??(b.progress==null?'进度未记录':b.progress>=100?'已读完':'在读'));
   function create({data,art,loadImage}){
+    const progressInk=book=>ACCENTS[Math.max(0,data.books.findIndex(row=>row.book_id===book.book_id))%ACCENTS.length];
     const fonts=Promise.all([document.fonts.load('600 48px ReadingSerif'),document.fonts.load('400 32px ReadingSerif'),document.fonts.load('400 28px ReadingSans')]);
     const categories=new Map();for(const b of data.books)categories.set(b.category,(categories.get(b.category)||0)+1);
     const counts=[...categories].map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'zh'));
     const colors=new Map(counts.map((r,i)=>[r.name,palette[i%palette.length]]));
-    const chartPalette=['#8c3b43','#b29d82','#797f67','#aa745d','#9c7d85','#77745f','#b2a798'];
+    const chartPalette=ACCENTS;
     const chartColors=new Map([...categories].sort((a,b)=>b[1]-a[1]).map(([name],i)=>[name,chartPalette[i%chartPalette.length]]));
     const bookAccents=new Map(),bookColor=b=>bookAccents.get(b.book_id)||colors.get(b.category)||C.blue;
     async function coverAccent(b){
@@ -749,7 +751,7 @@ window.ReadingShareArtwork = (() => {
       const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,M=64,R=W-M;
       const manifest={version:'editorial-2',page:p.id,width:W,height:H,footerTop:H-84,text:[],charts:[],images:[],spacing:[],blocks:[]};cv.readingLayout=manifest;
       function text(str,x,y,{size=30,weight=400,font=SERIF,color=C.ink,align='left',italic=false,role='content'}={}){
-        ctx.font=`${italic?'italic ':''}${weight} ${size}px ${font}`;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='alphabetic';
+        if(font===SERIF&&size>=36){weight=600;color=C.red;}ctx.font=`${italic?'italic ':''}${weight} ${size}px ${font}`;ctx.fillStyle=color;ctx.textAlign=align;ctx.textBaseline='alphabetic';
         ctx.fillText(String(str),x,y);const metric=ctx.measureText(String(str));
         const box={text:String(str),x:x-metric.actualBoundingBoxLeft,y:y-metric.actualBoundingBoxAscent,w:metric.actualBoundingBoxLeft+metric.actualBoundingBoxRight,h:metric.actualBoundingBoxAscent+metric.actualBoundingBoxDescent,size,role};
         if(String(str).trim())manifest.text.push(box);ctx.textAlign='left';return box;
@@ -778,7 +780,7 @@ window.ReadingShareArtwork = (() => {
         fit.rows.forEach((s,i)=>text(s,x,y+fit.size+i*fit.step,{...style,size:fit.size}));
         manifest.blocks.push({x,y,w,h,cut:fit.cut});return {bottom:y+fit.height,lines:fit.rows.length,cut:fit.cut};
       }
-      function rect(x,y,w,h,fill,stroke){if(w<=0||h<=0)return;ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(4,w/2,h/2));ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}}
+      function rect(x,y,w,h,fill,stroke){if(w<=0||h<=0)return;ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,Math.min(8,w/2,h/2));ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}}
       function line(x1,y1,x2,y2,color=C.line,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
       function dot(x,y,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
       function section(label,x,y,w,no){line(x,y-12,x+w,y-12);text(label,x,y+22,{size:27,weight:500,font:SANS});return y+48;}
@@ -806,11 +808,11 @@ window.ReadingShareArtwork = (() => {
       }
       function metric(n,label,x,y,w,{size=64,color=C.ink,labelY,labelSize=26}={}){
         const s=amount(n);let fs=size;ctx.font=`400 ${fs}px ${NUM}`;while(ctx.measureText(s).width>w-8&&fs>28){fs-=2;ctx.font=`400 ${fs}px ${NUM}`;}
-        const numberBox=text(s,x,y,{size:fs,font:NUM,color});
+        const numberBox=text(s,x+w/2,y,{size:fs,font:NUM,color,align:'center'});
         // Labels in a row share a baseline, even when a long value shrinks.
         ctx.font=`400 ${size}px ${NUM}`;const descent=ctx.measureText('0123456789').actualBoundingBoxDescent;
         ctx.font=`400 ${labelSize}px ${SANS}`;const ascent=ctx.measureText('阅读小时分钟').actualBoundingBoxAscent;
-        const labelBox=text(label,x,labelY??y+descent+ascent+18,{size:labelSize,font:SANS,color:C.muted});
+        const labelBox=text(label,x+w/2,labelY??y+descent+ascent+18,{size:labelSize,font:SANS,color:C.muted,align:'center'});
         manifest.spacing.push({kind:'metric',gap:labelBox.y-numberBox.y-numberBox.h,minimum:14,labelY:labelBox.y+labelBox.h});
       }
       function progress(b,x,y,w){
@@ -826,6 +828,7 @@ window.ReadingShareArtwork = (() => {
         }
         const top=Math.ceil(Math.max(...valid.map(r=>r.v/3600),1)/2)*2,left=x+(small?8:42),right=x+w-16,base=y+h-44,upper=y+26;
         if(!small)for(const v of [0,top/2,top]){const yy=base-v/top*(base-upper);line(left,yy,right,yy);text(String(v),x,yy+8,{size:25,font:NUM,color:C.muted});}
+        line(left,upper,left,base,C.muted,1);line(left,base,right,base,C.muted,1);
         const points=vals.map((v,i)=>known(v)?{value:v,month:i+1,x:vals.length===1?(left+right)/2:left+i*(right-left)/(vals.length-1),y:base-v/3600/top*(base-upper)}:null);
         ctx.strokeStyle=C.red;ctx.lineWidth=small?2:3;ctx.beginPath();let active=false;for(const pt of points){if(!pt){active=false;continue;}active?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y);active=true;}ctx.stroke();
         const peak=valid.reduce((a,b)=>b.v>a.v?b:a);for(const pt of points)if(pt)dot(pt.x,pt.y,small?3:5,pt.month===peak.i+1?C.blue:C.red);
@@ -867,7 +870,7 @@ window.ReadingShareArtwork = (() => {
       if(!keys.length){
         if(months.some(known)){
           d.text('每月阅读时长',x,y,{font:SANS,size:24,weight:500});
-          d.trend(x,y+40,width,88,{small:true});
+          d.trend(x,y+22,width,166,{small:false});
         }else d.text('年度阅读时长',x,y,{font:SANS,size:24,weight:500});
         return;
       }
@@ -904,7 +907,7 @@ window.ReadingShareArtwork = (() => {
         await cover(b,M,y,42,58);
         d.block((b.focus_rank===null?'—':String(b.focus_rank).padStart(2,'0'))+'  '+b.title,M+60,y+5,510,38,{size:26,min:20});
         text(duration(b.reading_seconds),R,y+30,{font:SANS,size:21,align:'right',color:C.muted});
-        rect(M+60,y+48,510*b.reading_seconds/max,6,C.red);
+        rect(M+60,y+48,510,20,C.cream);rect(M+60,y+48,510*b.reading_seconds/max,20,progressInk(b));
       }
       text(rows.length?'按年度时长排序 · 展示前'+rows.length+'本':'暂无可用的逐书年度时长',M,H-154,{font:SANS,size:22,color:C.muted});
       text('反映时间投入，不代表连续阅读或注意力测量',M,H-118,{font:SANS,size:21,color:C.muted});
@@ -926,13 +929,13 @@ window.ReadingShareArtwork = (() => {
       }
       line(M,shelfBottom+8,R,shelfBottom+8);
       const metrics=[[data.summary.read,'本读过'],[data.summary.finished,'本读完'],[data.summary.read_days,'天阅读'],[data.summary.notes,'条笔记']];
-      for(const [i,[value,label]]of metrics.entries())metric(value,label,M+i*193,shelfBottom+70,169,{size:48,labelSize:21});
+      for(const [i,[value,label]]of metrics.entries())metric(value,label,M+i*193,shelfBottom+70,193,{size:48,labelSize:21});
       if(known(data.summary.seconds))text('累计 '+duration(data.summary.seconds),R,H-288,{font:SANS,size:23,align:'right',color:C.quietBlue});
       calendar(d,M,H-288,R-M);
     }
     async function statsPage(d){
       const {H,M,R,text,rect,trend,section}=d,square=H===900;
-      text('阅读的节奏',M,174,{size:56,weight:600});
+      text('阅读的节奏',M,174,{size:60,weight:600});
       section('每月阅读时长',M,227,R-M,'01');
       if(known(data.summary.seconds))text(duration(data.summary.seconds),R,174,{font:NUM,size:28,color:C.red,align:'right'});
       const chartX=M+24,chartY=285,chartW=R-M-48,chartH=square?160:275;
@@ -942,7 +945,7 @@ window.ReadingShareArtwork = (() => {
       months.forEach((seconds,i)=>{
         const x=chartX+step*(i+.5),height=known(seconds)?seconds/3600/top*chartH:0;
         if(known(seconds)){
-          rect(x-barW/2,base-height,barW,height,seconds/3600===top?C.red:'#b5a187');
+          rect(x-barW/2,base-height,barW,height,seconds/3600===top?ACCENTS[0]:ACCENTS[(i+1)%ACCENTS.length]);
           if(months.length<=10||i%2===0)text((seconds/3600).toFixed(1),x,base-height-13,{font:NUM,size:21,color:C.muted,align:'center'});
         }
         if(months.length<=10||i%2===0||i===months.length-1)text((i+1)+'月',x,base+33,{font:SANS,size:21,color:C.muted,align:'center'});
@@ -957,8 +960,14 @@ window.ReadingShareArtwork = (() => {
       if(peak?.v>0)text(peak.i+1+'月读得最久 · '+duration(peak.v),M,peakY,{font:SANS,size:22,color:C.quietBlue});
       if(!durations.length){
         section('阅读与记录',M,split,R-M);
-        d.metric(data.summary.read_days,'天与书相伴',M,split+115,320,{size:58,labelSize:23});
-        d.metric(data.summary.notes,'条笔记记录',M+386,split+115,320,{size:58,labelSize:23});
+        const cells=[[data.summary.read,'本读过'],[data.summary.finished,'本读完'],[data.summary.read_days,'天阅读'],[data.summary.notes,'条笔记记录'],[known(data.summary.seconds)&&data.summary.read_days>0?duration(data.summary.seconds/data.summary.read_days):'—','阅读日平均'],[valid.filter(v=>v.v>0).length,'个有时长的月份']];
+        const start=split+48,cellW=(R-M-24)/3,cellH=(H-120-start-12)/2;
+        cells.forEach(([v,label],i)=>{
+          const x=M+(i%3)*(cellW+12),y=start+Math.floor(i/3)*(cellH+12);
+          rect(x,y,cellW,cellH,C.cream);
+          text(String(v??'—'),x+cellW/2,y+cellH*.49,{font:NUM,size:typeof v==='string'?27:44,color:C.red,align:'center'});
+          text(label,x+cellW/2,y+cellH*.79,{font:SANS,size:21,color:C.muted,align:'center'});
+        });
         return;
       }
       section('单日阅读时长分布',M,split,R-M);
@@ -997,14 +1006,14 @@ window.ReadingShareArtwork = (() => {
       const sectionY=square?(sparse?378:359):(sparse?410:376);
       section('按书目数量统计',M,sectionY,R-M,'01');
       const firstRow=sectionY+(sparse?(square?72:84):70);
-      const lastRow=rows.length===1?firstRow:sparse?(compactShelf?564:730):H-(omitted?171:160);
+      const lastRow=rows.length===1?firstRow:sparse?(compactShelf?564:730):Math.min(firstRow+(rows.length-1)*82,H-(omitted?300:290));
       const stride=rows.length>1?(lastRow-firstRow)/(rows.length-1):0;
       for(const [i,row]of rows.entries()){
         const y=firstRow+i*stride,pct=row.count/data.books.length;
         block(row.name,M,y-28,R-M-168,39,{size:26,min:24,font:SANS});
         text(row.count+'本 · '+Math.round(pct*100)+'%',R,y,{font:SANS,size:23,align:'right',color:C.muted});
-        rect(M,y+14,R-M,11,C.cream);
-        rect(M,y+14,(R-M)*pct,11,row.other?'#a79786':chartColors.get(row.name)||C.red);
+        rect(M,y+16,R-M,22,C.cream);
+        rect(M,y+16,(R-M)*row.count/Math.max(...rows.map(r=>r.count)),22,row.other?'#a79786':chartColors.get(row.name)||C.red);
       }
       if(omitted)text('其余分类合并统计，包含'+rows.at(-1).count+'本书',M,lastRow+54,{font:SANS,size:22,color:C.muted});
       if(rows.length<=3){
@@ -1015,6 +1024,14 @@ window.ReadingShareArtwork = (() => {
         const height=H-121-imageTop;
         section('书架里的几本书',M,top-12,R-M,'02');
         for(const [i,book]of books.entries())await cover(book,M+i*spacing+(spacing-wide)/2,imageTop,wide,height,{shadow:true});
+      }
+      if(rows.length>3){
+        const y=H-216,w=(R-M-20)/2;
+        rect(M,y,w,98,C.cream);rect(M+w+20,y,w,98,C.cream);
+        text('书目最多的方向',M+20,y+31,{font:SANS,size:21,color:C.muted});
+        block(counts[0].name,M+20,y+42,w-40,44,{size:28,min:24,font:SANS,color:C.red});
+        text('该分类书目占比',M+w+40,y+31,{font:SANS,size:21,color:C.muted});
+        text(Math.round(counts[0].count/data.books.length*100)+'%',M+w+40,y+78,{font:NUM,size:36,color:C.red});
       }
       for(const row of rows)d.manifest.charts.push({kind:'category',encoding:'share-bar',...row,total:data.books.length});
     }
@@ -1044,21 +1061,22 @@ window.ReadingShareArtwork = (() => {
     }
     async function bookPage(d,p){
       const {H,M,R,text,block,measureBlock,line,cover}=d,b=p.book,square=H===900,color=bookColor(b);
+      const denseTitle=square||b.title.length>90||b.author.length>80;
       const parts=b.title.match(/^(.{2,24}?)[：:]\s*(.+)$/);
       let title;
       if(parts){
-        const main=block(parts[1],M,127,R-M,square?100:133,{size:58,min:36,weight:600,leading:1.2});
-        title=block(parts[2],M,main.bottom+19,R-M,square?92:114,{size:38,min:30,weight:400,leading:1.35});
+        const main=block(parts[1],M,127,R-M,denseTitle?76:133,{size:58,min:36,weight:600,leading:1.2});
+        title=block(parts[2],M,main.bottom+19,R-M,denseTitle?66:114,{size:38,min:30,weight:400,leading:1.35});
       }else{
         let size=56;
         // Avoid a lone final character in a headline; fit by the text, not by scaling the canvas.
-        for(;size>36;size-=2){const fit=measureBlock(b.title,R-M,220,{size,min:size,weight:600,leading:1.2});if(!fit.cut&&(fit.rows.length<=1||fit.rows.at(-1).trim().length>=4))break;}
-        title=block(b.title,M,127,R-M,220,{size,min:32,weight:600,leading:1.2});
+        for(;size>36;size-=2){const fit=measureBlock(b.title,R-M,denseTitle?140:220,{size,min:size,weight:600,leading:1.2});if(!fit.cut&&(fit.rows.length<=1||fit.rows.at(-1).trim().length>=4))break;}
+        title=block(b.title,M,127,R-M,denseTitle?140:220,{size,min:32,weight:600,leading:1.2});
       }
-      const author=block(b.author,M,title.bottom+24,R-M,67,{size:27,min:25,font:SANS,color:C.muted,leading:1.35});
-      const bodyY=author.bottom+32,mainBottom=H-260,available=mainBottom-bodyY;
+      const author=block(b.author,M,title.bottom+24,R-M,denseTitle?48:67,{size:27,min:25,font:SANS,color:C.muted,leading:1.35});
+      const bodyY=author.bottom+32,mainBottom=H-330,available=mainBottom-bodyY;
       const primary=p.quote||'',kind=p.textKind==='thought'?'个人笔记':'原文摘录',rich=Boolean(primary),long=primary.length>(square?75:130);
-      const bodyStyle={size:30,min:30,weight:400,font:SERIF,color:C.secondaryInk,leading:1.65,role:'book-body'};
+      const bodyStyle={size:27,min:27,weight:400,font:SERIF,color:C.secondaryInk,leading:1.65,role:'book-body'};
       let excerpted=false;
       function excerpt(str,x,y,w,h,label){
         const fit=measureBlock(str,w,h,bodyStyle);excerpted=excerpted||fit.cut;
@@ -1107,18 +1125,21 @@ window.ReadingShareArtwork = (() => {
         }
         if(art.readingRecord&&mainBottom-next>=132)await d.image(art.readingRecord,tx,next,tw,mainBottom-next-4);
       }
-      const metricY=H-200,mx=M+280,mw=R-mx;
-      line(M,metricY-30,R,metricY-30,color,1);
-      const hComplete=b.note_coverage?.highlights==='complete',tComplete=b.note_coverage?.thoughts==='complete';
-      const cols=[[known(b.reading_seconds)?`${Math.floor(b.reading_seconds/3600)}小时\n${Math.floor(b.reading_seconds%3600/60)}分钟`:null,'阅读时长'],[hComplete&&(rich||b.highlights.length)?String(b.highlights.length):null,'条划线'],[tComplete&&(rich||b.thoughts.length)?String(b.thoughts.length):null,'条个人笔记']].filter(([v])=>v!==null);
-      if(known(b.progress))d.progress(b,M,metricY+19,cols.length?230:R-M);
-      else if(cols.length)block(status(b),M,metricY+3,230,54,{size:28,min:26,color:C.muted});
-      if(cols.length)for(const [i,[v,label]]of cols.entries()){
-        const x=mx+i*mw/cols.length,w=mw/cols.length-23,isTime=label==='阅读时长';
-        if(i)line(x-15,metricY-1,x-15,metricY+84);
-        block(v,x,isTime?metricY-11:metricY+6,w,isTime?75:60,{size:isTime?28:44,min:26,font:isTime?SANS:NUM,leading:1.35,color:i===0?color:C.ink});
-        text(label,x,metricY+92,{font:SANS,size:24,color:C.muted});
+      const panelY=H-292,panelW=R-M;
+      d.rect(M-16,panelY,panelW+32,184,C.cream);
+      text('当前阅读状态',M+6,panelY+31,{font:SANS,size:22,color:C.muted});
+      text(status(b)+(known(b.progress)?' · '+b.progress+'%':''),R-6,panelY+31,{font:SANS,size:24,color:C.red,align:'right'});
+      if(known(b.progress)){
+        const v=Math.max(0,Math.min(100,b.progress));
+        d.rect(M+6,panelY+49,panelW-12,18,C.paper);d.rect(M+6,panelY+49,(panelW-12)*v/100,18,progressInk(b));
+        d.manifest.charts.push({kind:'progress',value:v,width:(panelW-12)*v/100,totalWidth:panelW-12});
       }
+      const cols=[[known(b.reading_seconds)?duration(b.reading_seconds):null,'年度阅读时长'],[b.highlights.length||b.note_coverage?.highlights==='complete'?String(b.highlights.length):null,'已载入划线'],[b.thoughts.length||b.note_coverage?.thoughts==='complete'?String(b.thoughts.length):null,'已载入个人笔记']].filter(([v])=>v!==null);
+      cols.forEach(([v,label],i)=>{
+        const x=M+panelW*(i+.5)/cols.length;
+        text(v,x,panelY+117,{font:NUM,size:label==='年度阅读时长'?27:36,color:C.ink,align:'center'});
+        text(label,x,panelY+155,{font:SANS,size:21,color:C.muted,align:'center'});
+      });
       d.manifest.material={highlights:b.highlights.length,thoughts:b.thoughts.length,kind:rich?kind:'book-info',long,excerpted};
     }
     return {render};

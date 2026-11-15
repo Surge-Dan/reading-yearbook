@@ -28,7 +28,7 @@ const {chromium}=require('playwright'),{pathToFileURL}=require('url'),fs=require
    fs.writeFileSync(path.join(out,label+'.png'),Buffer.from(r.png.split(',')[1],'base64'));
    assert.equal(r.layout.width,900);
    const bodies=r.layout.text.filter(t=>t.role==='book-body'),labels=r.layout.text.filter(t=>t.role==='book-label');
-   for(const t of bodies)assert.equal(t.size,30,`${label}: excerpt / note body size differs`);
+   for(const t of bodies)assert.equal(t.size,27,`${label}: excerpt / note body size differs`);
    for(const t of labels)assert.equal(t.size,24,`${label}: excerpt / note label size differs`);
    if(r.layout.material&&['原文摘录','个人笔记'].includes(r.layout.material.kind))assert(bodies.length&&labels.length,`${label}: missing styled reading material`);
    for(const t of r.layout.text){assert(t.x>=20&&t.x+t.w<=881,`${label}: horizontal overflow ${JSON.stringify(t)}`);assert(t.y>=20&&t.y+t.h<=r.layout.height-20,`${label}: vertical overflow ${JSON.stringify(t)}`);if(t.role!=='footer')assert(t.y+t.h<=r.layout.footerTop-12,`${label}: text reaches footer ${t.text}`);}
