@@ -1,7 +1,7 @@
 interface:
   display_name: "年年阅"
   short_description: "生成可离线阅读和分享的年度报告，也可在助手中提炼简短书籍精华"
-  brand_color: "#245B59"
-  default_prompt: "Use $reading-yearbook-skill to create an offline HTML reading yearbook from my records, with source-backed statistics, timeline, book notes and share-image exports. Reuse existing data and confirm only missing scope or design choices."
+  brand_color: "#B83225"
+  default_prompt: "使用$reading-yearbook-skill生成我的微信读书阅读报告，并打开网页预览。沿用Skill标准样式；报告完成后由我选择是否蒸馏。后续蒸馏自动追加到本次报告最后；单独蒸馏则打开独立HTML。只询问尚缺的年份或授权。"
 policy:
   allow_implicit_invocation: true

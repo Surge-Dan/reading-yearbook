@@ -2,7 +2,7 @@
 
 年度报告不要求蒸馏。用户只想生成／查看报告时直接走 [HTML 年鉴](html-yearbook.md)，不采集书本正文、不创建蒸馏任务。
 
-用户主动提供书名／作者或有权处理的 EPUB/PDF/TXT/MD 时，才在助手里蒸馏。网页只读，不要求上传后回对话复制指令。完成后可以再加一本，也可以把精华附在年度报告底部。独立蒸馏无需微信读书账号。
+用户主动提供书名／作者或有权处理的 EPUB/PDF/TXT/MD 时，才在助手里蒸馏。网页只读，不要求上传后回对话复制指令。完成后默认附到当前任务已有报告底部并打开；没有报告或明确单独蒸馏时生成独立HTML。独立蒸馏无需微信读书账号。
 
 ## 默认流程
 
@@ -53,7 +53,7 @@ ebook_light.py 是新任务默认引擎，按[轻量笔记](light-reading.md)输
 
 正式原子发布 deep/distillation.json、analysis.json、DIGEST.md、BOOK_OVERVIEW.md 与验证记录，服务再生成独立 HTML。新结果不创建 methods/ 或术语库。公开包只保留读者字段，不含全文、私有路径、令牌或过程输出；共享校验器检查结构、来源哈希与引用。哈希是完整性检查，不是语义认证。
 
-source_mode:real|sample 与 input_mode:upload|title 分别保留。没有包也可生成报告；明确提供坏包或混用真实／sample 时仍拒绝，不静默丢弃。有包时网页、复制、Markdown、独立 HTML、PNG／ZIP 使用同一结果；范围提示集中参考区与页脚。
+source_mode:real|sample 与 input_mode:upload|title 分别保留。没有包也可生成报告；明确提供坏包或混用真实／sample 时仍拒绝，不静默丢弃。有包时网页、复制、Markdown与独立HTML使用同一结果。蒸馏不提供分享图、不显示参考资料区；来源核验留在结果包。完成后执行[标准交付](standard-delivery.md)：本次已有报告自动追加，没有报告则交付独立HTML，不以聊天文字代替成品。
 
 源书、缓存、身份与诊断留在私人 .ebook-workbench/jobs/<id>/，不公开上传。关闭服务后静态结果仍可读和导出，新蒸馏由助手重开服务。服务仅监听127.0.0.1，令牌、Host、Origin、路径与符号链接检查保留。
 

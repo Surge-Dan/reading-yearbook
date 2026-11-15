@@ -134,6 +134,9 @@ def deliver(snapshot, materials, covers, output, previous=None, state_path=None,
     from report_reader import validated_distillations
     packages = validated_distillations(distillations)
     data=annual_data(snapshot)
+    if previous and previous.get('source_mode') != 'sample' and previous.get('year') == data['year']:
+        from reading_delivery import merge_books
+        packages = merge_books(previous.get('distillations'), packages)
     data['distillations']=packages
     if previous and previous.get('year')==data['year'] and previous.get('source_mode')!='sample':
         existing={b['book_id']:b for b in previous.get('books',[])}
