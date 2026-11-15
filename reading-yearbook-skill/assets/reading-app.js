@@ -131,16 +131,17 @@
     // B2 skeleton: calendar floor, hairline path, individual dots, peak label.
     // Mapping uses unrounded seconds; null breaks a path, a measured zero stays on baseline.
     const mobile=matchMedia('(max-width:520px)').matches, W=Math.max(280,$('#chart').clientWidth),H=mobile?220:235;
-    const left=37,right=W-15,base=H-37,max=Math.max(...months.filter(v=>v!=null).map(v=>v/3600),1);
-    const top=Math.ceil(max/2)*2, x=i=>months.length===1?(left+right)/2:left+i*(right-left)/(months.length-1), y=v=>base-(v/3600)/top*(base-25);
+    const scale=ReadingShareArtwork.monthlyScale(months),labels=scale.ticks.map(ReadingShareArtwork.axisNumber);
+    const left=Math.max(37,...labels.map(label=>label.length*8+14)),right=W-15,base=H-37;
+    const top=scale.top, x=i=>months.length===1?(left+right)/2:left+i*(right-left)/(months.length-1), y=v=>base-(v/3600)/top*(base-25);
     let svg=`<svg viewBox="0 0 ${W} ${H}" role="group" aria-label="月度阅读时长，单位小时"><title>月度阅读时长</title>`;
-    for (const tick of [0,top/2,top]) svg+=`<line x1="${left}" y1="${base-tick/top*(base-25)}" x2="${right}" y2="${base-tick/top*(base-25)}" stroke="#d5d3ca" stroke-width=".7" ${tick?'stroke-dasharray="2 4"':''}/><text x="${left-12}" y="${base-tick/top*(base-25)+4}" text-anchor="end" fill="#696962" font-size="12">${tick}</text>`;
+    for (const tick of scale.ticks) svg+=`<line x1="${left}" y1="${base-tick/top*(base-25)}" x2="${right}" y2="${base-tick/top*(base-25)}" stroke="#d5d3ca" stroke-width=".7" ${tick?'stroke-dasharray="2 4"':''}/><text x="${left-12}" y="${base-tick/top*(base-25)+4}" text-anchor="end" fill="#696962" font-size="12">${ReadingShareArtwork.axisNumber(tick)}</text>`;
     svg+='<text x="0" y="13" fill="#696962" font-size="11">小时</text>';
     let segment=[]; const paths=[];
     months.forEach((v,i)=>{if(v==null){if(segment.length)paths.push(segment);segment=[];}else segment.push([x(i),y(v)]);});if(segment.length)paths.push(segment);
     paths.forEach(points=>svg+=`<path d="${points.map((p,i)=>(i?'L':'M')+p.join(' ')).join(' ')}" fill="none" stroke="#b94035" stroke-width="1.4" pathLength="1" class="draw"/>`);
     const peak=months.findIndex(v=>v!=null&&v===Math.max(...months.filter(v=>v!=null)));
-    months.forEach((v,i)=>{svg+=`<line x1="${x(i)}" y1="${base}" x2="${x(i)}" y2="${base-7}" stroke="#bdbab0" stroke-width=".8"/><text x="${x(i)}" y="${base+24}" text-anchor="middle" fill="#696962" font-size="12">${i+1}月</text>`;
+    months.forEach((v,i)=>{svg+=`<line x1="${x(i)}" y1="${base}" x2="${x(i)}" y2="${base-7}" stroke="#bdbab0" stroke-width=".8"/><text x="${x(i)}" y="${base+24}" text-anchor="middle" fill="#696962" font-size="12">${i+1}</text>`;
       if(v!=null) {svg+=`<circle data-chart-month="${i}" tabindex="0" role="button" aria-label="${i+1}月，${esc(duration(v))}" cx="${x(i)}" cy="${y(v)}" r="${i===peak?4.5:3}" fill="#b94035" class="pop" style="animation-delay:${.2+i*.03}s"/><circle cx="${x(i)}" cy="${y(v)}" r="11" fill="transparent" data-chart-month="${i}" aria-hidden="true"/>`;
         svg+=`<text x="${x(i)}" y="${y(v)-13}" text-anchor="middle" fill="${i===peak?'#b94035':'#68665e'}" font-size="11" class="fade" style="paint-order:stroke;stroke:#faf6e9;stroke-width:4;animation-delay:${1+i*.01}s">${(v/3600).toFixed(1)}</text>`;}
     }); $('#chart').innerHTML=svg+'</svg>';

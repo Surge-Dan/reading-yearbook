@@ -720,6 +720,19 @@ window.ReadingShareArtwork = (() => {
   const amount=n=>known(n)?String(n):'—';
   const duration=n=>!known(n)?'未记录':n>=3600?`${Math.floor(n/3600)}小时${Math.floor(n%3600/60)}分钟`:`${Math.floor(n/60)}分钟`;
   const status=b=>({finished:'已读完',reading:'在读',unstarted:'未开始',unknown:'状态未记录'}[b.status]??(b.progress==null?'进度未记录':b.progress>=100?'已读完':'在读'));
+  function axisNumber(value){
+    if(Math.abs(value)>=1e8)return Number((value/1e8).toPrecision(3))+'亿';
+    if(Math.abs(value)>=1e4)return Number((value/1e4).toPrecision(3))+'万';
+    return String(Number(value.toPrecision(10)));
+  }
+  function monthlyScale(values){
+    const peak=Math.max(0,...values.filter(v=>known(v)&&v>=0).map(v=>v/3600));
+    if(!peak)return {top:1,ticks:[0,.5,1]};
+    const raw=peak/2,power=10**Math.floor(Math.log10(raw));
+    const step=[1,2,2.5,5,10].find(n=>n*power>=raw)*power;
+    const count=Math.ceil(peak/step),top=count*step;
+    return {top,ticks:Array.from({length:count+1},(_,i)=>Number((i*step).toPrecision(12)))};
+  }
   function create({data,art,loadImage}){
     const progressInk=book=>ACCENTS[Math.max(0,data.books.findIndex(row=>row.book_id===book.book_id))%ACCENTS.length];
     const fonts=Promise.all([document.fonts.load('600 48px ReadingSerif'),document.fonts.load('400 32px ReadingSerif'),document.fonts.load('400 28px ReadingSans')]);
@@ -826,13 +839,13 @@ window.ReadingShareArtwork = (() => {
           else block('暂无月度阅读时长记录。',x,y+35,w,h-35,{size:32,min:30,color:C.muted});
           return;
         }
-        const top=Math.ceil(Math.max(...valid.map(r=>r.v/3600),1)/2)*2,left=x+(small?8:42),right=x+w-16,base=y+h-44,upper=y+26;
-        if(!small)for(const v of [0,top/2,top]){const yy=base-v/top*(base-upper);line(left,yy,right,yy);text(String(v),x,yy+8,{size:25,font:NUM,color:C.muted});}
+        const scale=monthlyScale(vals),top=scale.top;ctx.font=`400 23px ${NUM}`;const gutter=Math.max(42,...scale.ticks.map(v=>ctx.measureText(axisNumber(v)).width+14)),left=x+(small?8:gutter),right=x+w-16,base=y+h-44,upper=y+26;
+        if(!small)for(const v of scale.ticks){const yy=base-v/top*(base-upper);line(left,yy,right,yy);text(axisNumber(v),x,yy+8,{size:25,font:NUM,color:C.muted});}
         line(left,upper,left,base,C.muted,1);line(left,base,right,base,C.muted,1);
         const points=vals.map((v,i)=>known(v)?{value:v,month:i+1,x:vals.length===1?(left+right)/2:left+i*(right-left)/(vals.length-1),y:base-v/3600/top*(base-upper)}:null);
         ctx.strokeStyle=C.red;ctx.lineWidth=small?2:3;ctx.beginPath();let active=false;for(const pt of points){if(!pt){active=false;continue;}active?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y);active=true;}ctx.stroke();
         const peak=valid.reduce((a,b)=>b.v>a.v?b:a);for(const pt of points)if(pt)dot(pt.x,pt.y,small?3:5,pt.month===peak.i+1?C.blue:C.red);
-        if(!small){for(let i=0;i<vals.length;i++){const xx=vals.length===1?(left+right)/2:left+i*(right-left)/(vals.length-1);if(vals.length<=9||i%2===0||i===vals.length-1)text(`${i+1}月`,xx,base+35,{size:25,font:SANS,color:C.muted,align:'center'});}text('小时',x,y+5,{size:23,font:SANS,color:C.muted});}
+        if(!small){for(let i=0;i<vals.length;i++){const xx=vals.length===1?(left+right)/2:left+i*(right-left)/(vals.length-1);text(String(i+1),xx,base+35,{size:25,font:SANS,color:C.muted,align:'center'});}text('小时',x,y+5,{size:23,font:SANS,color:C.muted});}
         manifest.charts.push({kind:'monthly',points,top,base,upper});
       }
       function base(){
@@ -880,8 +893,8 @@ window.ReadingShareArtwork = (() => {
         const date=new Date(time),index=(time-start)/day+offset;
         const left=x+Math.floor(index/7)*pitch,top=gridY+(index%7)*pitch;
         const value=daily[date.toISOString().slice(0,10)];
-        if(date.getUTCDate()===1 && date.getUTCMonth()%2===0){
-          d.text((date.getUTCMonth()+1)+'月',left,y+37,{font:SANS,size:17,color:C.muted});
+        if(date.getUTCDate()===1){
+          d.text(String(date.getUTCMonth()+1),left,y+37,{font:SANS,size:17,color:C.muted});
         }
         if(time>cutoff)continue;
         if(!known(value))d.rect(left+.5,top+.5,size-1,size-1,C.paper,'#eadcc7');
@@ -939,16 +952,16 @@ window.ReadingShareArtwork = (() => {
       section('每月阅读时长',M,227,R-M,'01');
       if(known(data.summary.seconds))text(duration(data.summary.seconds),R,174,{font:NUM,size:28,color:C.red,align:'right'});
       const chartX=M+24,chartY=285,chartW=R-M-48,chartH=square?160:275;
-      const top=Math.max(1,...months.filter(known).map(v=>v/3600));
+      const top=monthlyScale(months).top,barPeak=Math.max(0,...months.filter(known));
       const step=chartW/Math.max(1,months.length),barW=Math.min(48,step*.62),base=chartY+chartH;
       text('小时',M,chartY-10,{font:SANS,size:21,color:C.muted});
       months.forEach((seconds,i)=>{
         const x=chartX+step*(i+.5),height=known(seconds)?seconds/3600/top*chartH:0;
         if(known(seconds)){
-          rect(x-barW/2,base-height,barW,height,seconds/3600===top?ACCENTS[0]:ACCENTS[(i+1)%ACCENTS.length]);
-          if(months.length<=10||i%2===0)text((seconds/3600).toFixed(1),x,base-height-13,{font:NUM,size:21,color:C.muted,align:'center'});
+          rect(x-barW/2,base-height,barW,height,seconds===barPeak?ACCENTS[0]:ACCENTS[(i+1)%ACCENTS.length]);
+          text(seconds>0&&seconds<36?'<0.01':axisNumber(Number((seconds/3600).toFixed(2))),x,base-height-13,{font:NUM,size:21,color:C.muted,align:'center'});
         }
-        if(months.length<=10||i%2===0||i===months.length-1)text((i+1)+'月',x,base+33,{font:SANS,size:21,color:C.muted,align:'center'});
+        text(String(i+1),x,base+33,{font:SANS,size:21,color:C.muted,align:'center'});
       });
       d.manifest.charts.push({kind:'monthly-bars',values:months,rounded:true});
       const valid=months.map((v,i)=>({v,i})).filter(row=>known(row.v));
@@ -1003,17 +1016,18 @@ window.ReadingShareArtwork = (() => {
       const rows=omitted?[...retained,{name:'其他'+omitted+'类',count:counts.slice(retained.length).reduce((n,r)=>n+r.count,0),other:true}]:retained;
       const sparse=rows.length<=3;
       const compactShelf=square&&rows.length>1&&sparse;
+      const denseCategories=square&&rows.length>3||rows.length>6;
       const sectionY=square?(sparse?378:359):(sparse?410:376);
       section('按书目数量统计',M,sectionY,R-M,'01');
       const firstRow=sectionY+(sparse?(square?72:84):70);
-      const lastRow=rows.length===1?firstRow:sparse?(compactShelf?564:730):Math.min(firstRow+(rows.length-1)*82,H-(omitted?300:290));
+      const lastRow=rows.length===1?firstRow:sparse?(compactShelf?564:730):(denseCategories?H-(omitted?171:160):Math.min(firstRow+(rows.length-1)*82,H-(omitted?300:290)));
       const stride=rows.length>1?(lastRow-firstRow)/(rows.length-1):0;
       for(const [i,row]of rows.entries()){
         const y=firstRow+i*stride,pct=row.count/data.books.length;
         block(row.name,M,y-28,R-M-168,39,{size:26,min:24,font:SANS});
         text(row.count+'本 · '+Math.round(pct*100)+'%',R,y,{font:SANS,size:23,align:'right',color:C.muted});
-        rect(M,y+16,R-M,22,C.cream);
-        rect(M,y+16,(R-M)*row.count/Math.max(...rows.map(r=>r.count)),22,row.other?'#a79786':chartColors.get(row.name)||C.red);
+        rect(M,y+(denseCategories?10:16),R-M,denseCategories?16:22,C.cream);
+        rect(M,y+(denseCategories?10:16),(R-M)*row.count/Math.max(...rows.map(r=>r.count)),denseCategories?16:22,row.other?'#a79786':chartColors.get(row.name)||C.red);
       }
       if(omitted)text('其余分类合并统计，包含'+rows.at(-1).count+'本书',M,lastRow+54,{font:SANS,size:22,color:C.muted});
       if(rows.length<=3){
@@ -1025,7 +1039,7 @@ window.ReadingShareArtwork = (() => {
         section('书架里的几本书',M,top-12,R-M,'02');
         for(const [i,book]of books.entries())await cover(book,M+i*spacing+(spacing-wide)/2,imageTop,wide,height,{shadow:true});
       }
-      if(rows.length>3){
+      if(rows.length>3&&!denseCategories){
         const y=H-216,w=(R-M-20)/2;
         rect(M,y,w,98,C.cream);rect(M+w+20,y,w,98,C.cream);
         text('书目最多的方向',M+20,y+31,{font:SANS,size:21,color:C.muted});
@@ -1174,7 +1188,7 @@ window.ReadingShareArtwork = (() => {
     const total=rows.reduce((n,b)=>n+b.reading_seconds,0);
     return {rows:ranked,total,topShare:rows.filter(b=>b.reading_seconds>0).length>=3&&total>0?rows.slice(0,3).reduce((n,b)=>n+b.reading_seconds,0)/total:null};
   }
-  return {create,createDigest,focusRanking};
+  return {create,createDigest,focusRanking,monthlyScale,axisNumber};
 })();
 </script><script>/* Offline reading yearbook. Charts adapted from lieflat-charts Basics B2/F2,
  * B1/F1 Rung Bars and C1/F5 Tick Rows, including draw / pop / fade animation;
@@ -1309,16 +1323,17 @@ window.ReadingShareArtwork = (() => {
     // B2 skeleton: calendar floor, hairline path, individual dots, peak label.
     // Mapping uses unrounded seconds; null breaks a path, a measured zero stays on baseline.
     const mobile=matchMedia('(max-width:520px)').matches, W=Math.max(280,$('#chart').clientWidth),H=mobile?220:235;
-    const left=37,right=W-15,base=H-37,max=Math.max(...months.filter(v=>v!=null).map(v=>v/3600),1);
-    const top=Math.ceil(max/2)*2, x=i=>months.length===1?(left+right)/2:left+i*(right-left)/(months.length-1), y=v=>base-(v/3600)/top*(base-25);
+    const scale=ReadingShareArtwork.monthlyScale(months),labels=scale.ticks.map(ReadingShareArtwork.axisNumber);
+    const left=Math.max(37,...labels.map(label=>label.length*8+14)),right=W-15,base=H-37;
+    const top=scale.top, x=i=>months.length===1?(left+right)/2:left+i*(right-left)/(months.length-1), y=v=>base-(v/3600)/top*(base-25);
     let svg=`<svg viewBox="0 0 ${W} ${H}" role="group" aria-label="月度阅读时长，单位小时"><title>月度阅读时长</title>`;
-    for (const tick of [0,top/2,top]) svg+=`<line x1="${left}" y1="${base-tick/top*(base-25)}" x2="${right}" y2="${base-tick/top*(base-25)}" stroke="#d5d3ca" stroke-width=".7" ${tick?'stroke-dasharray="2 4"':''}/><text x="${left-12}" y="${base-tick/top*(base-25)+4}" text-anchor="end" fill="#696962" font-size="12">${tick}</text>`;
+    for (const tick of scale.ticks) svg+=`<line x1="${left}" y1="${base-tick/top*(base-25)}" x2="${right}" y2="${base-tick/top*(base-25)}" stroke="#d5d3ca" stroke-width=".7" ${tick?'stroke-dasharray="2 4"':''}/><text x="${left-12}" y="${base-tick/top*(base-25)+4}" text-anchor="end" fill="#696962" font-size="12">${ReadingShareArtwork.axisNumber(tick)}</text>`;
     svg+='<text x="0" y="13" fill="#696962" font-size="11">小时</text>';
     let segment=[]; const paths=[];
     months.forEach((v,i)=>{if(v==null){if(segment.length)paths.push(segment);segment=[];}else segment.push([x(i),y(v)]);});if(segment.length)paths.push(segment);
     paths.forEach(points=>svg+=`<path d="${points.map((p,i)=>(i?'L':'M')+p.join(' ')).join(' ')}" fill="none" stroke="#b94035" stroke-width="1.4" pathLength="1" class="draw"/>`);
     const peak=months.findIndex(v=>v!=null&&v===Math.max(...months.filter(v=>v!=null)));
-    months.forEach((v,i)=>{svg+=`<line x1="${x(i)}" y1="${base}" x2="${x(i)}" y2="${base-7}" stroke="#bdbab0" stroke-width=".8"/><text x="${x(i)}" y="${base+24}" text-anchor="middle" fill="#696962" font-size="12">${i+1}月</text>`;
+    months.forEach((v,i)=>{svg+=`<line x1="${x(i)}" y1="${base}" x2="${x(i)}" y2="${base-7}" stroke="#bdbab0" stroke-width=".8"/><text x="${x(i)}" y="${base+24}" text-anchor="middle" fill="#696962" font-size="12">${i+1}</text>`;
       if(v!=null) {svg+=`<circle data-chart-month="${i}" tabindex="0" role="button" aria-label="${i+1}月，${esc(duration(v))}" cx="${x(i)}" cy="${y(v)}" r="${i===peak?4.5:3}" fill="#b94035" class="pop" style="animation-delay:${.2+i*.03}s"/><circle cx="${x(i)}" cy="${y(v)}" r="11" fill="transparent" data-chart-month="${i}" aria-hidden="true"/>`;
         svg+=`<text x="${x(i)}" y="${y(v)-13}" text-anchor="middle" fill="${i===peak?'#b94035':'#68665e'}" font-size="11" class="fade" style="paint-order:stroke;stroke:#faf6e9;stroke-width:4;animation-delay:${1+i*.01}s">${(v/3600).toFixed(1)}</text>`;}
     }); $('#chart').innerHTML=svg+'</svg>';

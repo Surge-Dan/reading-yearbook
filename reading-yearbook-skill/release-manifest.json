@@ -75,9 +75,9 @@
     },
     {
       "path": "assets/reading-app.js",
-      "sha256": "c8f6a7e34681bd846367d3134c9937991f3f69b3b18723ed5d2f894606413c1b",
+      "sha256": "4c43e988ba8ccd43e6a410f232d637bf5d3d5008bb504dd79b3761b24fa9ee11",
       "hash_kind": "text-lf",
-      "bytes": 48988
+      "bytes": 49109
     },
     {
       "path": "assets/reading-art.css",
@@ -93,9 +93,9 @@
     },
     {
       "path": "assets/reading-share-art.js",
-      "sha256": "60b77769ce385814348db193dcebb46ab954fea7f4fc3cc7ba6b9d047e2c9a61",
+      "sha256": "d75103b98593dccaf2ba8c3f05d8878f3780e078e52e0b9dc296a44dbe1f8729",
       "hash_kind": "text-lf",
-      "bytes": 37945
+      "bytes": 38850
     },
     {
       "path": "assets/reading-template.html",
@@ -345,15 +345,15 @@
     },
     {
       "path": "examples/reading-html-demo/images/01-cover.png",
-      "sha256": "e3e576208db71ebe523b466cfecc40a1efc21cbe932a51ed5dcbb253acc47300",
+      "sha256": "9041591ccad664848b61660b1b95a9d6db062ad05c82c07790b1b9f4d4f4d10d",
       "hash_kind": "binary",
-      "bytes": 231836
+      "bytes": 232495
     },
     {
       "path": "examples/reading-html-demo/images/02-stats.png",
-      "sha256": "f50afb745a92657b2f1730a8beb3868a51eb63d298a152dccf03256a28f51657",
+      "sha256": "c6fe75cdeded531b969b2934a6426e93c8965d978ae1699cfaae451bdb6a63e3",
       "hash_kind": "binary",
-      "bytes": 129456
+      "bytes": 127456
     },
     {
       "path": "examples/reading-html-demo/images/03-distribution.png",
@@ -405,9 +405,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "9218a6531989273b268e5b1d01cdf60266e7ace04dce16bf88546a2dd49a48a8",
+      "sha256": "e87da3b71e2d33a25bf85cc09494075350437a27edf162162ba79b823ea88afc",
       "hash_kind": "text-lf",
-      "bytes": 7947188
+      "bytes": 7948214
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
@@ -423,15 +423,15 @@
     },
     {
       "path": "examples/reading-html-demo/share-overview.png",
-      "sha256": "9d145978dda5d48b1fe154c335b0311a1ab5d8f761691f73847f0fc99e056945",
+      "sha256": "325e893fcf77ccd9ce87da4745914cabb8a4cfaaac781e21fa634ccaeda04913",
       "hash_kind": "binary",
-      "bytes": 465089
+      "bytes": 462434
     },
     {
       "path": "examples/reading-html-demo/web-preview.png",
-      "sha256": "45bb1354d1321ff626163b778c3bc857702baf3cb7e310acd3d20746f1c77e62",
+      "sha256": "e5bcf9e313712427dfc63092533f9729379b47300d95bda5675c88afa4496030",
       "hash_kind": "binary",
-      "bytes": 867337
+      "bytes": 865467
     },
     {
       "path": "examples/README.md",
@@ -627,9 +627,9 @@
     },
     {
       "path": "references/html-yearbook.md",
-      "sha256": "27b893289518385cf0614ab37a9d3574c1c2a08b344d64193d2bc23b815ab71d",
+      "sha256": "e7295fab60d372d447ea064068cf4bead60a6ff94c4ee74be0d74c053bbdc8ce",
       "hash_kind": "text-lf",
-      "bytes": 21921
+      "bytes": 22438
     },
     {
       "path": "references/light-reading.md",
