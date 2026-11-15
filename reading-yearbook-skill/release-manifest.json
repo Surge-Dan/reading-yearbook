@@ -87,9 +87,9 @@
     },
     {
       "path": "assets/reading-refinement.css",
-      "sha256": "d09866e4370ac7c4807f211c51d1f5bc24444935eb25e17cc1bad6529462ab77",
+      "sha256": "9453a91940baad38b33f307cd715885d841d9c6f8aa3588f7880f2d5ff6b2aed",
       "hash_kind": "text-lf",
-      "bytes": 12550
+      "bytes": 13111
     },
     {
       "path": "assets/reading-share-art.js",
