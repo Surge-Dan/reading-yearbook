@@ -1,0 +1,24 @@
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const assert=require('assert/strict'),fs=require('fs'),path=require('path');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'});
+try{const page=await browser.newPage();const source=path.resolve(process.argv[2]);await page.goto('file:///'+source.replaceAll('\\','/'));
+await page.evaluate(()=>{window.print=()=>{dispatchEvent(new Event('beforeprint'));window.printResult=[...document.querySelectorAll('#printDetails img')].map(i=>({loaded:i.complete&&i.naturalWidth>0,title:i.alt}));};});
+await page.locator('.share-more-formats summary').click();await page.locator('#exportPdf').click();
+await page.waitForFunction(()=>window.printResult);const states=await page.evaluate(()=>window.printResult);
+assert(states.length>0);assert(states.every(i=>i.loaded),JSON.stringify(states.filter(i=>!i.loaded)));
+console.log('PASS: every PDF cover fully decoded before print');
+if(process.argv[3])await page.pdf({path:path.resolve(process.argv[3]),printBackground:true,preferCSSPageSize:true});
+// Cancelling and starting again must prepare a fresh, complete document.
+await page.evaluate(()=>{dispatchEvent(new Event('afterprint'));delete window.printResult;});
+await page.locator('#exportPdf').click();await page.waitForFunction(()=>window.printResult);
+assert((await page.evaluate(()=>window.printResult)).every(i=>i.loaded));
+const html=fs.readFileSync(source,'utf8'),pattern=/<script id="reading-data" type="application\/json">([\s\S]*?)<\/script>/;
+const data=JSON.parse(html.match(pattern)[1]);data.books[0].cover='data:image/png;base64,broken';delete data.books[1].cover;
+const temp=fs.mkdtempSync(path.join(require('os').tmpdir(),'pdf-covers-')),fixture=path.join(temp,'broken.html');
+fs.writeFileSync(fixture,html.replace(pattern,()=>'<script id="reading-data" type="application/json">'+JSON.stringify(data).replace(/</g,'\\u003c')+'</script>'));
+await page.goto('file:///'+fixture.replaceAll('\\','/'));
+await page.evaluate(()=>{window.print=()=>{dispatchEvent(new Event('beforeprint'));window.printResult=[...document.querySelectorAll('#printDetails img')].every(i=>i.complete&&i.naturalWidth>0);};});
+await page.locator('.share-more-formats summary').click();await page.locator('#exportPdf').click();await page.waitForFunction(()=>window.printResult!==undefined);
+assert(await page.evaluate(()=>window.printResult));assert(await page.locator('.print-cover-placeholder').count()>=2);
+console.log('PASS: repeat/cancel, corrupt and missing covers use named placeholders without blank frames');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});

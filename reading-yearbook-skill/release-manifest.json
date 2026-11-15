@@ -69,15 +69,15 @@
     },
     {
       "path": "assets/reading-app.css",
-      "sha256": "9f7366cbf20eba6cb3afee437dd20ea978565fdeb5037f565d9b58f68e41408e",
+      "sha256": "560466991d0536cba23ed5227ef9b6f32ce1906fb5d6ea6d6514fd92b2c82be6",
       "hash_kind": "text-lf",
-      "bytes": 20812
+      "bytes": 21195
     },
     {
       "path": "assets/reading-app.js",
-      "sha256": "4a2b44e5c901998d965eb403559c995e2e3a646868c2cdaf4d2e02e5355730a7",
+      "sha256": "86bdb057d0bed3ef12feb852856e880f753cbb2a3d2379c2404681d5eb8e4852",
       "hash_kind": "text-lf",
-      "bytes": 54888
+      "bytes": 56433
     },
     {
       "path": "assets/reading-art.css",

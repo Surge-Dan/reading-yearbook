@@ -65,3 +65,5 @@ dialog>.dialog-header{
  .ebook-standalone #ebook{padding:0}.ebook-standalone #ebook h3,.ebook-standalone #ebook h4{break-after:avoid}
  .ebook-standalone #ebook .distill-theme-grid{display:block}.ebook-standalone #ebook .distill-theme-grid article{break-inside:auto;border:0;padding:0;margin:0 0 6mm}
 }
+
+@media print{#printDetails .print-cover-placeholder{display:flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;width:23mm;min-height:33mm;padding:3mm;border:1px solid #d9c8b0;background:#f4eee1;color:#65503d;font:10pt/1.6 var(--serif);overflow-wrap:anywhere;text-align:center}#printDetails .print-covers .print-cover-placeholder{width:28mm;height:40mm}}

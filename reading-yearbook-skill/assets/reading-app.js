@@ -185,7 +185,7 @@
   $('#audioFocusRows').innerHTML=audio.rows.map(b=>`<p>${esc(b.title)} · ${esc(duration(b.reading_seconds))}</p>`).join('');
   $('#investment').innerHTML=timedBooks.length?timedBooks.map((b,i)=>{
     const color=categoryPalette[categoryCounts.findIndex(c=>c.name===b.category)%7],width=b.reading_seconds/maxSeconds*480;
-    return `<button class="tick-row investment-row" data-open-book="${esc(b.book_id)}" data-seconds="${b.reading_seconds}" aria-label="${esc(b.title)}，${esc(duration(b.reading_seconds))}，查看详情"><span class="investment-cover" aria-hidden="true"><span>书</span>${b.cover?`<img src="${esc(b.cover)}" alt="" loading="lazy">`:''}</span><span class="tick-label"><small class="focus-rank">${b.focus_rank===null?'—':String(b.focus_rank).padStart(2,'0')}</small>${esc(b.title)}</span><svg viewBox="0 0 480 28" aria-hidden="true"><rect y="8" width="480" height="12" rx="3" fill="#e9e1cf"/><path d="M120 6v16M240 6v16M360 6v16" stroke="#c9c4b3" stroke-width=".6"/><rect class="duration-fill fade" style="animation-delay:${i*.045}s" y="8" width="${width}" height="12" rx="3" fill="${color}"/></svg><span class="tick-time">${esc(duration(b.reading_seconds))}</span></button>`;
+    return `<button class="tick-row investment-row" data-open-book="${esc(b.book_id)}" data-seconds="${b.reading_seconds}" aria-label="${esc(b.title)}，${esc(duration(b.reading_seconds))}，查看详情"><span class="investment-cover" aria-hidden="true"><span>书</span>${b.cover?`<img src="${esc(b.cover)}" alt="" loading="eager" decoding="sync">`:''}</span><span class="tick-label"><small class="focus-rank">${b.focus_rank===null?'—':String(b.focus_rank).padStart(2,'0')}</small>${esc(b.title)}</span><svg viewBox="0 0 480 28" aria-hidden="true"><rect y="8" width="480" height="12" rx="3" fill="#e9e1cf"/><path d="M120 6v16M240 6v16M360 6v16" stroke="#c9c4b3" stroke-width=".6"/><rect class="duration-fill fade" style="animation-delay:${i*.045}s" y="8" width="${width}" height="12" rx="3" fill="${color}"/></svg><span class="tick-time">${esc(duration(b.reading_seconds))}</span></button>`;
   }).join(''):'<p class="empty">有逐书数据时，这里会呈现每本书的阅读投入。</p>';
   $$('.investment-cover img').forEach(img=>img.addEventListener('error',()=>{img.hidden=true;}));
   $('#investmentTable').innerHTML='<table><thead><tr><th>书名</th><th>时长</th><th>秒数</th></tr></thead><tbody>'+timedBooks.map(b=>`<tr><td>${esc(b.title)}</td><td>${esc(duration(b.reading_seconds))}</td><td>${b.reading_seconds}</td></tr>`).join('')+'</tbody></table>';
@@ -210,7 +210,7 @@
   $('#timeline').innerHTML=events.length?previewEvents.map(eventHtml).join('')+(remainingEvents.length?`<details><summary>展开其余${remainingEvents.length}条记录</summary>${groups.map(m=>{const rows=remainingEvents.filter(e=>e.date.startsWith(m));return rows.length?`<h3 class="timeline-month">${Number(m.slice(5))}月</h3>${rows.map(eventHtml).join('')}`:'';}).join('')}</details>`:''):'<p class="empty">暂无带日期的阅读记录</p>';
 
   function fallbackCover(b){return `<span class="cover-fallback"><span>${esc(b.title)}</span><small>${esc(b.author)}</small></span>`;}
-  function coverMarkup(b) {return b.cover?`<img data-cover-book="${esc(b.book_id)}" src="${esc(b.cover)}" alt="《${esc(b.title)}》书封" loading="lazy">`:fallbackCover(b);}
+  function coverMarkup(b) {return b.cover?`<img data-cover-book="${esc(b.book_id)}" src="${esc(b.cover)}" alt="《${esc(b.title)}》书封" loading="eager" decoding="sync">`:fallbackCover(b);}
   document.addEventListener('error',e=>{if(e.target instanceof HTMLImageElement&&e.target.dataset.coverBook){const b=bookMap.get(e.target.dataset.coverBook);if(b){const holder=document.createElement('span');holder.innerHTML=fallbackCover(b);e.target.replaceWith(holder.firstElementChild);}}},true);
   function visibleBooks(){const q=state.query.toLocaleLowerCase();return data.books.filter(b=>(state.status==='all'||b.status===state.status)&&(!state.category||b.category===state.category)&&(!q||(b.title+' '+b.author).toLocaleLowerCase().includes(q)));}
   function drawBooks(printing=false) {
@@ -450,9 +450,13 @@
     if(a.review?.status==='ready')out+='<h3>读后余味</h3>'+a.review.paragraphs.map(p=>printParagraph(p.text)).join('');
     return out+'</article>';
   }
+  function printCover(b){
+    const label=esc(b.title||'书籍');
+    return b.cover?'<img data-print-cover src="'+esc(b.cover)+'" alt="'+label+'" loading="eager" decoding="sync">':'<span class="print-cover-placeholder">'+label+'</span>';
+  }
   function printDocument(){
     const s=data.summary,metrics=[['读过',value(s.read)+'本'],['读完',value(s.finished)+'本'],['阅读天数',value(s.read_days)+'天'],['阅读时长',duration(s.seconds)]];
-    let out='<section class="print-cover"><p class="print-eyebrow">年年阅 · 阅读留痕</p><p class="print-year">'+data.year+'</p><h1>我的阅读年鉴</h1><div class="print-covers">'+data.books.filter(b=>b.cover).slice(0,5).map(b=>'<img src="'+esc(b.cover)+'" alt="'+esc(b.title)+'">').join('')+'</div><div class="print-metrics">'+metrics.map(([label,val])=>'<div><strong>'+esc(val)+'</strong><span>'+label+'</span></div>').join('')+'</div></section>';
+    let out='<section class="print-cover"><p class="print-eyebrow">年年阅 · 阅读留痕</p><p class="print-year">'+data.year+'</p><h1>我的阅读年鉴</h1><div class="print-covers">'+data.books.slice(0,5).map(printCover).join('')+'</div><div class="print-metrics">'+metrics.map(([label,val])=>'<div><strong>'+esc(val)+'</strong><span>'+label+'</span></div>').join('')+'</div></section>';
     const months=(s.monthly||[]).map((seconds,i)=>({seconds,month:i+1})).filter(m=>m.seconds!=null),max=Math.max(1,...months.map(m=>m.seconds));
     out+='<section class="print-overview"><h2>这一年的阅读</h2>';
     if(months.length)out+='<h3>月度阅读时长</h3><div class="print-months">'+months.map(m=>'<div><span>'+m.month+'</span><i><b style="width:'+m.seconds/max*100+'%"></b></i><em>'+esc(duration(m.seconds))+'</em></div>').join('')+'</div>';
@@ -460,7 +464,7 @@
     if(categories.size)out+='<h3>书架的主题</h3><div class="print-categories">'+[...categories].sort((a,b)=>b[1]-a[1]).map(([name,count])=>'<span>'+esc(name)+' <strong>'+count+'本</strong></span>').join('')+'</div>';
     out+='<h3>我的书单</h3><table><thead><tr><th>书名</th><th>作者</th><th>当前状态</th></tr></thead><tbody>'+data.books.map(b=>'<tr><td>'+esc(b.title)+'</td><td>'+esc(b.author||'')+'</td><td>'+esc(statusLabel(b))+'</td></tr>').join('')+'</tbody></table></section>';
     for(const b of data.books.filter(b=>b.highlights?.length||b.thoughts?.length)){
-      out+='<article class="print-book"><div class="print-book-heading">'+(b.cover?'<img src="'+esc(b.cover)+'" alt="">':'')+'<div><p class="print-eyebrow">摘录与笔记</p><h2>'+esc(b.title)+'</h2><p class="print-author">'+esc(b.author||'')+'</p></div></div>';
+      out+='<article class="print-book"><div class="print-book-heading">'+printCover(b)+'<div><p class="print-eyebrow">摘录与笔记</p><h2>'+esc(b.title)+'</h2><p class="print-author">'+esc(b.author||'')+'</p></div></div>';
       if(b.note_coverage?.scope==='all_time')out+='<p class="print-caption">本书笔记包含历年记录。</p>';
       if(b.highlights?.length){out+='<h3>原文摘录</h3>';for(const n of b.highlights)out+='<blockquote>'+(n.chapter_title?'<h4>'+esc(n.chapter_title)+'</h4>':'')+printParagraph(n.text)+'</blockquote>';}
       if(b.thoughts?.length){out+='<h3>我的笔记</h3>';for(const n of b.thoughts)out+='<div class="print-thought">'+(n.created_at?'<p class="print-caption">'+esc(n.created_at)+'</p>':'')+(n.quote?'<blockquote>'+printParagraph(n.quote)+'</blockquote>':'')+printParagraph(n.text)+'</div>';}
@@ -470,10 +474,30 @@
     return out;
   }
   $('#exportMd').onclick=()=>download(new Blob([markdown()],{type:'text/markdown;charset=utf-8'}),`${data.year}-阅读年鉴.md`);
-  $('#exportPdf').onclick=()=>window.print();
-  addEventListener('beforeprint',()=>{$('#printDetails').innerHTML=printDocument();});
+  const coverWarmup=[...new Set(data.books.map(b=>b.cover).filter(Boolean))].map(src=>{
+    const image=new Image();image.src=src;return image.decode().catch(()=>{});
+  });
+  let preparingPrint=false;
+  function ensurePrintDocument(){if(!$('#printDetails').children.length)$('#printDetails').innerHTML=printDocument();}
+  async function preparePrintCovers(){
+    ensurePrintDocument();
+    await Promise.all([...$('#printDetails').querySelectorAll('img')].map(async image=>{
+      let timer;try{
+        await Promise.race([image.decode(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('cover timeout')),10000);})]);
+        if(!image.naturalWidth)throw Error('empty cover');
+      }catch{
+        const placeholder=document.createElement('span');placeholder.className='print-cover-placeholder';placeholder.textContent=image.alt||'书籍';image.replaceWith(placeholder);
+      }finally{clearTimeout(timer);}
+    }));
+    if(document.fonts?.ready)await document.fonts.ready;
+  }
+  $('#exportPdf').onclick=async()=>{
+    if(preparingPrint)return;preparingPrint=true;const button=$('#exportPdf'),label=button.textContent;button.disabled=true;button.textContent='正在准备封面…';
+    try{await preparePrintCovers();window.print();}catch{toast('PDF准备失败，请重试。');}finally{button.disabled=false;button.textContent=label;preparingPrint=false;}
+  };
+  // Never rebuild decoded images immediately before the print snapshot.
+  addEventListener('beforeprint',ensurePrintDocument);
   addEventListener('afterprint',()=>{$('#printDetails').replaceChildren();});
-
   // Keep chapter indicator aligned to the currently visible section.
   if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{const active=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];if(active){$$('.masthead nav a').forEach(a=>a.getAttribute('href')==='#'+active.target.id?a.setAttribute('aria-current','location'):a.removeAttribute('aria-current'));}},{rootMargin:'-15% 0px -60% 0px'});['overview','shelf','quotes','share'].forEach(id=>observer.observe($('#'+id)));}
   drawShare();
