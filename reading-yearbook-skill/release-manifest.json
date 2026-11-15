@@ -21,9 +21,9 @@
     },
     {
       "path": "assets/ebook-app.js",
-      "sha256": "69501a2b20a97feb3a6e00b3fda4596cd9dbaeb97f9acd151b37435eff86a8d0",
+      "sha256": "64b8eede7ef4bde0fd4281f46d744087969856c0e7e503e23c0addd1c0788efb",
       "hash_kind": "text-lf",
-      "bytes": 23038
+      "bytes": 23758
     },
     {
       "path": "assets/ebook-reader-section.html",
@@ -69,15 +69,15 @@
     },
     {
       "path": "assets/reading-app.css",
-      "sha256": "afd5cb2409877b3ab90c941ebba3f5a08ffd7a134c93d2c410d31f89ff6d92d5",
+      "sha256": "9f7366cbf20eba6cb3afee437dd20ea978565fdeb5037f565d9b58f68e41408e",
       "hash_kind": "text-lf",
-      "bytes": 16898
+      "bytes": 20812
     },
     {
       "path": "assets/reading-app.js",
-      "sha256": "4c43e988ba8ccd43e6a410f232d637bf5d3d5008bb504dd79b3761b24fa9ee11",
+      "sha256": "4a2b44e5c901998d965eb403559c995e2e3a646868c2cdaf4d2e02e5355730a7",
       "hash_kind": "text-lf",
-      "bytes": 49109
+      "bytes": 54888
     },
     {
       "path": "assets/reading-art.css",
@@ -99,9 +99,9 @@
     },
     {
       "path": "assets/reading-template.html",
-      "sha256": "2363f5015021782e8231d5413680f5940292a685ac189caad93ec237ccc34da4",
+      "sha256": "f18ff4b8f513fce505f9390858b8f5258684ca84239d66440dcaad44ef4fe6c5",
       "hash_kind": "text-lf",
-      "bytes": 12163
+      "bytes": 12137
     },
     {
       "path": "assets/sample-data.json",
@@ -627,9 +627,9 @@
     },
     {
       "path": "references/html-yearbook.md",
-      "sha256": "5a87bbc0e8d1c9ad40acadef9b495c19a05f855bf6bbe7da06c2653656db75fa",
+      "sha256": "cc069124fa8f54e59ad7b7c517bda88086f4d2bdc3fa3ce47e49647ede17a78c",
       "hash_kind": "text-lf",
-      "bytes": 22737
+      "bytes": 23439
     },
     {
       "path": "references/light-reading.md",

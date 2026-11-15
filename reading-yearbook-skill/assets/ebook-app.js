@@ -19,15 +19,27 @@
     function sources(parent,item){for(const s of item.sources||[]){const b=el('blockquote');b.append(el('span',sourceLabel(item,s)+' · '+(s.location||s.element_id||'位置未记录'),'ebook-source-label'),el('p',s.quote||''));if(s.url)sourceLink(b,s.url,'查看实际资料');parent.append(b);}}
     const readerText=value=>String(value).replace(/^AI\s*(?:解释|整理)\s*[：:]\s*/, '');
     function textParts(item,kind){const out=[];if(kind==='overview')return describe(item);if(item.case_origin==='ai_exercise')out.push('应用示例（不是原书案例）');for(const k of ['explanation','interpretation','text','why_it_matters'])if(item[k])out.push(readerText(item[k]));if(item.trigger)out.push('什么时候用：'+item.trigger);if(item.steps?.length)out.push('怎么做：\n'+item.steps.map((s,i)=>`${i+1}. ${s}`).join('\n'));if(item.example)out.push('案例／示例：'+item.example);if(item.boundaries?.length)out.push('使用提醒：\n'+item.boundaries.join('\n'));for(const k of ['summary','definition'])if(item[k])out.push(readerText(item[k]));return out.join('\n\n');}
-    function digestText(){
-      if(!result?.analysis)return '';
-      const a=result.analysis,parts=['# '+(a.book?.title||'书籍精华'),describe(a.overview)];
-      for(const [key,title]of [['book_context','读懂这本书'],['themes','核心观点'],['methods','值得带走的方法'],['cases','关键案例'],['counterexamples','反例'],['insights','读完想带走的东西']])if(a[key]?.length)parts.push('## '+title,...a[key].map(item=>'### '+(item.title||'')+'\n\n'+textParts(item,key)));
-      for(const item of a.reading_lenses||[])parts.push('## '+item.title,item.text);
-      for(const item of a.memorable_passages||[])parts.push('## 值得保留的金句','> '+item.text.replace(/\n/g,'\n> '),item.why_it_matters);
-      if(a.review?.status==='ready')parts.push('## 读后余味',...a.review.paragraphs.map(p=>p.text));
-      return parts.filter(Boolean).join('\n\n');
+  const mdInline=text=>String(text??'').replace(/[\\`*_{}\[\]<>|#]/g,'\\$&').replace(/\r?\n/g,' ');
+  const mdQuote=text=>String(text??'').split(/\r?\n/).map(line=>'> '+line).join('\n');
+  function bookMarkdown(a,level=2){
+    const mark='#'.repeat(level),lines=[mark+' '+mdInline(a.book?.title||'书籍精华')];
+    if(a.book?.author)lines.push('*'+mdInline(a.book.author)+'*');
+    if(a.overview)lines.push(mark+'# 书籍概览',String(a.overview));
+    for(const [key,title]of [['book_context','读懂这本书'],['themes','重要观点'],['methods','值得带走的方法'],['cases','书中的故事'],['counterexamples','换个角度看'],['insights','读完想带走的东西']]){
+      if(!a[key]?.length)continue;lines.push(mark+'# '+title);
+      for(const item of a[key]){lines.push(mark+'## '+mdInline(item.title||''),String(item.explanation||item.interpretation||''));
+        if(item.steps?.length)lines.push(item.steps.map((step,i)=>`${i+1}. ${step}`).join('\n'));
+        if(item.example)lines.push('**举个例子**\n\n'+item.example);
+        if(item.boundaries?.length)lines.push('**使用提醒**\n\n'+item.boundaries.map(x=>'- '+x).join('\n'));
+      }
     }
+    for(const item of a.reading_lenses||[])lines.push(mark+'# '+mdInline(item.title),item.text);
+    if(a.memorable_passages?.length){lines.push(mark+'# 值得保留的金句');for(const item of a.memorable_passages)lines.push(mdQuote(item.text),item.why_it_matters);}
+    if(a.review?.status==='ready')lines.push(mark+'# 读后余味',...a.review.paragraphs.map(p=>p.text));
+    return lines.filter(Boolean).join('\n\n');
+  }
+
+    function digestText(){return result?.analysis?bookMarkdown(result.analysis,1)+'\n':'';}
     function copyButton(parent,text){const b=el('button','复制这条','text-button');b.type='button';b.dataset.ebookCopy='true';b.onclick=()=>copy(text);parent.append(b);}
     function resultSection(title){const s=el('section');s.append(el('h3',title));$('ebookResult').append(s);return s;}
     let readingObserver,updateReading=()=>{};
@@ -102,7 +114,7 @@ function showJob(current){job=current;$('ebookTask').hidden=false;$('ebookFilena
         section.querySelector('#ebookBookPicker')?.remove();section.querySelector('#ebookEmpty')?.remove();
         section.querySelector('#ebookResult').replaceChildren();
         section.querySelector('#ebookResultShell').hidden=true;
-        const styles=[...document.querySelectorAll('style')].map(s=>s.outerHTML).join('\n'),scripts=[...document.scripts].filter(s=>s.id==='ebook-app-mounted'||s.id==='reading-share-mounted'||s.textContent.startsWith('/* Editorial share artwork.')).map(s=>s.outerHTML).join('\n'),safe=JSON.stringify({analysis:result.analysis,digest:digestText(),source_mode:result.source_mode}).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
+        const styles=[...document.querySelectorAll('style')].map(s=>s.outerHTML).join('\n'),scripts=[...document.scripts].filter(s=>s.id==='ebook-app-mounted').map(s=>s.outerHTML).join('\n'),safe=JSON.stringify({analysis:result.analysis,digest:digestText(),source_mode:result.source_mode}).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
         page='<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>年年阅 · 书籍精华</title>'+styles+'<script>window.EBOOK_RESULT='+safe+';<'+'/script></head><body class="ebook-standalone"><div class="paper"><main>'+section.outerHTML+'</main></div>'+scripts+'</body></html>';
       }
       download(new Blob([page],{type:'text/html;charset=utf-8'}),safeName()+'.html');notice('独立 HTML 已导出，可离线阅读。');

@@ -23,3 +23,45 @@ dialog>.dialog-header{
   #detail,#sourcesDialog{--dialog-gutter:18px}
   dialog>.dialog-header{padding-block:14px}
 }
+
+/* Reading documents use their own pagination, independent of screen filters. */
+@media print{
+ @page{size:A4;margin:18mm 17mm 19mm;@bottom-center{content:counter(page);font-family:sans-serif;font-size:9pt;color:#88735c}}
+ body{background:white!important;color:#292620;font-size:11pt;line-height:1.7}
+ body:not(.ebook-standalone) .paper>main>*:not(#printDetails){display:none!important}
+ .paper{padding:0!important;margin:0!important;max-width:none!important;box-shadow:none!important;border:0!important;background:white!important}
+ .paper:before,.paper:after,.masthead,.toast,dialog,.skip,footer{display:none!important}
+ #printDetails{display:block!important;color:#292620;font:11pt/1.8 var(--sans)}
+ #printDetails article{break-before:auto}
+ #printDetails .print-cover{min-height:245mm;display:flex;flex-direction:column;justify-content:center;break-after:page}
+ #printDetails .print-eyebrow{font:10pt/1.5 var(--sans);letter-spacing:.12em;color:#92785e;margin:0 0 8mm}
+ #printDetails .print-year{font:600 62pt/1 var(--serif);color:#963f46;margin:0 0 7mm}
+ #printDetails h1{font-size:32pt;line-height:1.4;margin:0 0 16mm}
+ #printDetails h2{font-size:23pt;line-height:1.45;margin:0 0 6mm;color:#513c32}
+ #printDetails h3{font-size:15pt;margin:9mm 0 4mm;color:#963f46;break-after:avoid}
+ #printDetails h4{font-size:11pt;margin:0 0 2mm;break-after:avoid}
+ #printDetails p{font-size:11pt;line-height:1.85;margin:0 0 4mm;white-space:normal;orphans:3;widows:3}
+ #printDetails .print-covers{display:flex;gap:5mm;margin:0 0 16mm;align-items:center}
+ #printDetails .print-covers img{width:28mm;height:40mm;object-fit:contain}
+ #printDetails .print-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:7mm;border-top:1px solid #dacbbb;padding-top:7mm}
+ #printDetails .print-metrics strong{display:block;font:600 20pt/1.6 var(--serif);color:#513c32}
+ #printDetails .print-metrics span,#printDetails .print-caption,#printDetails .print-author{font-size:9pt;color:#806d5b}
+ #printDetails .print-book{break-before:page}
+ #printDetails .print-book-heading{display:flex;gap:7mm;align-items:center;margin-bottom:7mm;break-inside:avoid}
+ #printDetails .print-book-heading img{width:23mm;height:33mm;object-fit:contain}
+ #printDetails .print-book-heading .print-eyebrow{margin-bottom:3mm}
+ #printDetails blockquote{margin:0 0 5mm;padding:3mm 0 2mm 5mm;border-left:2px solid #d9bba6;break-inside:auto;overflow-wrap:anywhere}
+ #printDetails .print-thought{margin:0 0 6mm;overflow-wrap:anywhere}
+ #printDetails table{width:100%;border-collapse:collapse;font-size:9pt;table-layout:fixed}
+ #printDetails th,#printDetails td{text-align:left;border-bottom:1px solid #e6ddd1;padding:3mm 2mm;overflow-wrap:anywhere}
+ #printDetails th:first-child{width:50%}#printDetails thead{display:table-header-group}#printDetails tr{break-inside:avoid}
+ #printDetails .print-months>div{display:flex;align-items:center;gap:4mm;margin:2mm 0;font-size:9pt;break-inside:avoid}
+ #printDetails .print-months span{width:5mm}#printDetails .print-months i{flex:1;background:#f1e9dd;height:3mm;border-radius:2mm;overflow:hidden}
+ #printDetails .print-months b{display:block;background:#a35c58;height:100%;border-radius:2mm}
+ #printDetails .print-months em{width:34mm;font-style:normal;text-align:right}
+ #printDetails .print-categories{display:flex;gap:3mm;flex-wrap:wrap;font-size:9pt}#printDetails .print-categories span{border:1px solid #e6ddd1;border-radius:2mm;padding:2mm 3mm}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .ebook-standalone .ebook-actions,.ebook-standalone [data-ebook-copy],.ebook-standalone .ebook-reading-nav{display:none!important}
+ .ebook-standalone #ebook{padding:0}.ebook-standalone #ebook h3,.ebook-standalone #ebook h4{break-after:avoid}
+ .ebook-standalone #ebook .distill-theme-grid{display:block}.ebook-standalone #ebook .distill-theme-grid article{break-inside:auto;border:0;padding:0;margin:0 0 6mm}
+}

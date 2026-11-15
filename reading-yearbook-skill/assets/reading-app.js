@@ -406,25 +406,75 @@
     const size=central.reduce((n,x)=>n+x.length,0),end=new Uint8Array(22),v=new DataView(end.buffer);u32(v,0,0x06054b50);u16(v,8,files.length);u16(v,10,files.length);u32(v,12,size);u32(v,16,offset);return new Blob([...chunks,...central,end],{type:'application/zip'});
   }
   $('#exportGroup').onclick=()=>runExport(async()=>{const chosen=pages.filter(p=>state.selection.has(p.id)),ratio=state.ratio,files=[];for(const [i,p] of chosen.entries()){$('#exportStatus').textContent=`正在生成第${i+1}／${chosen.length}页…`;files.push({name:filename(p),blob:await blobCanvas(await canvasPage(p,ratio))});}download(await zip(files),`${data.year}-reading-share.zip`);});
-  function markdown(){
-    const lines=[`# ${data.year}阅读年鉴`,'',`范围：${scope}${data.as_of?'；采集日期：'+data.as_of:''}`,'',`阅读时长：${duration(data.summary.seconds)}`,`读过：${value(data.summary.read)}本；年度汇总读完：${value(data.summary.finished)}本`,''];
-    if(data.collection_status&&!data.collection_status.complete)lines.push(data.collection_status.message||'部分材料暂未取得。','');
-    if(data.material_coverage)lines.push(`当前进度100%的书：${esc(value(data.material_coverage.current_finished))}本（与年度汇总分别统计）。`,'');
-    for(const b of data.books){
-      lines.push(`## ${b.title}`,'',`作者：${b.author}`,'',`阅读状态：${statusLabel(b)}`,'');
-      if(b.note_coverage?.scope==='all_time')lines.push('笔记范围：本书全部历史记录。','');
-      for(const [title,rows,key] of [['划线',b.highlights,'highlights'],['个人笔记',b.thoughts,'thoughts']]){
-        lines.push(`### ${title}`,'');for(const n of rows)lines.push(n.text,'',`来源：${b.title} · ${n.created_at||'日期未记录'} · ${n.source_id||'未记录来源ID'}`,'');
-        if(!rows.length)lines.push(emptyNotes(b,key),'');
+  // Documents are reading artifacts; raw provenance stays in private data.
+  const mdInline=text=>String(text??'').replace(/[\\`*_{}\[\]<>|#]/g,'\\$&').replace(/\r?\n/g,' ');
+  const mdQuote=text=>String(text??'').split(/\r?\n/).map(line=>'> '+line).join('\n');
+  function bookMarkdown(a,level=2){
+    const mark='#'.repeat(level),lines=[mark+' '+mdInline(a.book?.title||'书籍精华')];
+    if(a.book?.author)lines.push('*'+mdInline(a.book.author)+'*');
+    if(a.overview)lines.push(mark+'# 书籍概览',String(a.overview));
+    for(const [key,title]of [['book_context','读懂这本书'],['themes','重要观点'],['methods','值得带走的方法'],['cases','书中的故事'],['counterexamples','换个角度看'],['insights','读完想带走的东西']]){
+      if(!a[key]?.length)continue;lines.push(mark+'# '+title);
+      for(const item of a[key]){lines.push(mark+'## '+mdInline(item.title||''),String(item.explanation||item.interpretation||''));
+        if(item.steps?.length)lines.push(item.steps.map((step,i)=>`${i+1}. ${step}`).join('\n'));
+        if(item.example)lines.push('**举个例子**\n\n'+item.example);
+        if(item.boundaries?.length)lines.push('**使用提醒**\n\n'+item.boundaries.map(x=>'- '+x).join('\n'));
       }
-    }return lines.join('\n');
+    }
+    for(const item of a.reading_lenses||[])lines.push(mark+'# '+mdInline(item.title),item.text);
+    if(a.memorable_passages?.length){lines.push(mark+'# 值得保留的金句');for(const item of a.memorable_passages)lines.push(mdQuote(item.text),item.why_it_matters);}
+    if(a.review?.status==='ready')lines.push(mark+'# 读后余味',...a.review.paragraphs.map(p=>p.text));
+    return lines.filter(Boolean).join('\n\n');
   }
-  $('#exportMd').onclick=()=>download(new Blob([markdown()],{type:'text/markdown;charset=utf-8'}),`${data.year}-reading.md`);
-  $('#exportJson').onclick=()=>{const copy=JSON.parse(JSON.stringify(data));copy.books.forEach(b=>{delete b.cover;delete b.review;delete b.full_text_search;delete b.full_text_review;});download(new Blob([JSON.stringify(copy,null,2)],{type:'application/json;charset=utf-8'}),`${data.year}-reading.json`);};
-  $('#exportPdf').onclick=()=>{if(state.query||state.category||state.status!=='all')toast('PDF将使用当前筛选的书架范围');window.print();};
-  addEventListener('beforeprint',()=>{drawBooks(true);$$('#timeline details').forEach(el=>{el.dataset.wasOpen=String(el.open);el.open=true;});$('#printDetails').innerHTML=visibleBooks().map(b=>`<article>${bookDetails(b,true)}</article>`).join('');});
-  addEventListener('afterprint',()=>{$('#printDetails').replaceChildren();$$('#timeline details').forEach(el=>el.open=el.dataset.wasOpen==='true');drawBooks();});
+  function markdown(){
+    const summary=data.summary,lines=[`# ${data.year} · 我的阅读年鉴`,'## 这一年的阅读','| 读过 | 读完 | 阅读天数 | 阅读时长 |\n| --- | --- | --- | --- |',`| ${value(summary.read)}本 | ${value(summary.finished)}本 | ${value(summary.read_days)}天 | ${duration(summary.seconds)} |`];
+    const months=(summary.monthly||[]).map((seconds,i)=>seconds==null?null:`| ${i+1} | ${duration(seconds)} |`).filter(Boolean);
+    if(months.length)lines.push('### 月度阅读时长','| 月份 | 时长 |\n| --- | --- |',months.join('\n'));
+    lines.push('## 我的书单',data.books.map((b,i)=>`${i+1}. **${mdInline(b.title)}**${b.author?' · '+mdInline(b.author):''} · ${statusLabel(b)}`).join('\n'));
+    const noted=data.books.filter(b=>b.highlights?.length||b.thoughts?.length);
+    if(noted.length)lines.push('## 摘录与笔记',noted.some(b=>b.note_coverage?.scope==='all_time')?'以下按书整理的笔记包含历年记录。':'');
+    for(const b of noted){lines.push('### '+mdInline(b.title),b.author?'*'+mdInline(b.author)+'*':'');
+      if(b.highlights?.length){lines.push('#### 原文摘录');for(const n of b.highlights)lines.push(n.chapter_title?'**'+mdInline(n.chapter_title)+'**':'',mdQuote(n.text));}
+      if(b.thoughts?.length){lines.push('#### 我的笔记');for(const n of b.thoughts)lines.push(n.created_at?'*'+n.created_at+'*':'',n.quote?mdQuote(n.quote):'',n.text);}
+    }
+    if(data.distillations?.length)lines.push('## 读过之后',...data.distillations.map(b=>bookMarkdown(b.analysis,3)));
+    return lines.filter(Boolean).join('\n\n')+'\n';
+  }
+  const printParagraph=text=>'<p>'+esc(text).replace(/\n/g,'<br>')+'</p>';
+  function printDistillation(a){
+    let out='<article class="print-book"><p class="print-eyebrow">蒸馏一本书</p><h2>'+esc(a.book?.title||'')+'</h2>'+(a.book?.author?'<p class="print-author">'+esc(a.book.author)+'</p>':'');
+    if(a.overview)out+='<h3>书籍概览</h3>'+printParagraph(a.overview);
+    for(const [key,title]of [['book_context','读懂这本书'],['themes','重要观点'],['methods','值得带走的方法'],['cases','书中的故事'],['counterexamples','换个角度看'],['insights','读完想带走的东西']])if(a[key]?.length){out+='<h3>'+title+'</h3>';for(const item of a[key]){out+='<h4>'+esc(item.title||'')+'</h4>'+printParagraph(item.explanation||item.interpretation||'');if(item.steps?.length)out+='<ol>'+item.steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol>';if(item.example)out+=printParagraph(item.example);if(item.boundaries?.length)out+='<ul>'+item.boundaries.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ul>';}}
+    for(const item of a.reading_lenses||[])out+='<h3>'+esc(item.title)+'</h3>'+printParagraph(item.text);
+    if(a.memorable_passages?.length){out+='<h3>值得保留的金句</h3>';for(const item of a.memorable_passages)out+='<blockquote>'+printParagraph(item.text)+'</blockquote>'+printParagraph(item.why_it_matters);}
+    if(a.review?.status==='ready')out+='<h3>读后余味</h3>'+a.review.paragraphs.map(p=>printParagraph(p.text)).join('');
+    return out+'</article>';
+  }
+  function printDocument(){
+    const s=data.summary,metrics=[['读过',value(s.read)+'本'],['读完',value(s.finished)+'本'],['阅读天数',value(s.read_days)+'天'],['阅读时长',duration(s.seconds)]];
+    let out='<section class="print-cover"><p class="print-eyebrow">年年阅 · 阅读留痕</p><p class="print-year">'+data.year+'</p><h1>我的阅读年鉴</h1><div class="print-covers">'+data.books.filter(b=>b.cover).slice(0,5).map(b=>'<img src="'+esc(b.cover)+'" alt="'+esc(b.title)+'">').join('')+'</div><div class="print-metrics">'+metrics.map(([label,val])=>'<div><strong>'+esc(val)+'</strong><span>'+label+'</span></div>').join('')+'</div></section>';
+    const months=(s.monthly||[]).map((seconds,i)=>({seconds,month:i+1})).filter(m=>m.seconds!=null),max=Math.max(1,...months.map(m=>m.seconds));
+    out+='<section class="print-overview"><h2>这一年的阅读</h2>';
+    if(months.length)out+='<h3>月度阅读时长</h3><div class="print-months">'+months.map(m=>'<div><span>'+m.month+'</span><i><b style="width:'+m.seconds/max*100+'%"></b></i><em>'+esc(duration(m.seconds))+'</em></div>').join('')+'</div>';
+    const categories=new Map();for(const b of data.books)categories.set(b.category||'未分类',(categories.get(b.category||'未分类')||0)+1);
+    if(categories.size)out+='<h3>书架的主题</h3><div class="print-categories">'+[...categories].sort((a,b)=>b[1]-a[1]).map(([name,count])=>'<span>'+esc(name)+' <strong>'+count+'本</strong></span>').join('')+'</div>';
+    out+='<h3>我的书单</h3><table><thead><tr><th>书名</th><th>作者</th><th>当前状态</th></tr></thead><tbody>'+data.books.map(b=>'<tr><td>'+esc(b.title)+'</td><td>'+esc(b.author||'')+'</td><td>'+esc(statusLabel(b))+'</td></tr>').join('')+'</tbody></table></section>';
+    for(const b of data.books.filter(b=>b.highlights?.length||b.thoughts?.length)){
+      out+='<article class="print-book"><div class="print-book-heading">'+(b.cover?'<img src="'+esc(b.cover)+'" alt="">':'')+'<div><p class="print-eyebrow">摘录与笔记</p><h2>'+esc(b.title)+'</h2><p class="print-author">'+esc(b.author||'')+'</p></div></div>';
+      if(b.note_coverage?.scope==='all_time')out+='<p class="print-caption">本书笔记包含历年记录。</p>';
+      if(b.highlights?.length){out+='<h3>原文摘录</h3>';for(const n of b.highlights)out+='<blockquote>'+(n.chapter_title?'<h4>'+esc(n.chapter_title)+'</h4>':'')+printParagraph(n.text)+'</blockquote>';}
+      if(b.thoughts?.length){out+='<h3>我的笔记</h3>';for(const n of b.thoughts)out+='<div class="print-thought">'+(n.created_at?'<p class="print-caption">'+esc(n.created_at)+'</p>':'')+(n.quote?'<blockquote>'+printParagraph(n.quote)+'</blockquote>':'')+printParagraph(n.text)+'</div>';}
+      out+='</article>';
+    }
+    for(const b of data.distillations||[])out+=printDistillation(b.analysis);
+    return out;
+  }
+  $('#exportMd').onclick=()=>download(new Blob([markdown()],{type:'text/markdown;charset=utf-8'}),`${data.year}-阅读年鉴.md`);
+  $('#exportPdf').onclick=()=>window.print();
+  addEventListener('beforeprint',()=>{$('#printDetails').innerHTML=printDocument();});
+  addEventListener('afterprint',()=>{$('#printDetails').replaceChildren();});
+
   // Keep chapter indicator aligned to the currently visible section.
-  if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{const active=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];if(active){$$('nav a').forEach(a=>a.getAttribute('href')==='#'+active.target.id?a.setAttribute('aria-current','location'):a.removeAttribute('aria-current'));}},{rootMargin:'-15% 0px -60% 0px'});['overview','shelf','quotes','share'].forEach(id=>observer.observe($('#'+id)));}
+  if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{const active=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];if(active){$$('.masthead nav a').forEach(a=>a.getAttribute('href')==='#'+active.target.id?a.setAttribute('aria-current','location'):a.removeAttribute('aria-current'));}},{rootMargin:'-15% 0px -60% 0px'});['overview','shelf','quotes','share'].forEach(id=>observer.observe($('#'+id)));}
   drawShare();
 })();
