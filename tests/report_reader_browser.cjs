@@ -23,10 +23,8 @@ const scope=second.input_mode==='title'?'基于公开资料，未核验全文':'
     await page.evaluate(()=>{Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>window.copied=text},configurable:true});});
     await page.locator('#ebookCopyAll').click();
     assert((await page.evaluate(()=>window.copied)).includes(first.analysis.book.title));
-    await page.evaluate(()=>{const create=ReadingShareArtwork.createDigest;ReadingShareArtwork.createDigest=config=>{window.readerShareConfig=config;return create(config);};});
     await page.locator('#ebookBookSelect').selectOption('1');
     await page.locator('#ebookBookTitle').getByText(second.analysis.book.title,{exact:true}).waitFor();
-    assert.equal(await page.evaluate(()=>window.readerShareConfig.source_mode),'sample','reader forwards the bundle source mode to the image renderer');
     assert.equal(await page.locator('#stats').textContent(),stats);
     assert(!(await page.locator('#ebookResult').textContent()).includes(first.analysis.overview));
     await page.locator('#ebookCopyAll').click();
@@ -38,12 +36,7 @@ const scope=second.input_mode==='title'?'基于公开资料，未核验全文':'
     const passageCopy=await page.evaluate(()=>window.copied);
     assert(passageCopy.startsWith('原文：\n'),'single-passage copy identifies the original text');
     assert(passageCopy.includes('为什么记住它：'),'single-passage copy separates interpretation');
-    const footer=await page.evaluate(async()=>{const a=structuredClone(window.EBOOK_RESULT.analysis);a.book={title:'Plain title',author:'Plain author'};const art=ReadingShareArtwork.createDigest({analysis:a,source_mode:'sample'}),pages=await art.pages([{id:'scope',kind:'reading_lenses',title:a.reading_lenses[0].title,text:a.reading_lenses[0].text}],'3:4'),canvas=await art.render(pages[0],'3:4');return canvas.readingLayout.text.filter(row=>row.role==='footer').map(row=>row.text).join(' ');});
-    assert.deepEqual({copyScope:copied.includes(scope),imageScope:footer.includes(scope)},{copyScope:true,imageScope:true},'exports retain the current source boundary');
-    assert(footer.includes('功能测试示例'),'sample footer is mandatory even with plain title and author');
-    const realFooter=await page.evaluate(async()=>{const a=window.EBOOK_RESULT.analysis,art=ReadingShareArtwork.createDigest({analysis:a,source_mode:'real'}),pages=await art.pages([{id:'scope',kind:'reading_lenses',title:a.reading_lenses[0].title,text:a.reading_lenses[0].text}],'3:4'),canvas=await art.render(pages[0],'3:4');return canvas.readingLayout.text.filter(row=>row.role==='footer').map(row=>row.text).join(' ');});
-    assert(!realFooter.includes('功能测试示例'),'real results must not receive a sample label');
-    assert(realFooter.includes(scope),'real results retain their source boundary');
+    assert.equal(await page.locator('#ebookShareToggle,#ebook-reading-references').count(),0,'the current reader does not expose retired share/reference controls');
     async function download(id){
       const [dl]=await Promise.all([page.waitForEvent('download'),page.locator(id).click()]);
       const file=path.join(out,dl.suggestedFilename());await dl.saveAs(file);return {file,bytes:fs.readFileSync(file)};
@@ -58,22 +51,14 @@ const scope=second.input_mode==='title'?'基于公开资料，未核验全文':'
     assert.equal(await offline.locator('#ebookUpload,#ebookTask').count(),0);
     await page.setViewportSize({width:375,height:812});
     assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)), '375px report overflow');
-    await page.locator('#ebookShareToggle').click();
-    await page.waitForFunction(()=>document.querySelector('#ebookPage').options.length>0&&!document.querySelector('#ebookExportPng').disabled);
-    assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)), '375px share overflow');
-    const preview=await page.locator('#ebookCanvas').evaluate(c=>c.toDataURL().split(',')[1]);
-    const png=await download('#ebookExportPng');
-    assert.equal(png.bytes.toString('base64'),preview,'selected-book preview must equal exported PNG');
-    const pages=await page.locator('#ebookPage option').count(),zip=(await download('#ebookExportZip')).bytes;
-    assert.equal(zip.readUInt32LE(zip.length-22),0x06054b50);assert.equal(zip.readUInt16LE(zip.length-12),pages);
     await page.locator('#ebookBookSelect').selectOption('0');
-    await page.waitForFunction(()=>document.querySelector('#ebookPage').options.length>0&&!document.querySelector('#ebookExportPng').disabled);
-    assert((await page.locator('#ebookBookTitle').textContent()).includes(first.analysis.book.title));
-    assert.notEqual(await page.locator('#ebookCanvas').evaluate(c=>c.toDataURL().split(',')[1]),preview,'switching replaces selected-book share canvas');
+    await page.locator('#ebookBookTitle').getByText(first.analysis.book.title,{exact:true}).waitFor();
+    assert.equal(await page.locator('#stats').textContent(),stats);
     const colors=await page.evaluate(()=>({body:getComputedStyle(document.body).backgroundImage,paper:getComputedStyle(document.querySelector('.paper')).backgroundImage,button:getComputedStyle(document.querySelector('#ebookCopyAll')).borderRadius}));
-    assert.deepEqual(colors,{body:'none',paper:'none',button:'8px'});
+    assert.deepEqual(colors,{body:'none',paper:'none',button:'9px'});
     await page.locator('#ebook').screenshot({path:path.join(out,'reader-375.png')});
     assert.deepEqual(errors,[]);assert(!requests.some(url=>/^https?:/.test(url)), 'offline report makes no HTTP requests');
-    console.log(JSON.stringify({status:'PASS',checks:'two-book readonly, optional reading fields, copy, MD/HTML/PNG/ZIP, switching share, unchanged annual stats, 375px, no HTTP requests/page errors',output:out}));
+    console.log(JSON.stringify({status:'PASS',checks:'two-book readonly, optional reading fields, copy, Markdown/HTML, switching books, unchanged annual stats, 375px, no HTTP requests/page errors',output:out}));
   }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
+

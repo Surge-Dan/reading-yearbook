@@ -139,6 +139,8 @@ def deliver(snapshot, materials, covers, output, previous=None, state_path=None,
         packages = merge_books(previous.get('distillations'), packages)
     data['distillations']=packages
     if previous and previous.get('year')==data['year'] and previous.get('source_mode')!='sample':
+        if re.fullmatch(r'[a-f0-9]{32}',str(previous.get('edit_scope') or '')):
+            data['edit_scope']=previous['edit_scope']
         existing={b['book_id']:b for b in previous.get('books',[])}
         for book in data['books']:
             old=existing.get(book['book_id'],{})
@@ -147,6 +149,14 @@ def deliver(snapshot, materials, covers, output, previous=None, state_path=None,
             if isinstance(old.get('note_coverage'),dict):
                 book['note_coverage']={**old['note_coverage'],'highlights':'unverified','thoughts':'unverified'}
     merge_materials(data,materials)
+    from reading_portrait import reuse_analysis, analysis_state, prepare_packet
+    data=reuse_analysis(data,previous)
+    portrait=analysis_state(data)
+    packet_path=None
+    if portrait['status']=='pending':
+        data['portrait_analysis']={'status':'pending','material_fingerprint':portrait['material_fingerprint']}
+        packet_path=Path(state_path).with_name('portrait-input.json') if state_path else Path(output).parent/'portrait-input.private.json'
+        atomic_json(packet_path,prepare_packet(data))
     errors=[{'book_id':row['book_id'],'scope':e['scope'],'message':'材料暂未取得'}
             for row in materials.get('books',[]) for e in row.get('errors',[])]
     errors.extend(snapshot.get('errors',[]))
@@ -164,8 +174,18 @@ def deliver(snapshot, materials, covers, output, previous=None, state_path=None,
         for book in saved['books']:book.pop('cover',None)
         state_path=Path(state_path);state_path.parent.mkdir(parents=True,exist_ok=True)
         atomic_json(state_path,saved)
-    return {**result,'status':'complete' if complete else 'partial',
-            'errors':len(errors),'message':data['collection_status']['message']}
+    material_summary={'books':len(data['books']),
+        'with_highlights':sum(bool(b['highlights']) for b in data['books']),
+        'with_thoughts':sum(bool(b['thoughts']) for b in data['books']),
+        'without_loaded_notes':sum(not b['highlights'] and not b['thoughts'] for b in data['books']),
+        'verified_empty_notes':sum(not b['highlights'] and not b['thoughts'] and
+            all(b.get('note_coverage',{}).get(k)=='complete' for k in ('highlights','thoughts')) for b in data['books']),
+        'incomplete_notes':sum(any(b.get('note_coverage',{}).get(k) not in ('complete','unsupported')
+            for k in ('highlights','thoughts')) for b in data['books'])}
+    return {**result,'status':'complete' if complete else 'partial','materials':material_summary,
+            'errors':len(errors),'message':data['collection_status']['message'],
+            'portrait_analysis':portrait,'portrait_packet':str(packet_path) if packet_path else None,
+            'state_path':str(state_path) if state_path else None,'ready_for_preview':portrait['status']!='pending'}
 
 
 def main():

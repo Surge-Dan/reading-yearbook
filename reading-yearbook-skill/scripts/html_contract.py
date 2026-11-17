@@ -46,14 +46,15 @@ def atomic_text(path, text):
             stream.write(text)
         # Windows readers/indexers can briefly deny replacement of a closed
         # destination. Retry only this filesystem operation, never generation.
-        for attempt in range(4):
+        delays=(0.02,0.05,0.1,0.2,0.4,0.8,1.2)
+        for attempt in range(len(delays)+1):
             try:
                 os.replace(name, path)
                 break
             except PermissionError as error:
-                if getattr(error, 'winerror', None) not in (5, 32, 33) or attempt == 3:
+                if getattr(error, 'winerror', None) not in (5, 32, 33) or attempt == len(delays):
                     raise
-                time.sleep((0.02, 0.05, 0.1)[attempt])
+                time.sleep(delays[attempt])
     finally:
         if os.path.exists(name):
             os.unlink(name)

@@ -51,3 +51,4 @@ class FocusRankingTests(unittest.TestCase):
                 with page.expect_download() as event:page.locator('#exportFocus').click()
                 self.assertEqual(event.value.suggested_filename,'2025-focus-ranking.png')
             finally:browser.close()
+

@@ -13,6 +13,25 @@ window.ReadingShareArtwork = (() => {
   const amount=n=>known(n)?String(n):'—';
   const duration=n=>!known(n)?'未记录':n>=3600?`${Math.floor(n/3600)}小时${Math.floor(n%3600/60)}分钟`:`${Math.floor(n/60)}分钟`;
   const status=b=>({finished:'已读完',reading:'在读',unstarted:'未开始',unknown:'状态未记录'}[b.status]??(b.progress==null?'进度未记录':b.progress>=100?'已读完':'在读'));
+  function calendarData(data){
+    const year=Number(data.year);
+    if(!Number.isInteger(year)||year<1900||year>2200)throw Error('日历年份无效');
+    const day=86400000,start=Date.UTC(year,0,1),end=Date.UTC(year+1,0,1);
+    let parsed=/^\d{4}-\d{2}-\d{2}$/.test(data.as_of||'')?Date.parse(data.as_of+'T00:00:00Z'):NaN;
+    if(Number.isFinite(parsed)&&new Date(parsed).toISOString().slice(0,10)!==data.as_of)parsed=NaN;
+    const cutoff=Number.isFinite(parsed)?parsed:end-day,offset=(new Date(start).getUTCDay()+6)%7;
+    const daily=data.features?.daily||{},cells=[];
+    for(let time=start;time<end;time+=day){
+      const date=new Date(time).toISOString().slice(0,10),raw=daily[date],valid=known(raw)&&raw>=0;
+      const state=time>cutoff?'future':!valid?'missing':raw===0?'zero':'reading';
+      const index=(time-start)/day+offset;
+      cells.push({date,state,seconds:state==='zero'||state==='reading'?raw:null,
+        level:state==='reading'?(raw<=900?1:raw<=1800?2:raw<=3600?3:4):0,
+        column:Math.floor(index/7),row:index%7});
+    }
+    return {cells,weeks:Math.ceil((cells.length+offset)/7),
+      observed:cells.filter(c=>c.state==='zero'||c.state==='reading').length};
+  }
   function axisNumber(value){
     if(Math.abs(value)>=1e8)return Number((value/1e8).toPrecision(3))+'亿';
     if(Math.abs(value)>=1e4)return Number((value/1e4).toPrecision(3))+'万';
@@ -165,42 +184,36 @@ window.ReadingShareArtwork = (() => {
       return cv;
     }
     function calendar(d,x,y,width){
-      const daily=data.features?.daily??{};
-      const day=86400000,start=Date.UTC(data.year,0,1),end=Date.UTC(data.year+1,0,1);
-      const cutoff=data.as_of?Date.parse(data.as_of):end-day;
-      const offset=(new Date(start).getUTCDay()+6)%7;
-      const weeks=Math.ceil(((end-start)/day+offset)/7);
-      const pitch=Math.min(14,width/weeks),size=pitch-2;
-      const colors=['#efe4d4','#efcf9b','#dda366','#bf6246','#923a30'];
-      const keys=Object.keys(daily);
-      if(!keys.length){
-        if(months.some(known)){
-          d.text('每月阅读时长',x,y,{font:SANS,size:24,weight:500});
-          d.trend(x,y+22,width,166,{small:false});
-        }else d.text('年度阅读时长',x,y,{font:SANS,size:24,weight:500});
-        return;
+      const model=calendarData(data),gridX=x+30,gridY=y+55;
+      const pitch=Math.min(14,(width-30)/model.weeks),size=pitch-3;
+      const colors=['#e7ddce','#e8c6c3','#cf9698','#aa626b',C.red];
+      function cell(left,top,state,level=0,edge=size){
+        const c=d.ctx;c.save();c.beginPath();c.roundRect(left,top,edge,edge,1.8);
+        c.fillStyle=state==='future'?'#f1ebdf':state==='missing'?C.paper:colors[level];
+        if(state==='future')c.globalAlpha=.5;c.fill();
+        if(state==='missing'){c.strokeStyle=C.line;c.lineWidth=.75;c.stroke();
+          c.beginPath();c.moveTo(left+2,top+edge-2);c.lineTo(left+edge-2,top+2);c.stroke();}
+        c.restore();
       }
-      d.text('每天的阅读记录',x,y,{font:SANS,size:24,weight:500});
-      const gridY=y+48;
-      for(let time=start;time<end;time+=day){
-        const date=new Date(time),index=(time-start)/day+offset;
-        const left=x+Math.floor(index/7)*pitch,top=gridY+(index%7)*pitch;
-        const value=daily[date.toISOString().slice(0,10)];
-        if(date.getUTCDate()===1){
-          d.text(String(date.getUTCMonth()+1),left,y+37,{font:SANS,size:17,color:C.muted});
-        }
-        if(time>cutoff)continue;
-        if(!known(value))d.rect(left+.5,top+.5,size-1,size-1,C.paper,'#eadcc7');
-        else d.rect(left,top,size,size,colors[value===0?0:value<=900?1:value<=1800?2:value<=3600?3:4]);
+      d.text('全年阅读日历',x,y,{font:SANS,size:24,weight:500});
+      for(const [row,label]of [[0,'一'],[2,'三'],[4,'五'],[6,'日']])
+        d.text(label,x+15,gridY+row*pitch+size,{font:SANS,size:17,color:C.muted,align:'right'});
+      for(const item of model.cells){
+        const left=gridX+item.column*pitch,top=gridY+item.row*pitch;
+        if(item.date.endsWith('-01'))d.text(Number(item.date.slice(5,7))+'月',left,y+37,{font:SANS,size:17,color:C.muted});
+        cell(left,top,item.state,item.level);
+        Object.assign(item,{x:left,y:top,width:size,height:size});
       }
-      const legendY=gridY+7*pitch+22;
-      d.rect(x,legendY-12,12,12,C.paper,'#eadcc7');
-      d.text('缺记录',x+21,legendY,{font:SANS,size:18,color:C.muted});
-      d.text('空白为未到日期',x+116,legendY,{font:SANS,size:18,color:C.muted});
-      d.text('0分钟',x+475,legendY,{font:SANS,size:18,color:C.muted});
-      colors.forEach((fill,i)=>d.rect(x+540+i*19,legendY-13,14,14,fill));
-      d.text('超过60分钟',x+645,legendY,{font:SANS,size:18,color:C.muted});
-      d.manifest.charts.push({kind:'calendar',weeks,days:keys.length});
+      const legendY=gridY+7*pitch+27;
+      d.text(model.observed?`已载入${model.observed}天明细`:'逐日明细尚未取得',x,legendY,{font:SANS,size:18,color:C.muted});
+      for(const [dx,state,label]of [[225,'zero','0分钟'],[322,'missing','缺记录'],[427,'future','未到日期']]){
+        cell(x+dx,legendY-13,state,0,12);d.text(label,x+dx+20,legendY,{font:SANS,size:18,color:C.muted});
+      }
+      d.text('少',x+width-151,legendY,{font:SANS,size:18,color:C.muted});
+      for(let i=1;i<=4;i++)cell(x+width-122+(i-1)*20,legendY-13,'reading',i,12);
+      d.text('多',x+width,legendY,{font:SANS,size:18,color:C.muted,align:'right'});
+      d.manifest.charts.push({kind:'calendar',weeks:model.weeks,days:model.observed,
+        year:data.year,cells:model.cells,grid:{x:gridX,y:gridY,pitch,size},colors});
     }
     async function focusPage(d){
       const {M,R,H,text,cover,rect}=d,rank=focusRanking(data.books);
@@ -481,5 +494,5 @@ window.ReadingShareArtwork = (() => {
     const total=rows.reduce((n,b)=>n+b.reading_seconds,0);
     return {rows:ranked,total,topShare:rows.filter(b=>b.reading_seconds>0).length>=3&&total>0?rows.slice(0,3).reduce((n,b)=>n+b.reading_seconds,0)/total:null};
   }
-  return {create,createDigest,focusRanking,monthlyScale,axisNumber};
+  return {create,createDigest,focusRanking,monthlyScale,axisNumber,calendarData};
 })();

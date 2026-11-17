@@ -18,6 +18,17 @@ import skill_release
 
 
 class DeliveryTests(unittest.TestCase):
+    def test_preview_reuses_origin_after_restart_and_handles_conflict(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'index.html';path.write_text('<h1>受控示例</h1>','utf-8')
+            first=preview_server(path);port=first.server_port
+            second=preview_server(path)
+            try:self.assertNotEqual(second.server_port,port)
+            finally:second.server_close();first.server_close()
+            reopened=preview_server(path)
+            try:self.assertEqual(reopened.server_port,port)
+            finally:reopened.server_close()
+
     def test_append_update_preserves_annual_data_and_other_books(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp)/'index.html'
@@ -102,3 +113,4 @@ class DeliveryTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

@@ -36,8 +36,11 @@ const {chromium}=require('playwright'),{pathToFileURL}=require('url'),fs=require
    for(const gap of r.layout.spacing)assert(gap.gap>=14,`${label}: number and label too close: ${gap.gap}`);
    for(const im of r.layout.images){assert(im.x>=30&&im.x+im.w<=870,`${label}: image exceeds frame`);assert(im.y+im.h<=r.layout.footerTop-16,`${label}: rotated image reaches footer`);}
    if(r.layout.page==='cover'){
-     const time=r.layout.text.find(t=>['每天的阅读记录','每月阅读时长','年度阅读时长'].includes(t.text)),units=r.layout.text.filter(t=>['本读过','本读完','天阅读','条笔记'].includes(t.text));
+     const time=r.layout.text.find(t=>t.text==='全年阅读日历'),units=r.layout.text.filter(t=>['本读过','本读完','天阅读','条笔记'].includes(t.text));
      assert(time&&units.length===4);
+     const calendar=r.layout.charts.find(c=>c.kind==='calendar');assert(calendar&&calendar.cells.length>=365);
+     assert(!r.layout.charts.some(c=>c.kind==='monthly'),'cover must keep the annual calendar even without daily data');
+     for(const cell of calendar.cells){assert(cell.x>=64&&cell.x+cell.width<=837);assert(cell.y+cell.height<r.layout.footerTop-12);}
      assert(time.y-Math.max(...units.map(t=>t.y+t.h))>=24,`${label}: time group too close to headline metrics`);
    }
    if(r.layout.page==='stats'){
@@ -61,6 +64,7 @@ const {chromium}=require('playwright'),{pathToFileURL}=require('url'),fs=require
  fs.writeFileSync(path.join(out,'fonts.json'),JSON.stringify(fonts,null,2));
  for(const ratio of ['3:4','1:1','4:5'])for(const kind of ['cover','stats','distribution','timeline','book']){
    const r=await render(kind,ratio),label=kind+'-'+ratio.replace(':','-');validate(r,label);
+   if(kind==='cover')fs.writeFileSync(path.join(out,label+'.png'),Buffer.from(r.png.split(',')[1],'base64'));
    assert.equal(r.layout.height,ratio==='1:1'?900:ratio==='4:5'?1125:1200);
  }
  const N=await page.locator('#reading-data').evaluate(n=>JSON.parse(n.textContent).books.length);

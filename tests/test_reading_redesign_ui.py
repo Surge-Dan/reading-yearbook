@@ -45,7 +45,8 @@ class ReadingRedesignBrowserTests(unittest.TestCase):
                 for title,label in [('尚未检查的方法','needs_review'),('仅供参考的方法','reference'),('检查完成的方法','validated')]:
                     article = page.locator('[data-reading-section="methods"] article').filter(has=page.get_by_role('heading',name=title,exact=True))
                     self.assertNotIn(label,article.inner_text())
-                    self.assertIn(label,page.locator('[data-reading-section="references"]').text_content())
+                    self.assertEqual(page.locator('[data-reading-section="references"]').count(),0)
+                    self.assertIn(label,page.evaluate('EBOOK_RESULT.analysis.methods.map(m=>m.verification.status)'))
             finally: browser.close()
 
     def test_review_and_title_stage_names_are_readable(self):
@@ -66,7 +67,7 @@ class ReadingRedesignBrowserTests(unittest.TestCase):
                     page.unroute('**/*',route_request)
             finally: browser.close()
 
-    def test_reading_structure_review_copy_and_real_share_renderer(self):
+    def test_reading_structure_review_copy_and_markdown(self):
         a = analysis_reply()
         source = dict(a['themes'][0]['sources'][0], source_type='author',url='https://example.org/research/'+'long-location/'*30)
         a.update(input_mode='title', methods=[], cases=[], counterexamples=[], glossary=[], references=[],
@@ -82,9 +83,9 @@ class ReadingRedesignBrowserTests(unittest.TestCase):
                 html = offline_page(a, '测试正文').replace('<script id="ebook-app-mounted">',capture+'<script id="ebook-app-mounted">')
                 page.set_content(html, wait_until='load')
                 self.assertEqual(page.locator('#ebookResult > section > h3').all_text_contents(),
-                                 ['书籍概览','核心观点','对我的启发','我的书评','参考资料'])
-                self.assertIn('部分解读', page.locator('[data-reading-section="references"]').text_content())
-                self.assertIn('尚缺关键章节', page.locator('[data-reading-section="references"]').text_content())
+                                 ['书籍概览','核心观点','对我的启发','我的书评'])
+                self.assertEqual(page.locator('[data-reading-section="references"]').count(),0)
+                self.assertEqual(page.evaluate('EBOOK_RESULT.analysis.reading_status.reason'),'尚缺关键章节')
                 self.assertFalse(page.evaluate('document.documentElement.scrollWidth>innerWidth'))
                 self.assertEqual(page.evaluate('getComputedStyle(document.documentElement).scrollBehavior'), 'auto')
                 review = page.locator('[data-reading-section="review"]')
@@ -93,30 +94,19 @@ class ReadingRedesignBrowserTests(unittest.TestCase):
                 page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copied=text;}}})")
                 review.get_by_role('button', name='复制这条').first.click()
                 copied = page.evaluate('window.copied')
-                for text in ('我更在意方法停下来的条件。', '未核验全文'): self.assertIn(text, copied)
+                self.assertIn('我更在意方法停下来的条件。',copied)
                 self.assertNotIn('AI 书评', copied)
-                self.assertEqual(page.locator('[data-ebook-share="review-0"]').count(), 1)
-                page.locator('#ebookShareToggle').click()
-                page.wait_for_function("() => !document.getElementById('ebookExportPng').disabled")
-                share_text = page.evaluate("renderedShareItems.find(item=>item.id==='review-0').text")
-                self.assertEqual('我更在意方法停下来的条件。', share_text)
-                for text in (source['quote'],source['url']): self.assertNotIn(text,share_text)
-                self.assertIn('我的书评 · 1', page.locator('#ebookPage').inner_text())
-                self.assertGreater(page.locator('#ebookCanvas').evaluate('(c)=>c.width'), 0)
-                review_page = page.locator('#ebookPage option').filter(has_text='我的书评 · 1').first.get_attribute('value')
-                page.locator('#ebookPage').select_option(review_page)
-                with page.expect_download() as download:
-                    page.locator('#ebookExportPng').click()
-                self.assertTrue(download.value.suggested_filename.endswith('.png'))
-                self.assertGreater(Path(download.value.path()).stat().st_size, 1000)
-                self.assertEqual(page.locator('.ebook-reading-nav a').all_text_contents(), ['书籍概览','核心观点','对我的启发','我的书评','参考资料'])
+                self.assertEqual(page.locator('#ebookShareToggle,[data-ebook-share="review-0"]').count(),0)
+                with page.expect_download() as download:page.locator('#ebookDownloadMd').click()
+                self.assertIn('我更在意方法停下来的条件。',Path(download.value.path()).read_text('utf-8'))
+                self.assertEqual(page.locator('.ebook-reading-nav a').all_text_contents(), ['书籍概览','核心观点','对我的启发','我的书评'])
                 page.set_viewport_size({'width':1280,'height':900})
                 self.assertFalse(page.evaluate('document.documentElement.scrollWidth>innerWidth'))
                 self.assertEqual(review.evaluate('(e)=>getComputedStyle(e).opacity'), '1')
-                page.locator('.ebook-reading-nav summary').click()
+                page.set_viewport_size({'width':1280,'height':420})
                 page.locator('.ebook-reading-nav a').filter(has_text='核心观点').click()
                 page.wait_for_function("() => document.querySelector('.ebook-reading-nav a[aria-current]').textContent==='核心观点'", timeout=3000)
-                self.assertEqual(page.locator('.ebook-reading-nav').evaluate('(e)=>getComputedStyle(e).position'), 'static')
+                self.assertEqual(page.locator('.ebook-reading-nav').evaluate('(e)=>getComputedStyle(e).position'), 'sticky')
             finally: browser.close()
 
     def test_old_result_and_failed_review_remain_readable(self):
@@ -128,7 +118,8 @@ class ReadingRedesignBrowserTests(unittest.TestCase):
             try:
                 page = browser.new_page()
                 page.set_content(offline_page(a, ''), wait_until='load')
-                self.assertIn('书评暂未生成', page.locator('[data-reading-section="references"]').text_content())
+                self.assertEqual(page.locator('[data-reading-section="references"]').count(),0)
+                self.assertEqual(page.evaluate('EBOOK_RESULT.analysis.review.reason'),'引用待核查')
                 self.assertEqual(page.locator('[data-ebook-share^="review-"]').count(), 0)
                 self.assertEqual(page.get_by_role('heading',name='值得带走的方法',exact=True).count(), 0)
                 self.assertEqual(page.get_by_role('heading',name='核心观点',exact=True).count(), 1)
@@ -140,8 +131,9 @@ class ReadingRedesignBrowserTests(unittest.TestCase):
                 page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copied=text;}}})")
                 page.locator('[data-reading-section="cases"]').get_by_role('button',name='复制这条').click()
                 self.assertIn('不是原书案例',page.evaluate('window.copied'))
-                self.assertIn('所提供正文',page.evaluate('window.copied'))
+                self.assertEqual(page.evaluate('EBOOK_RESULT.analysis.cases[0].case_origin'),'ai_exercise')
             finally: browser.close()
 
 
 if __name__ == '__main__': unittest.main()
+

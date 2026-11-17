@@ -438,3 +438,4 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(m.distill(p,out,r)['quality_status'],'completed')
 
 if __name__ == '__main__': unittest.main()
+

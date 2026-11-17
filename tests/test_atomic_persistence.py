@@ -29,7 +29,7 @@ class AtomicPersistenceTests(unittest.TestCase):
                 attempts.append(source)
                 self.assertEqual(target.read_text('utf-8'), 'old')
                 self.assertEqual(Path(source).read_text('utf-8'), '完整的新状态')
-                if len(attempts) < 3:
+                if len(attempts) < 5:
                     raise windows_lock()
                 replace(source, destination)
 
@@ -49,10 +49,11 @@ class AtomicPersistenceTests(unittest.TestCase):
                 calls.append(args)
                 raise windows_lock()
 
-            with patch('html_contract.os.replace', side_effect=always_busy):
+            with patch('html_contract.os.replace', side_effect=always_busy), patch('html_contract.time.sleep') as sleep:
                 with self.assertRaises(PermissionError):
                     atomic_text(target, 'new')
-            self.assertEqual(len(calls), 4)
+            self.assertLessEqual(len(calls),8)
+            self.assertLessEqual(sum(call.args[0] for call in sleep.call_args_list),3)
             self.assertEqual(target.read_text('utf-8'), 'old')
             self.assertEqual(list(Path(directory).iterdir()), [target])
 
@@ -76,3 +77,4 @@ class AtomicPersistenceTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

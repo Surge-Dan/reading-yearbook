@@ -296,12 +296,19 @@
   const pages=[{id:'cover',title:'封面',kind:'cover'},{id:'stats',title:'阅读统计',kind:'stats'},
     {id:'distribution',title:'阅读分布',kind:'distribution'},{id:'timeline',title:'阅读时间线',kind:'timeline'}];
   function bookSharePage(book){
-    const original=book.highlights[0]?.text||book.thoughts.find(note=>note.quote?.trim())?.quote;
+    const best=book.highlights.reduce((result,n)=>{
+      const score=text=>{const value=text.trim(),size=[...value].length;return (size>=30&&size<=180?4:size<=280?1:0)+(/[。！？.!?][”」』"']?$/.test(value)?2:0)-(/^(因此|所以|上述|这件事|这句话|他|她|它|…)/.test(value)?2:0);};
+      return !result||score(n.text)>score(result.text)?n:result;
+    },null);
+    const original=best?.text||book.thoughts.find(note=>note.quote?.trim())?.quote;
     return {id:'book-'+book.book_id,title:book.title,kind:'book',book,
       quote:original||book.thoughts[0]?.text||'',textKind:original?'highlight':'thought'};
   }
   data.books.forEach(book=>pages.push(bookSharePage(book)));
   state.selection=new Set(pages.map(p=>p.id));
+  const sharePreferences=window.ReadingShareState.create({data,pages,state,
+    notice:message=>$('#exportStatus').textContent=message});
+  sharePreferences.restore();$('#ratio').value=state.ratio;
   let shareBookComposing=false;
   const bookShareBox=$('#bookSharePicker'),bookShareMenu=$('#bookShareMenu'),bookShareTrigger=$('#bookShareTrigger');
   function closeShareBooks(restore=false){bookShareMenu.hidden=true;bookShareTrigger.setAttribute('aria-expanded','false');if(restore)bookShareTrigger.focus({preventScroll:true});}
@@ -351,7 +358,7 @@
     });
     $$('[data-page]').forEach(el=>{el.checked=state.selection.has(el.dataset.page);el.disabled=state.busy;el.onchange=()=>{if(state.busy)return;recordUndo();el.checked?state.selection.add(el.dataset.page):state.selection.delete(el.dataset.page);drawShare();};});
     $$('[data-preview]').forEach(el=>{el.disabled=state.busy;el.setAttribute('aria-pressed',String(state.preview===el.dataset.preview));el.onclick=()=>{if(state.busy)return;state.preview=el.dataset.preview;drawShare();};});
-    filterShareBooks();updatePreview();
+    filterShareBooks();sharePreferences.save();updatePreview();
   }
   $('#undoSelection').onclick=()=>{const old=state.undo.pop();if(!old||state.busy)return;state.selection=new Set(old.ids);state.preview=old.preview;for(const [id,q,kind]of old.quotes){const p=pages.find(p=>p.id===id);if(p){p.quote=q;p.textKind=kind;}}drawShare();};
   $('#ratio').onchange=()=>{if(state.busy)return;state.ratio=$('#ratio').value;drawShare();};

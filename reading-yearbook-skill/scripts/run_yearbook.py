@@ -7,6 +7,7 @@ import re
 import shutil
 import tempfile
 import uuid
+import time
 from copy import deepcopy
 from pathlib import Path
 
@@ -109,16 +110,28 @@ def _clear_profile_files(output_dir: Path) -> None:
                 path.unlink()
 
 
+def _replace_directory(source: Path, destination: Path) -> None:
+    delays = (0.02, 0.05, 0.1, 0.2, 0.4, 0.8, 1.2)
+    for attempt in range(len(delays) + 1):
+        try:
+            os.replace(source, destination)
+            return
+        except PermissionError as error:
+            if getattr(error, 'winerror', None) not in (5, 32, 33) or attempt == len(delays):
+                raise
+            time.sleep(delays[attempt])
+
+
 def _publish_staging(staging_dir: Path, output_dir: Path) -> None:
     backup_dir = output_dir.parent / f".{output_dir.name}.backup-{uuid.uuid4().hex}"
     had_output = output_dir.exists()
     if had_output:
-        os.replace(output_dir, backup_dir)
+        _replace_directory(output_dir, backup_dir)
     try:
-        os.replace(staging_dir, output_dir)
+        _replace_directory(staging_dir, output_dir)
     except Exception:
         if had_output and backup_dir.exists() and not output_dir.exists():
-            os.replace(backup_dir, output_dir)
+            _replace_directory(backup_dir, output_dir)
         raise
     if backup_dir.exists():
         shutil.rmtree(backup_dir)

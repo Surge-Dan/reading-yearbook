@@ -38,11 +38,8 @@ class WarmUITests(unittest.TestCase):
             try:
                 page=browser.new_page(reduced_motion='reduce')
                 page.goto(target.as_uri(),wait_until='networkidle')
-                page.locator('#ebookShareToggle').click()
-                self.assertEqual(page.locator('#ebookExportZip').evaluate('el=>getComputedStyle(el).backgroundColor'),'rgb(184, 50, 37)')
-                self.assertEqual(page.locator('#ebookRatio').evaluate('el=>getComputedStyle(el).borderRadius'),'10px')
-                self.assertEqual(page.locator('#ebookRatio').evaluate('el=>getComputedStyle(el).backgroundColor'),'rgb(255, 253, 246)')
-                self.assertEqual(page.locator('#ebookDownloadMd').evaluate('el=>getComputedStyle(el).color'),'rgb(32, 90, 197)')
+                self.assertEqual(page.locator('#ebookShareToggle,#ebookRatio').count(),0)
+                self.assertEqual(page.locator('#ebookDownloadMd').evaluate('el=>getComputedStyle(el).color'),'rgb(184, 50, 37)')
                 page.set_viewport_size({'width':375,'height':950})
                 self.assertFalse(page.evaluate('document.documentElement.scrollWidth>innerWidth'))
             finally:browser.close()
@@ -122,3 +119,4 @@ class WarmUITests(unittest.TestCase):
                     self.assertFalse(page.evaluate('document.documentElement.scrollWidth>innerWidth'))
                 self.assertEqual(errors,[])
             finally:browser.close()
+

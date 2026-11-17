@@ -32,8 +32,8 @@ class MonthlyAxisTests(unittest.TestCase):
                     self.assertEqual(scale['ticks'][-1],scale['top'])
                 for chart in results['charts']:
                     labels=[t['text'] for t in chart['text']]
-                    for month in range(1,13):self.assertIn(str(month),labels)
-                    for month in range(1,13):self.assertNotIn(str(month)+'月',labels)
+                    for month in range(1,13):self.assertIn(str(month)+('月' if chart['page']=='cover' else ''),labels)
+                    if chart['page']=='cover':self.assertEqual(len(next(c for c in chart['charts'] if c['kind']=='calendar')['cells']),365)
                     for t in chart['text']:
                         self.assertGreaterEqual(t['x'],20)
                         self.assertLessEqual(t['x']+t['w'],880)
@@ -54,3 +54,4 @@ class MonthlyAxisTests(unittest.TestCase):
                             dy=min(a['y']+a['h'],b['y']+b['h'])-max(a['y'],b['y'])
                             self.assertFalse(dx>2 and dy>2,(a['text'],b['text']))
             finally:browser.close()
+

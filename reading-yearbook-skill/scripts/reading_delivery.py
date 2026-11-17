@@ -6,8 +6,10 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import re
+import socket
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -51,6 +53,9 @@ def deliver(output, report=None, packages=None):
     if report:
         from build_reading_html import build_html
         data = read_report(report)
+        from reading_portrait import analysis_state
+        if (data.get('portrait_analysis') or {}).get('status')=='pending' and analysis_state(data)['status']=='pending':
+            raise ValueError('阅读侧写尚待当前助手分析。先完成 portrait-input 标注并应用，再交付预览；不是用户记录不足。')
         data['distillations'] = merge_books(data.get('distillations'), packages, data.get('source_mode', 'real'))
         # The same packaged builder supplies CSS, fonts, illustration and exports.
         # Validate before atomic replacement; keep all annual data and old books.
@@ -63,7 +68,7 @@ def deliver(output, report=None, packages=None):
     return {'output': str(output), 'kind': 'book', 'distillations': 1}
 
 
-def preview_server(path, port=0):
+def preview_server(path, port=None):
     path = Path(path).resolve()
     if not path.is_file():
         raise ValueError('预览文件尚未生成。')
@@ -86,7 +91,22 @@ def preview_server(path, port=0):
             self.wfile.write(body)
         def log_message(self, *_):
             pass
-    return ThreadingHTTPServer(('127.0.0.1', port), Handler)
+    # Keep the browser origin stable when reopening the same artifact. A new
+    # random port on every launch would silently discard localStorage choices.
+    class PreviewHTTPServer(ThreadingHTTPServer):
+        # Windows SO_REUSEADDR can bind a second listener to a live server's
+        # address. Never allow two reports to share a port unpredictably.
+        allow_reuse_address=not hasattr(socket,'SO_EXCLUSIVEADDRUSE')
+        def server_bind(self):
+            if hasattr(socket,'SO_EXCLUSIVEADDRUSE'):
+                self.socket.setsockopt(socket.SOL_SOCKET,socket.SO_EXCLUSIVEADDRUSE,1)
+            super().server_bind()
+    preferred=49152+int(hashlib.sha256(str(path).encode('utf-8')).hexdigest()[:8],16)%16000 if port is None else port
+    try:
+        return PreviewHTTPServer(('127.0.0.1', preferred), Handler)
+    except OSError:
+        if port is not None:raise
+        return PreviewHTTPServer(('127.0.0.1', 0), Handler)
 
 
 def main():
@@ -96,7 +116,7 @@ def main():
     parser.add_argument('--output', type=Path, help='默认更新 --report；单独蒸馏需指定HTML路径')
     parser.add_argument('--serve', action='store_true', help='返回本地HTTP预览URL并保持服务运行')
     parser.add_argument('--open', action='store_true', help='在系统默认浏览器打开HTTP预览（隐含--serve）')
-    parser.add_argument('--port', type=int, default=0)
+    parser.add_argument('--port', type=int, default=None, help='默认复用同一报告的候选端口；0使用临时端口')
     args = parser.parse_args()
     try:
         if not args.output and not args.report:

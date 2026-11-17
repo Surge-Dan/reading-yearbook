@@ -8,6 +8,7 @@ import json
 import math
 import re
 import io
+import uuid
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from html_contract import category_name, reading_status, safe_link, atomic_text
@@ -198,7 +199,11 @@ def adapt_data(raw, year=None):
         values.append(value)
     # Do not present the partly collected current month as a complete month.
     complete_months = int(as_of[5:7]) - 1 if as_of and int(as_of[:4]) == year else 12
+    edit_scope=raw.get('edit_scope')
+    if not isinstance(edit_scope,str) or not re.fullmatch(r'[a-f0-9]{32}',edit_scope):
+        edit_scope=uuid.uuid4().hex
     data = {'schema_version': 'reading-html/1.2', 'year': year, 'as_of': as_of,
+            'edit_scope':edit_scope,
             'source_mode': str(raw.get('source_mode', 'unknown')),
             'verification_status': str(raw.get('coverage', {}).get('verification_status') or raw.get('verification_status') or 'unverified'),
             'coverage': {'loaded_books': len(books), 'annual_books': total,
@@ -229,6 +234,9 @@ def adapt_data(raw, year=None):
         from reading_portrait import profile
         profile(raw['reading_signals'],data['books'],year)
         data['reading_signals']=[{k:s[k] for k in ('source_id','axis','side','reason','source_kind') if k in s} for s in raw['reading_signals']]
+    meta=raw.get('portrait_analysis')
+    if isinstance(meta,dict) and meta.get('status') in ('pending','complete'):
+        data['portrait_analysis']={k:meta[k] for k in ('status','method','material_fingerprint') if k in meta}
     return data
 
 
@@ -443,6 +451,8 @@ def distillation_can_be_shared(bundle, private, public):
 
 def build_html(data, output, covers=None, art_assets=None, require_all_covers=False, allow_draft=False):
     """Whitelist data at adapter boundary; no raw payload embedded."""
+    if not re.fullmatch(r'[a-f0-9]{32}',str(data.get('edit_scope') or '')):
+        data['edit_scope']=uuid.uuid4().hex
     validated_distillations(data.get('distillations'), data.get('source_mode'))
     private_books = [book for book in data['books'] if book.get('secret')]
     if private_books:
@@ -508,7 +518,7 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
     art['dailyDurationBins'] = DAILY_DURATION_BINS
     replacements = {'__DATA__': serialized, '__STYLE__': (ROOT / 'assets' / 'reading-app.css').read_text('utf-8') + '\n' + (ROOT / 'assets' / 'reading-art.css').read_text('utf-8') + '\n' + (ROOT / 'assets' / 'ebook-app.css').read_text('utf-8'),
                     '__ART__': json.dumps(art),
-                    '__APP__': (ROOT / 'assets' / 'reading-app.js').read_text('utf-8'),
+                    '__APP__': '\n'.join((ROOT / 'assets' / name).read_text('utf-8') for name in ('reading-share-state.js','reading-app.js')),
                     '__SHARE_APP__': (ROOT / 'assets' / 'reading-share-art.js').read_text('utf-8'),
                     '__EBOOK_APP__': (ROOT / 'assets' / 'ebook-app.js').read_text('utf-8'),
                     '__EBOOK_SECTION__': reader_section(),

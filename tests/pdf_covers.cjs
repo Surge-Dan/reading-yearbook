@@ -22,3 +22,4 @@ await page.locator('.share-more-formats summary').click();await page.locator('#e
 assert(await page.evaluate(()=>window.printResult));assert(await page.locator('.print-cover-placeholder').count()>=2);
 console.log('PASS: repeat/cancel, corrupt and missing covers use named placeholders without blank frames');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});
+

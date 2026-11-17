@@ -44,3 +44,4 @@ async function fixture(browser){
   };
   try{for(const [name,test]of Object.entries(cases)){const f=await fixture(browser);try{await test(f);assert.deepEqual(f.errors,[]);console.log('PASS '+name);}catch(e){failures.push(name+': '+e.message);console.error('FAIL '+name+': '+e.message);}finally{await f.close();}}assert.deepEqual(failures,[]);}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
+

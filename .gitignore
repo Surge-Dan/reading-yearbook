@@ -5,4 +5,9 @@ output/
 demo-output/
 
 reading-yearbook-skill/.vendor/
-.superpowers/
+node_modules/
+.venv/
+.ebook-workbench/
+.cache/
+.history/
+.diagnostics/

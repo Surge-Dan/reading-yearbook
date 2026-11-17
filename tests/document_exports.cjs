@@ -31,3 +31,4 @@ const fs=require('fs'),path=require('path'),assert=require('assert/strict');
  await context.close();console.log('PASS',kind,'Markdown, PDF, content scope, escaping and cleanup');
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
+

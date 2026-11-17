@@ -87,7 +87,7 @@ class JointExtractionTests(unittest.TestCase):
 
     def test_legacy_five_category_cache_reuses_understanding_but_not_joint_extraction(self):
         namespace={'__file__':pipeline.__file__,'__name__':'legacy_pipeline'}
-        source=subprocess.check_output(['git','show','dfbea095e843d296a9e212a8172a11dd76a65da5:reading-yearbook-skill/scripts/ebook_pipeline.py']).decode('utf-8')
+        source=(Path(__file__).parent/'fixtures/ebook-pipeline-dfbea09.py.txt').read_text('utf-8')
         exec(compile(source,'legacy_pipeline','exec'),namespace)
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'source.txt';path.write_text('受控短篇正文。',encoding='utf-8');out=Path(tmp)/'out'
@@ -168,3 +168,4 @@ class TitleBundleTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+

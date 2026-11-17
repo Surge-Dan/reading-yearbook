@@ -341,3 +341,4 @@ class SessionRecoveryTests(unittest.TestCase):
         self.assertIsNone(current_runner.revoked)
         self.assertIs(self.store.workers[job], current_worker)
         self.assertEqual(self.store.get(job)['assistant_session'], 'old-chat')
+

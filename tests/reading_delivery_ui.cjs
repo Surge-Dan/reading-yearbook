@@ -15,3 +15,4 @@ try{for(const [index,input]of process.argv.slice(2).entries()){
  }
  assert.deepEqual(errors,[]);await page.close();console.log('PASS',index===0?'annual report':'standalone book','shared reader, navigation, widths and script execution');
 }}finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});
+

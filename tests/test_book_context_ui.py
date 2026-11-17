@@ -19,11 +19,11 @@ class BookContextBrowserTests(unittest.TestCase):
                     page = browser.new_page(viewport={'width':width,'height':812}, reduced_motion='reduce')
                     page.set_content(offline_page(a,''), wait_until='load')
                     nav = page.locator('.ebook-reading-nav')
-                    self.assertEqual(nav.evaluate('(e)=>getComputedStyle(e).position'), 'static')
+                    self.assertEqual(nav.evaluate('(e)=>getComputedStyle(e).position'), 'sticky')
                     nav.evaluate('(e)=>e.open=true')
                     nav.get_by_role('link',name='核心观点',exact=True).click()
                     self.assertTrue(page.url.endswith('#ebook-reading-themes'))
-                    self.assertLess(nav.evaluate('(e)=>e.getBoundingClientRect().bottom'), 0)
+                    self.assertGreater(nav.evaluate('(e)=>e.getBoundingClientRect().bottom'), 0)
                     self.assertFalse(page.evaluate('document.documentElement.scrollWidth>innerWidth'))
                     page.close()
             finally:
@@ -50,10 +50,11 @@ class BookContextBrowserTests(unittest.TestCase):
                     for text in ('查看依据','核验状态','AI 解释：'):
                         self.assertNotIn(text, main.inner_text())
                     self.assertNotIn('AI 撰写', page.locator('[data-reading-section="review"]').inner_text())
-                    refs = page.locator('[data-reading-section="references"]')
-                    self.assertIn(source['quote'], refs.text_content())
-                    self.assertIn('内部原因', refs.text_content())
-                    self.assertIn('补充参考的独立引文', refs.text_content())
+                    self.assertEqual(page.locator('[data-reading-section="references"]').count(),0)
+                    retained=page.evaluate('EBOOK_RESULT.analysis')
+                    self.assertEqual(retained['themes'][0]['sources'][0]['quote'],source['quote'])
+                    self.assertEqual(retained['reading_status']['reason'],'内部原因')
+                    self.assertEqual(retained['glossary'][0]['sources'][0]['quote'],'补充参考的独立引文')
                     page.evaluate("Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copied=text;}}})")
                     page.locator('[data-reading-section="review"]').get_by_role('button',name='复制这条').click()
                     self.assertIn('我喜欢这个具体的选择。', page.evaluate('window.copied'))
@@ -69,3 +70,4 @@ class BookContextBrowserTests(unittest.TestCase):
 
 
 if __name__ == '__main__': unittest.main()
+

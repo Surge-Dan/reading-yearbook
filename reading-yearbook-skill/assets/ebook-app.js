@@ -47,6 +47,7 @@
     const resizeReading=()=>root.style.setProperty('--distill-nav-top',((masthead?.getBoundingClientRect().height||0)+1)+'px');
     resizeReading();if(masthead)new ResizeObserver(resizeReading).observe(masthead);
     window.addEventListener('scroll',()=>updateReading(),{passive:true});
+    window.addEventListener('resize',()=>{resizeReading();updateReading();});
     function renderResult(){
       if(!result?.analysis)return;
       const a=result.analysis,light=a.pipeline_version?.startsWith('reading-light-'),container=$('ebookResult');window.EBOOK_RESULT=result;
@@ -80,8 +81,9 @@
       const themes=container.querySelector('[data-reading-section="themes"]');
       if(themes){const grid=el('div',null,'distill-theme-grid');themes.querySelectorAll(':scope>article').forEach(a=>grid.append(a));themes.append(grid);}
       updateReading=()=>{
-        const edge=(masthead?.getBoundingClientRect().height||0)+155;
-        let current=sections.filter(({node})=>node.getBoundingClientRect().top<=edge).at(-1)||sections[0];
+        const edge=nav.getBoundingClientRect().bottom+16;
+        const padding=parseFloat(getComputedStyle(document.scrollingElement||document.documentElement).scrollPaddingTop)||0;
+        let current=sections.filter(({node})=>node.getBoundingClientRect().top<=Math.max(edge,padding+(parseFloat(getComputedStyle(node).scrollMarginTop)||0))+1).at(-1)||sections[0];
         if(innerHeight+scrollY>=document.documentElement.scrollHeight-4)current=sections.at(-1);
         for(const entry of sections){if(entry===current){entry.link.setAttribute('aria-current','location');entry.link.dataset.active='true';}else{entry.link.removeAttribute('aria-current');delete entry.link.dataset.active;}}
       };updateReading();

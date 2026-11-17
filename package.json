@@ -1,0 +1,11 @@
+{
+  "name": "reading-yearbook-checks",
+  "private": true,
+  "scripts": {
+    "test": "python -X utf8 tests/run_checks.py",
+    "test:quick": "python -X utf8 tests/run_checks.py --quick"
+  },
+  "devDependencies": {
+    "playwright": "1.60.0"
+  }
+}

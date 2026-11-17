@@ -368,7 +368,7 @@ class VerificationTests(unittest.TestCase):
         import ebook_pipeline
         from test_ebook_core import ContractRunner
         namespace={'__file__':ebook_pipeline.__file__,'__name__':'base_pipeline'}
-        source=subprocess.check_output(['git','show','a9c06c6:reading-yearbook-skill/scripts/ebook_pipeline.py']).decode('utf-8')
+        source=(Path(__file__).parent/'fixtures/ebook-pipeline-a9c06c6.py.txt').read_text('utf-8')
         exec(compile(source,'base_pipeline','exec'),namespace)
         class Stop(ContractRunner):
             def generate(self,prompt,*args,**kwargs):
@@ -390,3 +390,4 @@ class VerificationTests(unittest.TestCase):
             for key in common: self.assertEqual(old[key],new[key])
 
 if __name__=='__main__': unittest.main()
+

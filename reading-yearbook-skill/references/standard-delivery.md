@@ -29,6 +29,8 @@ python -X utf8 scripts/reading_delivery.py --report <本次报告/index.html> --
 python -X utf8 scripts/reading_delivery.py --report <本次报告/index.html> --open
 ```
 
+默认按报告路径选择稳定端口，重开同一路径时保留浏览器来源；端口被占用时改用临时端口，--port 0也显式使用临时端口。不同来源的浏览器存储不互通。
+
 本地服务需由助手保持运行；页面刷新读取最新文件。服务关闭后，HTML仍可离线浏览，重新预览时恢复本地服务。仅暴露指定HTML，不能把含书籍正文、密钥或中间结果的工作目录直接作为HTTP根目录。
 
 ## 后续蒸馏

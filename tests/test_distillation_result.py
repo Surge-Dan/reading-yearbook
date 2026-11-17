@@ -295,3 +295,4 @@ class BundleTests(unittest.TestCase):
                     bundle=api.make_bundle(analysis,document)
                     self.assertEqual(api.validate_bundle(bundle),bundle)
 if __name__ == '__main__': unittest.main()
+

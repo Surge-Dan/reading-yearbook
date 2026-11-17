@@ -104,3 +104,4 @@ const reportFile=path.join(out,'live-report.json');
     console.log(JSON.stringify({status:'pass',browser_checks:report.browser_checks,out}));
   }finally{await browser.close();}
 })().catch(e=>{console.error(e.message);process.exitCode=1;});
+

@@ -8,7 +8,7 @@
 
 这是本次城市与观察题材的判断，不规定其他书单也使用老照片、蓝色、楷体或双图构图。
 
-参考和取舍见 [研究记录](../../../docs/research/2026-10-01-visual-proof-second-pass.md)。
+参考和取舍见 [历史设计参考](../../references/art-direction.md)。
 
 ## 文案与素材
 

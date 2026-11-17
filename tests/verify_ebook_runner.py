@@ -40,3 +40,4 @@ else:
         sys.exit(1)
     assert result.get('ready') is True, 'CLI did not return requested structured response'
     print(json.dumps({'runner': runner.name, 'structured_output': 'pass', 'elapsed_seconds': round(time.monotonic() - start, 2)}))
+

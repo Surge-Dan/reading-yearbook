@@ -47,7 +47,8 @@ class TitleBrowserTests(unittest.TestCase):
             try:
                 page = browser.new_page()
                 page.set_content(offline_page(a, '基于公开资料，未核验全文'), wait_until='load')
-                self.assertIn('未核验全文', page.locator('[data-reading-section="references"]').text_content())
+                self.assertEqual(page.locator('[data-reading-section="references"]').count(),0)
+                self.assertEqual(page.evaluate('EBOOK_RESULT.analysis.input_mode'),'title')
                 footers = page.evaluate("""async () => {const art=ReadingShareArtwork.createDigest({analysis:EBOOK_RESULT.analysis});const out=[];for(const ratio of ['1:1','3:4','4:5']){const pages=await art.pages([{id:'x',title:'观点',text:'测试内容'.repeat(1000)}],ratio);for(const p of pages){const c=await art.render(p,ratio);out.push(c.readingLayout.text.filter(t=>t.role==='footer').map(t=>t.text).join(' '));}}return out;}""")
                 self.assertTrue(all('未核验全文' in text for text in footers))
             finally: browser.close()
@@ -65,14 +66,9 @@ class TitleBrowserTests(unittest.TestCase):
             try:
                 page = browser.new_page(); page.set_content(offline_page(a, '未核验全文'), wait_until='load')
                 page.evaluate("Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copied=text;}}})")
-                decision = page.locator('#ebookResult details').filter(has=page.locator('summary',has_text='决策速查'))
-                decision.locator(':scope > summary').click()
-                decision.get_by_role('button',name='复制这条').click()
-                with self.subTest('decision content'):
-                    copied = page.evaluate('window.copied')
-                    for value in ('比较方案','记录问题','未核验全文'): self.assertIn(value, copied)
-                    self.assertNotIn(source['url'], copied)
-                    self.assertIn(source['quote'],page.locator('[data-reading-section="references"]').text_content())
+                self.assertEqual(page.locator('#ebookResult details').filter(has=page.locator('summary',has_text='决策速查')).count(),0)
+                self.assertEqual(page.evaluate('EBOOK_RESULT.analysis.decision_rules[0].steps'),['记录问题'])
+                self.assertEqual(page.evaluate('EBOOK_RESULT.analysis.themes[0].sources[0].quote'),source['quote'])
                 case = page.locator('#ebookResult article').filter(has=page.get_by_role('heading',name='练习',exact=True))
                 case.get_by_role('button',name='复制这条').click()
                 with self.subTest('case origin'): self.assertIn('不是原书案例', page.evaluate('window.copied'))
@@ -80,3 +76,4 @@ class TitleBrowserTests(unittest.TestCase):
 
 
 if __name__ == '__main__': unittest.main()
+

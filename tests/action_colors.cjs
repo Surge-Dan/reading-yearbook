@@ -11,3 +11,4 @@ for(const id of ['#copyQuote','#shareQuote','#exportMd']){
 await page.locator('.masthead nav a[href="#quotes"]').click();await page.screenshot({path:'output/reading-2026-preview-20261113/action-colors.png'});
 console.log('PASS: all top navigation hover states red; quote and export actions warm orange.');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});
+

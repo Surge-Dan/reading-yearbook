@@ -1,0 +1,3 @@
+-r reading-yearbook-skill/requirements.txt
+-r reading-yearbook-skill/requirements-ebook.txt
+playwright==1.60.0
