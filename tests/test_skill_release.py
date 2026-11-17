@@ -23,10 +23,12 @@ class ReleaseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / 'SKILL.md').write_text('public skill', 'utf-8')
-            for folder in ('output/books', 'private', '.ebook-workbench/jobs/a', '.cache', '.history', '.diagnostics'):
+            for folder in ('output/books', 'private', '.ebook-workbench/jobs/a', '.cache', '.history', '.diagnostics', 'node_modules', '.git'):
                 file = root / folder / 'private.txt'
                 file.parent.mkdir(parents=True, exist_ok=True)
                 file.write_text('source book or runtime state', 'utf-8')
+            for name in ('.env', '.env.local', 'credential.pem', 'credential.key', 'credential.pfx', 'credential.p12'):
+                (root / name).write_text('synthetic credential', 'utf-8')
             self.assertEqual([item['path'] for item in manifest(root)['files']], ['SKILL.md'])
 
     def test_ebook_service_and_pinned_rules_are_required_install_resources(self):

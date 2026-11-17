@@ -31,7 +31,8 @@ COVER_HOSTS = {
 
 def validate_cover_url(url):
     parts = urlsplit(url)
-    if parts.scheme != 'https' or parts.hostname not in COVER_HOSTS:
+    if (parts.scheme != 'https' or parts.hostname not in COVER_HOSTS
+            or parts.username is not None or parts.password is not None or parts.port not in (None, 443)):
         raise ValueError('封面来源须为已核验的微信读书HTTPS资源域名')
 
 

@@ -15,6 +15,12 @@ from yearbook_core import YEARBOOK_TIMEZONE, build_gateway_payload
 GATEWAY_URL = "https://i.weread.qq.com/api/agent/gateway"
 
 
+class GatewayRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Never forward the bearer credential to a redirect destination.
+        raise WeReadError('微信读书接口发生重定向，已停止请求以保护授权。', 'parameter')
+
+
 class WeReadError(RuntimeError):
     def __init__(self, message, kind='temporary'):
         super().__init__(message)
@@ -29,9 +35,7 @@ class WeReadError(RuntimeError):
 def _unwrap(response: dict) -> dict:
     if not isinstance(response,dict):raise WeReadError('接口返回不是对象','schema')
     if "upgrade_info" in response and response["upgrade_info"] is not None:
-        info=response["upgrade_info"]
-        message = (info.get("message") if isinstance(info,dict) else None) or "微信读书 Skill 需要升级"
-        raise WeReadError(message, 'upgrade')
+        raise WeReadError('微信读书Skill需要升级，请按腾讯官方说明更新。', 'upgrade')
     data = response.get("data")
     return data if isinstance(data, dict) else response
 
@@ -46,8 +50,11 @@ def gateway_call(api_name: str, params: dict, api_key: str, timeout: int = 30, r
     )
     for attempt in range(retries + 1):
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
-                return _unwrap(json.loads(response.read().decode("utf-8")))
+            with urllib.request.build_opener(GatewayRedirect()).open(request, timeout=timeout) as response:
+                content = response.read(16 * 1024 * 1024 + 1)
+                if len(content) > 16 * 1024 * 1024:
+                    raise WeReadError('微信读书响应超过安全大小限制，请缩小采集范围。', 'parameter')
+                return _unwrap(json.loads(content.decode("utf-8")))
         except urllib.error.HTTPError as exc:
             if exc.code in {401, 403, 422, 499} or attempt == retries:
                 kind = 'auth' if exc.code in {401, 403} else 'upgrade' if exc.code == 499 else 'parameter' if exc.code == 422 else 'temporary'

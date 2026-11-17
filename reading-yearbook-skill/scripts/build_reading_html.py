@@ -502,8 +502,8 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
         data['collection_status']['message']='部分封面或材料暂未取得，年度报告仍可正常浏览和导出。'
         data['verification_status']='partial_verified'
     serialized = json.dumps(data, ensure_ascii=False, allow_nan=False).replace('<', '\\u003c').replace('\u2028', '\\u2028').replace('\u2029', '\\u2029')
-    if re.search(r'wrk-[A-Za-z0-9_-]{8,}', serialized):
-        raise ValueError('交付内容中检测到密钥格式，请移除后重试')
+    from output_security import ensure_no_credentials
+    ensure_no_credentials(serialized)
     template = (ROOT / 'assets' / 'reading-template.html').read_text('utf-8')
     from reading_portrait import DAILY_DURATION_BINS, section
     # Presentation assets and chart settings stay outside the user's exported reading JSON.

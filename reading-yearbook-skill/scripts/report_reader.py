@@ -4,6 +4,7 @@ import json
 import re
 
 from distillation_result import load_bundle, validate_bundle
+from output_security import ensure_no_credentials
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,6 +34,7 @@ def load_distillations(paths, source_mode='real'):
 
 
 def safe_json(value):
+    ensure_no_credentials(value)
     return json.dumps(value, ensure_ascii=False, allow_nan=False).replace('<', '\\u003c').replace('\u2028', '\\u2028').replace('\u2029', '\\u2029')
 
 

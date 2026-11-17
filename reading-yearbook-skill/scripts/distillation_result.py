@@ -179,6 +179,8 @@ def _bibliography_kind(element, bibliography):
 
 
 def validate_bundle(bundle):
+    from output_security import ensure_no_credentials
+    ensure_no_credentials(bundle)
     try:
         if not isinstance(bundle,dict) or set(bundle)!= {'schema_version','kind','analysis','digest','source_hash','input_mode','source_mode','checks','bundle_hash'}: raise ValueError('Invalid result bundle fields')
         if type(bundle['schema_version']) is not int or bundle['schema_version']!=1 or bundle['kind']!='reading-distillation' or bundle['source_mode'] not in ('real','sample') or not isinstance(bundle['digest'],str): raise ValueError('Invalid result bundle schema')

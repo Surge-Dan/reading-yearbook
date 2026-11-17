@@ -17,6 +17,7 @@ from urllib.parse import urlsplit
 
 from html_contract import atomic_text
 from report_reader import load_distillations, reader_page, validated_distillations
+from output_security import ensure_no_credentials, STATIC_CSP
 
 
 def read_report(path):
@@ -72,21 +73,36 @@ def preview_server(path, port=None):
     path = Path(path).resolve()
     if not path.is_file():
         raise ValueError('预览文件尚未生成。')
+    ensure_no_credentials(path.read_text('utf-8-sig'))
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
             allowed = {'127.0.0.1:'+str(self.server.server_port), 'localhost:'+str(self.server.server_port)}
             if self.headers.get('Host') not in allowed:
                 self.send_error(403)
                 return
+            origin = self.headers.get('Origin')
+            if (origin and origin not in {'http://' + host for host in allowed}) or (
+                    self.headers.get('Sec-Fetch-Site') == 'cross-site'
+                    and self.headers.get('Sec-Fetch-Mode') != 'navigate'):
+                self.send_error(403)
+                return
             if urlsplit(self.path).path not in ('/', '/index.html'):
                 self.send_error(404)
                 return
-            body = path.read_bytes()  # Refresh sees the latest atomic update.
+            try:
+                body = path.read_bytes()  # Refresh sees the latest atomic update.
+                ensure_no_credentials(body.decode('utf-8-sig'))
+            except (OSError, ValueError):
+                self.send_error(503, 'Report unavailable')
+                return
             self.send_response(200)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.send_header('Content-Length', str(len(body)))
             self.send_header('Cache-Control', 'no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
+            self.send_header('Referrer-Policy', 'no-referrer')
+            self.send_header('X-Frame-Options', 'DENY')
+            self.send_header('Content-Security-Policy', STATIC_CSP)
             self.end_headers()
             self.wfile.write(body)
         def log_message(self, *_):

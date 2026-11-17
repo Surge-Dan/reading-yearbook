@@ -116,6 +116,8 @@ def workbench_page(config=None, result=None, yearbook=None, legacy=False):
 
 
 def offline_page(analysis, digest):
+    from output_security import ensure_no_credentials
+    ensure_no_credentials({'analysis': analysis, 'digest': digest})
     return workbench_page(result={'analysis': analysis, 'digest': digest})
 
 
