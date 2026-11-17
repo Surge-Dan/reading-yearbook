@@ -47,7 +47,8 @@ window.ReadingShareArtwork = (() => {
   }
   function create({data,art,loadImage}){
     const progressInk=book=>ACCENTS[Math.max(0,data.books.findIndex(row=>row.book_id===book.book_id))%ACCENTS.length];
-    const fonts=Promise.all([document.fonts.load('600 48px ReadingSerif'),document.fonts.load('400 32px ReadingSerif'),document.fonts.load('400 28px ReadingSans')]);
+    // Font availability must not decide whether reading data can be exported.
+    const fonts=Promise.allSettled([document.fonts.load('600 48px ReadingSerif'),document.fonts.load('400 32px ReadingSerif'),document.fonts.load('400 28px ReadingSans')]);
     const categories=new Map();for(const b of data.books)categories.set(b.category,(categories.get(b.category)||0)+1);
     const counts=[...categories].map(([name,count])=>({name,count})).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'zh'));
     const colors=new Map(counts.map((r,i)=>[r.name,palette[i%palette.length]]));

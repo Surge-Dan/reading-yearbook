@@ -1,5 +1,6 @@
 """Public report preflight and static reader assembly. No task or provider access."""
 from pathlib import Path
+from html_assembly import insert_before_closing_tag
 import json
 import re
 import html
@@ -55,6 +56,8 @@ def reader_page(result=None, yearbook=None):
     section = reader_section()
     css = '\n'.join((ROOT / 'assets' / name).read_text('utf-8') for name in
                     ('reading-app.css', 'reading-art.css', 'ebook-app.css', 'reading-refinement.css'))
+    from embed_fonts import font_css
+    css += '\n' + font_css(result or {})
     app = '<script id="ebook-app-mounted">' + (ROOT / 'assets/ebook-app.js').read_text('utf-8') + '</script>'
     art = '<script id="reading-share-mounted">' + (ROOT / 'assets/reading-share-art.js').read_text('utf-8') + '</script>'
     if yearbook:
@@ -90,8 +93,8 @@ def reader_page(result=None, yearbook=None):
         else:
             # Very old reports combined artwork and annual app in one script;
             # preserve that app and initialize the current exporter for the reader.
-            page = page.replace('</body>', art + '</body>', 1)
-        page = page.replace('</head>', '<style>' + css + '</style></head>', 1)
+            page = insert_before_closing_tag(page, 'body', art)
+        page = insert_before_closing_tag(page, 'head', '<style>' + css + '</style>')
     else:
         page = ('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
                 '<meta name="viewport" content="width=device-width,initial-scale=1"><title>年年阅 · 书籍精华</title>'
@@ -99,4 +102,4 @@ def reader_page(result=None, yearbook=None):
                 + section + '</main></div>' + art + '</body></html>')
     injection = '<script id="ebook-config">window.EBOOK_RESULT=' + safe_json(result) + ';</script>'
     page = re.sub(r'<template id="distribution-licenses">.*?</template>', '', page, flags=re.S)
-    return page.replace('</head>', injection + '</head>', 1).replace('</body>', license_template() + app + '</body>', 1)
+    return insert_before_closing_tag(insert_before_closing_tag(page, 'head', injection), 'body', license_template() + app)

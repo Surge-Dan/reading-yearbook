@@ -1,6 +1,7 @@
 """Installed design parity and report-first/standalone delivery, no model calls."""
 import copy
 import json
+import os
 import sys
 import tempfile
 import threading
@@ -85,9 +86,16 @@ class DeliveryTests(unittest.TestCase):
             source = root/'data.json'
             source.write_text(json.dumps(report_data([bundle()]), ensure_ascii=False), 'utf8')
             outputs = []
+            # Compare package parity under the same dependency versions. The
+            # developer checkout may use .vendor while the clean install uses
+            # global packages; different fontTools versions encode differently.
+            environment = dict(os.environ)
+            vendor = ROOT/'reading-yearbook-skill/.vendor'
+            if vendor.is_dir():
+                environment['PYTHONPATH'] = str(vendor) + os.pathsep + environment.get('PYTHONPATH', '')
             for index, scripts in enumerate((ROOT/'reading-yearbook-skill/scripts', installed/'scripts')):
                 target = root/('report'+str(index)+'.html')
-                subprocess.run([sys.executable, '-X', 'utf8', str(scripts/'build_reading_html.py'), '--input', str(source), '--output', str(target)], check=True, capture_output=True)
+                subprocess.run([sys.executable, '-X', 'utf8', str(scripts/'build_reading_html.py'), '--input', str(source), '--output', str(target)], check=True, capture_output=True, env=environment)
                 outputs.append(target.read_bytes())
             self.assertEqual(outputs[0], outputs[1])
             self.assertTrue((installed/'scripts/reading_delivery.py').is_file())

@@ -16,6 +16,7 @@ from contextlib import nullcontext
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from html_assembly import insert_before_closing_tag
 from urllib.parse import parse_qs, urlsplit
 
 from html_contract import atomic_json, atomic_text
@@ -73,6 +74,8 @@ def workbench_page(config=None, result=None, yearbook=None, legacy=False):
         return reader_page(result, yearbook)
     section = asset('ebook-section.html') or '<main id="ebook"><h1>电子书精华</h1></main>'
     css = asset('ebook-app.css')
+    from embed_fonts import font_css
+    css += '\n' + font_css(result or {})
     if yearbook:
         page = Path(yearbook).read_text('utf-8')
         from cover_contract import check_yearbook_page
@@ -95,13 +98,13 @@ def workbench_page(config=None, result=None, yearbook=None, legacy=False):
             page = re.sub(r'<script id="ebook-app-mounted">.*?</script>',
                           lambda _: '<script id="ebook-app-mounted">' + asset('ebook-app.js') + '</script>', page, flags=re.S)
         else:
-            page = page.replace('</body>', '<script id="ebook-app-mounted">' + asset('ebook-app.js') + '</script></body>', 1)
+            page = insert_before_closing_tag(page, 'body', '<script id="ebook-app-mounted">' + asset('ebook-app.js') + '</script>')
         artwork = '<script>' + asset('reading-share-art.js') + '</script>'
         if '<script>/* Editorial share artwork.' in page:
             page = re.sub(r'<script>/\* Editorial share artwork\..*?</script>', lambda _: artwork, page, flags=re.S)
         else:
             page = page.replace('<script id="ebook-app-mounted">', artwork + '<script id="ebook-app-mounted">', 1)
-        page = page.replace('</head>', '<style>' + css + '</style></head>', 1)
+        page = insert_before_closing_tag(page, 'head', '<style>' + css + '</style>')
     else:
         page = ('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
                 '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -114,7 +117,7 @@ def workbench_page(config=None, result=None, yearbook=None, legacy=False):
     injection = '<script id="ebook-config">window.EBOOK_CONFIG=' + safe_json(config or {}) + ';window.EBOOK_RESULT=' + safe_json(result) + ';</script>'
     from report_reader import license_template
     page = re.sub(r'<template id="distribution-licenses">.*?</template>', '', page, flags=re.S)
-    return page.replace('</head>', injection + '</head>', 1).replace('</body>', license_template() + '</body>', 1)
+    return insert_before_closing_tag(insert_before_closing_tag(page, 'head', injection), 'body', license_template())
 
 
 def offline_page(analysis, digest):

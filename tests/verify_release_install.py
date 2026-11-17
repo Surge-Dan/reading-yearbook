@@ -11,6 +11,8 @@ from datetime import datetime,timezone,timedelta
 
 def main():
     installed=Path(sys.argv[1]).resolve()
+    sys.path.insert(0, str(installed/'scripts'))
+    from embed_fonts import font_css
     root=Path(sys.argv[2]).resolve();root.mkdir(parents=True,exist_ok=True)
     env=dict(os.environ);env.pop('PYTHONPATH',None);env['WEREAD_API_KEY']=''
     subprocess.run([sys.executable,'-X','utf8',str(installed/'scripts/skill_release.py')],cwd=root,env=env,check=True)
@@ -32,9 +34,10 @@ def main():
         html=(case/'index.html').read_text('utf-8')
         payload=json.loads(re.search(r'<script id="reading-data"[^>]*>(.*?)</script>',html,re.S).group(1))
         assert len(payload['books'])==count and all(b['cover'].startswith('data:image/') for b in payload['books'])
-        assert 'data:font/woff2;base64,' not in html
+        assert 'url(data:font/' in html
         assert 'ReadingInsights' not in html and 'PolyForm Noncommercial' in html
         expected_css='\n'.join((installed/'assets'/name).read_text('utf-8') for name in ('reading-app.css','reading-art.css','ebook-app.css','reading-refinement.css'))
+        expected_css += '\n' + font_css(payload)
         assert re.search(r'<style>(.*?)</style>',html,re.S).group(1).strip()==expected_css.strip()
         art=json.loads(re.search(r'<script id="reading-art"[^>]*>(.*?)</script>',html,re.S).group(1))
         assert base64.b64decode(art['readingRecord'].split(',',1)[1])==(installed/'assets/yearbook-art/reading-record.png').read_bytes()

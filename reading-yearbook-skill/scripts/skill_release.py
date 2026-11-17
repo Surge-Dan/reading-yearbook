@@ -11,7 +11,7 @@ from html_contract import atomic_json
 
 ROOT = Path(__file__).resolve().parents[1]
 EXCLUDED = {'assets/reading-theme.js', 'assets/reading-insights.js'}
-REQUIRED = ['LICENSE','THIRD_PARTY_NOTICES.md','scripts/output_security.py','scripts/reading_delivery.py','references/standard-delivery.md','SKILL.md','scripts/generate_reading_html.py','scripts/collect_html_materials.py',
+REQUIRED = ['scripts/html_assembly.py','LICENSE','THIRD_PARTY_NOTICES.md','scripts/output_security.py','scripts/reading_delivery.py','references/standard-delivery.md','SKILL.md','scripts/generate_reading_html.py','scripts/collect_html_materials.py',
     'scripts/build_reading_html.py','scripts/reading_portrait.py','scripts/html_contract.py','scripts/cover_contract.py','scripts/embed_fonts.py','assets/reading-refinement.css','references/reading-personality.md',
     'assets/reading-template.html','assets/reading-app.js','assets/reading-share-art.js','assets/reading-share-state.js',
     'assets/reading-app.css','assets/reading-art.css',
@@ -58,7 +58,7 @@ def manifest(root=ROOT):
         relative=p.relative_to(root)
         if relative.as_posix() in EXCLUDED or not p.is_file() or any(x in relative.parts for x in ('__pycache__','.vendor','revisions','output','private','.ebook-workbench','.cache','.history','.diagnostics','node_modules','.git')) or p.name in ('release-manifest.json','validation-report.json') or p.name.startswith('.env') or p.suffix.lower() in {'.pem','.key','.p12','.pfx'}:
             continue
-        kind='text-lf' if p.suffix.lower() in {'.py','.js','.cjs','.svg','.xml','.html','.css','.md','.txt','.json','.yaml','.yml','.template'} else 'binary'
+        kind='text-lf' if p.name in {'LICENSE','NOTICE','COPYING','AUTHORS'} or p.suffix.lower() in {'.py','.js','.cjs','.svg','.xml','.html','.css','.md','.txt','.json','.yaml','.yml','.template'} else 'binary'
         files.append({'path':relative.as_posix(),'sha256':file_hash(p,kind),'hash_kind':kind,'bytes':p.stat().st_size})
     return {'version':'2026.11.17','files':files}
 

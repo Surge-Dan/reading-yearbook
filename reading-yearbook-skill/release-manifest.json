@@ -21,9 +21,9 @@
     },
     {
       "path": "assets/ebook-app.js",
-      "sha256": "068d6fb404f3fc85c02e760879577cd04e0e37c9e23d551ae421e2af7fc10f0c",
+      "sha256": "a369a33a99a82339837c4d98b678f2c02d497e1b4d1a12b8f8a91f7eec6bb225",
       "hash_kind": "text-lf",
-      "bytes": 24025
+      "bytes": 22053
     },
     {
       "path": "assets/ebook-reader-section.html",
@@ -69,9 +69,9 @@
     },
     {
       "path": "assets/reading-app.css",
-      "sha256": "560466991d0536cba23ed5227ef9b6f32ce1906fb5d6ea6d6514fd92b2c82be6",
+      "sha256": "bb40b2b1b19a69717a4adf3f20417c6c71316349c5d466eef1718aca9c12e3fb",
       "hash_kind": "text-lf",
-      "bytes": 21195
+      "bytes": 21075
     },
     {
       "path": "assets/reading-app.js",
@@ -93,9 +93,9 @@
     },
     {
       "path": "assets/reading-share-art.js",
-      "sha256": "75e73d84772302c5b3400c7ad5181853cb83a8dd8578e97c0ae90e5d0d471134",
+      "sha256": "5c5f5c13233e98443f234878b7240c9bbcf361294e73a5b1d794285168bd85ae",
       "hash_kind": "text-lf",
-      "bytes": 40145
+      "bytes": 40231
     },
     {
       "path": "assets/reading-share-state.js",
@@ -351,69 +351,69 @@
     },
     {
       "path": "examples/reading-html-demo/images/01-cover.png",
-      "sha256": "cd5c81fc9ab0157744723ec7b19f127bdb114b8aa7e2bb850c479ce7f7a7f6d1",
+      "sha256": "406dd77718dc051df9b99f338ebebd59842e74fd4ee803ee863538579dc1406a",
       "hash_kind": "binary",
-      "bytes": 218542
+      "bytes": 221119
     },
     {
       "path": "examples/reading-html-demo/images/02-stats.png",
-      "sha256": "a4b08f521a58bd4b4f89bb33f2993b9f29e9fa287f853ced72e2d454b9b4b2d5",
+      "sha256": "c6fe75cdeded531b969b2934a6426e93c8965d978ae1699cfaae451bdb6a63e3",
       "hash_kind": "binary",
-      "bytes": 128322
+      "bytes": 127456
     },
     {
       "path": "examples/reading-html-demo/images/03-distribution.png",
-      "sha256": "f4bf321754b29a30d48d339974bb21a8050706fadfab1ac86552cc51112b2c11",
+      "sha256": "eaced4f72eef85a24d1e062b7717f5d2db4d808d5927a8dd77d415f9f57ce6f1",
       "hash_kind": "binary",
-      "bytes": 115995
+      "bytes": 115473
     },
     {
       "path": "examples/reading-html-demo/images/04-timeline.png",
-      "sha256": "13e20f1583670d8ecf4d2464fd2c105ba13cc50c18089c1a2bdddbb66e9b6c71",
+      "sha256": "7a21ab3cfbf142b58fd03135e2b84931f3de5666ffa0213d0f7b74ca0ad2eaa4",
       "hash_kind": "binary",
-      "bytes": 157175
+      "bytes": 156735
     },
     {
       "path": "examples/reading-html-demo/images/05-book-demo-001.png",
-      "sha256": "ca308723f7f97a51b032ae586ad55334c0a3f88efb2e0b95668690f9afcbd153",
+      "sha256": "4c2df7b06a8c0217185f95e07277140c4b2790b15794de4ef88e2925ffdc3a64",
       "hash_kind": "binary",
-      "bytes": 150518
+      "bytes": 150372
     },
     {
       "path": "examples/reading-html-demo/images/06-book-demo-002.png",
-      "sha256": "858dd516efc8c902ef1c1142a328ee2415bd2bda484e9481cc5473ff8dbd8434",
+      "sha256": "fdbfe4cb7f9de96d872c0e77bc44da881db0583c0bdef1834b6277a3815a8bda",
       "hash_kind": "binary",
-      "bytes": 154744
+      "bytes": 154351
     },
     {
       "path": "examples/reading-html-demo/images/07-book-demo-003.png",
-      "sha256": "070b0ba84df46ccc38eb7150a2b796cda00a49c0e86f2b855a7a4a6e00011205",
+      "sha256": "6dc4e1394fb26d6d8e79c3262030b8c7ef3139a90d823deeaf16d228be118e31",
       "hash_kind": "binary",
-      "bytes": 177611
+      "bytes": 177400
     },
     {
       "path": "examples/reading-html-demo/images/08-book-demo-004.png",
-      "sha256": "1e57d4f6e823a3b2a80232bcd28fd44c6b3d04a80a2ec31cd22710b40bc65de6",
+      "sha256": "e33f4198d1ecd00e1171008637165181c933a925dcfda1c46c844a5ce5208944",
       "hash_kind": "binary",
-      "bytes": 157606
+      "bytes": 157173
     },
     {
       "path": "examples/reading-html-demo/images/09-book-demo-005.png",
-      "sha256": "f91a7316c97529e03a920522a637f737302ff4af8b2f8c28198968db5651b108",
+      "sha256": "fbd19d9b4edde658c9d894d0fb940176d3e4ee72678e4ff17096e2f3ee45594d",
       "hash_kind": "binary",
-      "bytes": 151603
+      "bytes": 151306
     },
     {
       "path": "examples/reading-html-demo/images/10-book-demo-006.png",
-      "sha256": "5e97924d0bc0c42242ed6619def79dc1aece3800aae9e1a563d8427f514a8c12",
+      "sha256": "9588da265494207512fa55e9d2baffa5225ad2a2938339012172543288b72957",
       "hash_kind": "binary",
-      "bytes": 161362
+      "bytes": 161154
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "180515fe35299540d026952dfefbde1c7b674e9ebc40edf604714d02e06fcc4e",
+      "sha256": "6286e262a92afb80f150a1da370d14e7fee9caef1aa9dd991eb36f1436c5cdce",
       "hash_kind": "text-lf",
-      "bytes": 7966589
+      "bytes": 8475855
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
@@ -429,15 +429,15 @@
     },
     {
       "path": "examples/reading-html-demo/share-overview.png",
-      "sha256": "d2589907a212d6db547452a8a5c778d85175ccad57152309ec1a44f449c49e45",
+      "sha256": "2dd7523af8580d5143f74474955942a2c1b3c290cd3d51de1c88681699d7dac4",
       "hash_kind": "binary",
-      "bytes": 448772
+      "bytes": 455489
     },
     {
       "path": "examples/reading-html-demo/web-preview.png",
-      "sha256": "2ab986d5daf1a3ba8d725774e446560ccd5c7958dfcbe4659929fbc99906d331",
+      "sha256": "7dffdb7146a229314efe12667fd72e4de8aae8e10bd01b1a7561982e9a230db9",
       "hash_kind": "binary",
-      "bytes": 867583
+      "bytes": 872017
     },
     {
       "path": "examples/README.md",
@@ -586,7 +586,7 @@
     {
       "path": "LICENSE",
       "sha256": "79897e15035a69a9fbbc0b363aad4a0a64b47bbf71aecf0c231b55025ececc94",
-      "hash_kind": "binary",
+      "hash_kind": "text-lf",
       "bytes": 1066
     },
     {
@@ -741,9 +741,9 @@
     },
     {
       "path": "scripts/build_reading_html.py",
-      "sha256": "4d07552da98521cb955005790225fac773eae5122a4cf7ad47ac0a35f20e7003",
+      "sha256": "3e1eb31ab4f721939ccc649a71f2fef27290f8ef3b47f68f16212d4193a7109a",
       "hash_kind": "text-lf",
-      "bytes": 35663
+      "bytes": 35683
     },
     {
       "path": "scripts/collage_materials.py",
@@ -843,9 +843,9 @@
     },
     {
       "path": "scripts/embed_fonts.py",
-      "sha256": "cc68d6ac4a8e6ccc1c308f6fe998007968819679e10dc1455b3c8c47a4dd2714",
+      "sha256": "10bfbd661c2fb0a48c902936c81ad1684b7242d85cebdbc193770669aa1ff1a5",
       "hash_kind": "text-lf",
-      "bytes": 2474
+      "bytes": 2642
     },
     {
       "path": "scripts/export_cards.py",
@@ -864,6 +864,12 @@
       "sha256": "b854c5fed1e2d9a957d755b055ea39074eb78a2aa054488efea929c06233aa50",
       "hash_kind": "text-lf",
       "bytes": 17705
+    },
+    {
+      "path": "scripts/html_assembly.py",
+      "sha256": "8845450d13b1bfcba813bc215c80aee1d5c805c13e73d9b10f6eb15e4862e3dc",
+      "hash_kind": "text-lf",
+      "bytes": 808
     },
     {
       "path": "scripts/html_contract.py",
@@ -909,9 +915,9 @@
     },
     {
       "path": "scripts/report_reader.py",
-      "sha256": "de569e00a40c0511c6047d737aa3fb0cb7dff7234d634838ed9d461561eba7df",
+      "sha256": "9959cf0bf329332f243f3764fa5c092c63e49379d65042555a4be80c00a1f7f6",
       "hash_kind": "text-lf",
-      "bytes": 5409
+      "bytes": 5548
     },
     {
       "path": "scripts/run_share.py",
@@ -933,9 +939,9 @@
     },
     {
       "path": "scripts/serve_ebook.py",
-      "sha256": "12460ed901791add74763add778923cf7cbe3e2f1b9a987ce7f2263cf14e51ef",
+      "sha256": "9d0d0534e0b7cbd63ec3bb012087b8cdd276c5c7a540aacf51fa00c664da25fc",
       "hash_kind": "text-lf",
-      "bytes": 40178
+      "bytes": 40322
     },
     {
       "path": "scripts/share_contract.py",
@@ -945,9 +951,9 @@
     },
     {
       "path": "scripts/skill_release.py",
-      "sha256": "5241d9f1aef067b1aa65c48dc3bac224f0f5f5ab5e66db5baf0f119db95eb932",
+      "sha256": "2774d6693c021c66863191dbedcd5345b939aecaaca113e9d90654db240de21b",
       "hash_kind": "text-lf",
-      "bytes": 6430
+      "bytes": 6511
     },
     {
       "path": "scripts/static_graphics.py",
@@ -1006,7 +1012,7 @@
     {
       "path": "third_party/cangjie/LICENSE",
       "sha256": "1126322e2cc8d165adc4c792eeb195717de2bcc7b39be1ce77959d78e87ef685",
-      "hash_kind": "binary",
+      "hash_kind": "text-lf",
       "bytes": 1056
     },
     {

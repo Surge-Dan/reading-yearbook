@@ -25,7 +25,7 @@ def font_bytes(name,characters):
         from fontTools.ttLib import TTFont
     except ImportError:
         return raw
-    font=TTFont(io.BytesIO(raw),lazy=True)
+    font=TTFont(io.BytesIO(raw),lazy=True,recalcTimestamp=False)
     options=subset.Options();options.flavor='woff2';options.recalc_timestamp=False
     sub=subset.Subsetter(options=options);sub.populate(text=characters);sub.subset(font)
     # WOFF2 defaults to Brotli quality 11. Quality 5 retains identical glyphs
@@ -43,7 +43,7 @@ def font_bytes(name,characters):
 
 def font_css(data):
     sources=[json.dumps(data,ensure_ascii=False)]
-    for name in ('reading-template.html','reading-app.js','reading-share-art.js'):
+    for name in ('reading-template.html','reading-app.js','reading-share-art.js','ebook-app.js','ebook-reader-section.html'):
         sources.append((ROOT/'assets'/name).read_text('utf-8'))
     characters=''.join(sorted(set(''.join(sources))))
     # Numeric readouts, CJK punctuation and any dynamic prose used by controls.
@@ -53,5 +53,6 @@ def font_css(data):
         binary=font_bytes(name,characters);flavor='woff2' if binary[:4]==b'wOF2' else 'truetype'
         mime='font/woff2' if flavor=='woff2' else 'font/ttf'
         encoded=base64.b64encode(binary).decode('ascii')
-        css.append(f'@font-face{{font-family:{family};src:url(data:{mime};base64,{encoded}) format("{flavor}");font-weight:100 900;font-display:block}}')
+        local_name='Noto Serif SC' if family=='ReadingSerif' else 'Noto Sans SC'
+        css.append(f'@font-face{{font-family:{family};src:local("{local_name}"),url(data:{mime};base64,{encoded}) format("{flavor}");font-weight:100 900;font-display:block}}')
     return '\n'.join(css)

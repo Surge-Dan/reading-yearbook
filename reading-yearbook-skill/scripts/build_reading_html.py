@@ -524,7 +524,7 @@ def build_html(data, output, covers=None, art_assets=None, require_all_covers=Fa
                     '__EBOOK_SECTION__': reader_section(),
                     '__LICENSE__': html.escape((ROOT/'LICENSE').read_text('utf-8')+'\n\n'+(ROOT/'THIRD_PARTY_NOTICES.md').read_text('utf-8')+'\n\n'+(ROOT / 'assets' / 'lieflat-LICENSE.txt').read_text('utf-8')+'\n\nNoto Serif SC\n'+(ROOT/'assets/fonts/OFL-Serif.txt').read_text('utf-8')+'\n\nNoto Sans SC\n'+(ROOT/'assets/fonts/OFL-Sans.txt').read_text('utf-8'))}
     # One-pass replacement: user text may itself contain template delimiters.
-    replacements['__STYLE__']+='\n'+(ROOT/'assets/reading-refinement.css').read_text('utf-8')
+    replacements['__STYLE__']+='\n'+(ROOT/'assets/reading-refinement.css').read_text('utf-8')+'\n'+font_css(data)
     page = re.sub(r'__(?:DATA|STYLE|APP|SHARE_APP|EBOOK_APP|EBOOK_SECTION|LICENSE|ART)__', lambda m: replacements[m.group()], template)
     page=page.replace('<section id="shelf"',section(data)+'<section id="shelf"',1)
     if missing and allow_draft:

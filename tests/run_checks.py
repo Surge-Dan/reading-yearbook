@@ -22,6 +22,8 @@ def main():
     os.chdir(ROOT)
     vendor=ROOT/'reading-yearbook-skill/.vendor'
     if vendor.is_dir():sys.path.insert(0,str(vendor))
+    # Reject stale packages before spending time on browser/export checks.
+    run([sys.executable,'-X','utf8',ROOT/'reading-yearbook-skill/scripts/skill_release.py'])
     node=os.environ.get('SHARE_NODE') or shutil.which('node')
     if not args.quick:
         missing=[name for name in ('PIL','fontTools','brotli','pypdf','playwright') if importlib.util.find_spec(name) is None]

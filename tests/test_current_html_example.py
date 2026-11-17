@@ -1,6 +1,7 @@
 """Public examples must remain aligned with the shipped renderer, not a stale deck."""
 import json
 import re
+import sys
 import unittest
 from pathlib import Path
 
@@ -12,8 +13,12 @@ class CurrentExampleTests(unittest.TestCase):
     maxDiff = 500
     def test_public_example_uses_current_css_and_inline_scripts(self):
         page = (DEMO / 'index.html').read_text('utf-8')
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        from embed_fonts import font_css
+        embedded=json.loads(re.search(r'<script id="reading-data" type="application/json">(.*?)</script>',page,re.S).group(1))
         expected_css = '\n'.join((ROOT / 'assets' / name).read_text('utf-8')
                                  for name in ('reading-app.css', 'reading-art.css', 'ebook-app.css', 'reading-refinement.css'))
+        expected_css += '\n' + font_css(embedded)
         self.assertEqual(re.search(r'<style>(.*?)</style>', page, re.S).group(1).strip(), expected_css.strip())
         for script_id,asset in [('reading-share-mounted','reading-share-art.js'),('ebook-app-mounted','ebook-app.js')]:
             self.assertEqual(re.search(r'<script id="'+script_id+r'">(.*?)</script>',page,re.S).group(1).strip(),(ROOT/'assets'/asset).read_text('utf-8').strip())
