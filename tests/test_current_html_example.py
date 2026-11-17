@@ -1,5 +1,7 @@
 """Public examples must remain aligned with the shipped renderer, not a stale deck."""
 import json
+import base64
+import io
 import re
 import sys
 import unittest
@@ -19,7 +21,25 @@ class CurrentExampleTests(unittest.TestCase):
         expected_css = '\n'.join((ROOT / 'assets' / name).read_text('utf-8')
                                  for name in ('reading-app.css', 'reading-art.css', 'ebook-app.css', 'reading-refinement.css'))
         expected_css += '\n' + font_css(embedded)
-        self.assertEqual(re.search(r'<style>(.*?)</style>', page, re.S).group(1).strip(), expected_css.strip())
+        actual_css=re.search(r'<style>(.*?)</style>', page, re.S).group(1).strip()
+        # WOFF2 compression varies across supported fontTools versions. Compare
+        # exact CSS plus decoded glyph geometry/metrics, not encoder bytes.
+        font_url=r'data:font/[^;]+;base64,([A-Za-z0-9+/=]+)'
+        self.assertEqual(re.sub(font_url, 'EMBEDDED_FONT', actual_css),
+                         re.sub(font_url, 'EMBEDDED_FONT', expected_css.strip()))
+        actual_fonts=re.findall(font_url, actual_css);expected_fonts=re.findall(font_url, expected_css)
+        self.assertEqual(len(actual_fonts), 2)
+        from fontTools.ttLib import TTFont
+        for actual_binary,expected_binary in zip(actual_fonts,expected_fonts):
+            with TTFont(io.BytesIO(base64.b64decode(actual_binary))) as actual, TTFont(io.BytesIO(base64.b64decode(expected_binary))) as expected:
+                a_map=actual.getBestCmap();e_map=expected.getBestCmap()
+                self.assertEqual(set(a_map), set(e_map))
+                self.assertEqual(actual['head'].unitsPerEm, expected['head'].unitsPerEm)
+                for char,a_name in a_map.items():
+                    e_name=e_map[char]
+                    self.assertEqual(actual['hmtx'][a_name], expected['hmtx'][e_name])
+                    self.assertEqual(actual['glyf'][a_name].getCoordinates(actual['glyf']),
+                                     expected['glyf'][e_name].getCoordinates(expected['glyf']))
         for script_id,asset in [('reading-share-mounted','reading-share-art.js'),('ebook-app-mounted','ebook-app.js')]:
             self.assertEqual(re.search(r'<script id="'+script_id+r'">(.*?)</script>',page,re.S).group(1).strip(),(ROOT/'assets'/asset).read_text('utf-8').strip())
         expected_app='\n'.join((ROOT/'assets'/name).read_text('utf-8') for name in ('reading-share-state.js','reading-app.js'))
