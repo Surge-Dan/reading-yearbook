@@ -4,6 +4,7 @@
 
 ### 阅读年鉴、书籍精华与分享图Skill
 
+[![Original code: MIT](https://img.shields.io/badge/Original%20code-MIT-2f80ed.svg)](LICENSE)
 [![Charts: Noncommercial](https://img.shields.io/badge/Charts-Noncommercial-2f80ed.svg)](reading-yearbook-skill/assets/lieflat-LICENSE.txt)
 [![Platform: Codex](https://img.shields.io/badge/Platform-Codex-111827.svg)](reading-yearbook-skill/SKILL.md)
 [![WeRead: Report source](https://img.shields.io/badge/WeRead-Report%20source-16a34a.svg)](https://github.com/Tencent/WeChatReading)
@@ -152,7 +153,11 @@ PNG和ZIP在浏览器内生成，无需额外安装截图工具。导出不会�
 
 使用者只需安装Skill，`docs`和`tests`供开发维护，不是运行依赖。历史验收稿可在Git历史中查看。
 
-图表部分改编自[lieflat-charts](https://github.com/larashero3-dotcom/lieflat-charts)，采用PolyFormNoncommercial1.0.0许可，商业使用需另行确认授权。Noto字体遵循OFL许可；其他资源保留各自来源与许可。
+## 许可与来源
+
+本项目的原创代码和文档采用[MIT许可](LICENSE)，欢迎使用、修改和贡献。第三方内容保留原有许可，详见[第三方声明](THIRD_PARTY_NOTICES.md)。
+
+图表部分改编自[lieflat-charts](https://github.com/larashero3-dotcom/lieflat-charts)，采用PolyFormNoncommercial1.0.0许可；Noto字体遵循OFL，仓颉方法与工具保留上游MIT声明。根目录的MIT许可不覆盖这些第三方授权，也不意味着当前整套Skill及其产物可自由商用；商业使用需核对相关条款并取得必要授权。
 
 欢迎提Issue或PullRequest。请附上脱敏材料和复现步骤，排版问题带一张截图更好定位；不要上传密钥、整本电子书或私人阅读记录。
 

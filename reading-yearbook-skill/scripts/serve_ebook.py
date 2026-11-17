@@ -112,7 +112,9 @@ def workbench_page(config=None, result=None, yearbook=None, legacy=False):
                 '<script id="ebook-app-mounted">' + asset('ebook-app.js') + '</script></body></html>')
     # Configuration precedes deferred mounting; data is never executable HTML.
     injection = '<script id="ebook-config">window.EBOOK_CONFIG=' + safe_json(config or {}) + ';window.EBOOK_RESULT=' + safe_json(result) + ';</script>'
-    return page.replace('</head>', injection + '</head>', 1)
+    from report_reader import license_template
+    page = re.sub(r'<template id="distribution-licenses">.*?</template>', '', page, flags=re.S)
+    return page.replace('</head>', injection + '</head>', 1).replace('</body>', license_template() + '</body>', 1)
 
 
 def offline_page(analysis, digest):

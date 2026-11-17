@@ -411,9 +411,9 @@
     },
     {
       "path": "examples/reading-html-demo/index.html",
-      "sha256": "959143b1d23eaf7b45e1f586d803fd46f6ab9981638d9673a4f089fce470ea33",
+      "sha256": "180515fe35299540d026952dfefbde1c7b674e9ebc40edf604714d02e06fcc4e",
       "hash_kind": "text-lf",
-      "bytes": 7961127
+      "bytes": 7966589
     },
     {
       "path": "examples/reading-html-demo/preview-manifest.json",
@@ -584,6 +584,12 @@
       "bytes": 4055
     },
     {
+      "path": "LICENSE",
+      "sha256": "79897e15035a69a9fbbc0b363aad4a0a64b47bbf71aecf0c231b55025ececc94",
+      "hash_kind": "binary",
+      "bytes": 1066
+    },
+    {
       "path": "references/art-direction.md",
       "sha256": "b9e27996f2d8d01d364678157678a5ed4940949e9c69f437ebf0b20da26d65a8",
       "hash_kind": "text-lf",
@@ -735,9 +741,9 @@
     },
     {
       "path": "scripts/build_reading_html.py",
-      "sha256": "51591c532b0852680cdadab0b58babe947502938ac36a05c921f393c46442f86",
+      "sha256": "4d07552da98521cb955005790225fac773eae5122a4cf7ad47ac0a35f20e7003",
       "hash_kind": "text-lf",
-      "bytes": 35562
+      "bytes": 35663
     },
     {
       "path": "scripts/collage_materials.py",
@@ -903,9 +909,9 @@
     },
     {
       "path": "scripts/report_reader.py",
-      "sha256": "9112bb9d35706985a1136f8babd365d8c74e6642ddb188555d01e8701f821ee8",
+      "sha256": "de569e00a40c0511c6047d737aa3fb0cb7dff7234d634838ed9d461561eba7df",
       "hash_kind": "text-lf",
-      "bytes": 4915
+      "bytes": 5409
     },
     {
       "path": "scripts/run_share.py",
@@ -927,9 +933,9 @@
     },
     {
       "path": "scripts/serve_ebook.py",
-      "sha256": "c53075eee2b88a4b67b7bbdbecee9898cc43c291c73f321b3c5e5d5b054cc7b9",
+      "sha256": "12460ed901791add74763add778923cf7cbe3e2f1b9a987ce7f2263cf14e51ef",
       "hash_kind": "text-lf",
-      "bytes": 39981
+      "bytes": 40178
     },
     {
       "path": "scripts/share_contract.py",
@@ -939,9 +945,9 @@
     },
     {
       "path": "scripts/skill_release.py",
-      "sha256": "a36f8df3281268c569c09fa25c88df1e16896a65c791817f8c0c257c03764a75",
+      "sha256": "5241d9f1aef067b1aa65c48dc3bac224f0f5f5ab5e66db5baf0f119db95eb932",
       "hash_kind": "text-lf",
-      "bytes": 6395
+      "bytes": 6430
     },
     {
       "path": "scripts/static_graphics.py",
@@ -1212,6 +1218,12 @@
       "sha256": "d13a7c701238af799627f50a8180e4b5635b3cb76a20b19fa512c8d26593150e",
       "hash_kind": "text-lf",
       "bytes": 4515
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "sha256": "ee79d6eccc5a3c49e8a1353508d0f526edd4990ae7845ff48d3ef6710be7acc6",
+      "hash_kind": "text-lf",
+      "bytes": 2794
     }
   ]
 }

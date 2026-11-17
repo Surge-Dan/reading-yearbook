@@ -2,11 +2,19 @@
 from pathlib import Path
 import json
 import re
+import html
 
 from distillation_result import load_bundle, validate_bundle
 from output_security import ensure_no_credentials
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def license_template():
+    names = ('LICENSE', 'THIRD_PARTY_NOTICES.md', 'assets/lieflat-LICENSE.txt',
+             'assets/fonts/OFL-Serif.txt', 'assets/fonts/OFL-Sans.txt')
+    text = '\n\n'.join(name + '\n' + (ROOT / name).read_text('utf-8') for name in names)
+    return '<template id="distribution-licenses"><pre>' + html.escape(text) + '</pre></template>'
 
 
 def validated_distillations(bundles, source_mode='real'):
@@ -90,4 +98,5 @@ def reader_page(result=None, yearbook=None):
                 '<style>' + css + '</style></head><body class="ebook-standalone"><div class="paper"><main>'
                 + section + '</main></div>' + art + '</body></html>')
     injection = '<script id="ebook-config">window.EBOOK_RESULT=' + safe_json(result) + ';</script>'
-    return page.replace('</head>', injection + '</head>', 1).replace('</body>', app + '</body>', 1)
+    page = re.sub(r'<template id="distribution-licenses">.*?</template>', '', page, flags=re.S)
+    return page.replace('</head>', injection + '</head>', 1).replace('</body>', license_template() + app + '</body>', 1)
