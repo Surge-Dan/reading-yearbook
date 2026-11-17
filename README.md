@@ -4,6 +4,11 @@
 
 ### 阅读年鉴、书籍精华与分享图Skill
 
+[![Charts: Noncommercial](https://img.shields.io/badge/Charts-Noncommercial-2f80ed.svg)](reading-yearbook-skill/assets/lieflat-LICENSE.txt)
+[![Platform: Codex](https://img.shields.io/badge/Platform-Codex-111827.svg)](reading-yearbook-skill/SKILL.md)
+[![WeRead: Report source](https://img.shields.io/badge/WeRead-Report%20source-16a34a.svg)](https://github.com/Tencent/WeChatReading)
+[![Data: Local-first](https://img.shields.io/badge/Data-Local--first-f97316.svg)](#数据与使用说明)
+
 把一年的阅读，整理成一份想保存、也想分享的年鉴。
 
 </div>
